@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Responsive Image Carousel</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #f0f0f0;
+            }
+            .carousel-container {
+                position: relative;
+                width: 80%;
+                max-width: 800px;
+                overflow: hidden;
+                border-radius: 12px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                background: white;
+            }
+            .carousel {
+                display: flex;
+                transition: transform 0.5s ease-in-out;
+            }
+            .slide {
+                min-width: 100%;
+                position: relative;
+                text-align: center;
+            }
+            .slide img {
+                width: 100%;
+                height: auto;
+                display: block;
+                opacity: 0;
+                transition: opacity 0.5s;
+                cursor: pointer;
+            }
+            .slide img.loaded {
+                opacity: 1;
+            }
+            .caption {
+                position: absolute;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            .btn {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background-color: rgba(0, 0, 0, 0.7);
+                color: white;
+                border: none;
+                padding: 12px;
+                cursor: pointer;
+                font-size: 20px;
+                border-radius: 50%;
+                z-index: 10;
+                transition: background 0.3s;
+                width: 45px;
+                height: 45px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .btn-left {
+                left: 10px;
+            }
+            .btn-right {
+                right: 10px;
+            }
+            .btn svg {
+                width: 24px;
+                height: 24px;
+                fill: white;
+            }
+            .btn:hover {
+                background-color: rgba(0, 0, 0, 0.9);
+            }
+            .position-indicator {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            /* Fullscreen Zoom */
+            .fullscreen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 100;
+                display: none;
+            }
+            .fullscreen img {
+                max-width: 90%;
+                max-height: 90%;
+                border-radius: 10px;
+            }
+            .fullscreen-close {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: white;
+                color: black;
+                padding: 10px;
+                cursor: pointer;
+                font-size: 22px;
+                border-radius: 50%;
+                transition: background 0.3s;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 40px;
+                height: 40px;
+            }
+            .fullscreen-close:hover {
+                background: lightgray;
+            }
+            .fullscreen-close svg {
+                width: 24px;
+                height: 24px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="carousel-container">
+            <button class="btn btn-left" onclick="prevSlide()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+            </button>
+            <div class="carousel" id="carousel"></div>
+            <button class="btn btn-right" onclick="nextSlide()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 18l6-6-6-6" />
+                </svg>
+            </button>
+            <div class="position-indicator" id="positionIndicator">1 / 18</div>
+        </div>
+
+        <!-- Fullscreen Zoom -->
+        <div class="fullscreen" id="fullscreen">
+            <button class="fullscreen-close" onclick="closeFullscreen()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <img id="fullscreenImage" src="" alt="Zoomed Image" />
+        </div>
+
+        <script>
+            const carousel = document.getElementById('carousel');
+            const positionIndicator =
+                document.getElementById('positionIndicator');
+            const totalImages = 18;
+            let currentIndex = 0;
+
+            // Array of image URLs and captions
+            const imagesData = [
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.01.png',
+                    caption: 'Perairan Utara P. Buru',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.02.png',
+                    caption: ' Perairan Selatan P. Buru',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.03.png',
+                    caption: ' Perairan Seram Bagian Barat',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.04.png',
+                    caption: ' Perairan P. Ambon - P. Lease',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.05.png',
+                    caption: ' Perairan Utara Maluku Tengah',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.06.png',
+                    caption: ' Perairan Selatan Maluku Tengah',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.07.png',
+                    caption: ' Perairan Seram Bagian Timur (Utara)',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.08.png',
+                    caption: ' Perairan Seram Bagian Timur (Selatan)',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.09.png',
+                    caption: ' Perairan Seram Bagian Timur (P. Gorong)',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.10.png',
+                    caption: ' Perairan Kep. Banda Neira',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.11.png',
+                    caption: ' Perairan Kep. Kai',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.12.png',
+                    caption: ' Perairan Utara Kep. Aru',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.13.png',
+                    caption: ' Perairan Selatan Kep. Aru',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.14.png',
+                    caption: ' Perairan Barat Kep. Tanimbar',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.15.png',
+                    caption: ' Perairan Timur Kep. Tanimbar',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.16.png',
+                    caption: ' Perairan Kep. Babar',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.17.png',
+                    caption: ' Perairan Kep. Sermata - Kep. Leti',
+                },
+                {
+                    url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.18.png',
+                    caption: ' Perairan Wetar',
+                },
+            ];
+
+            // Load images dynamically
+            function loadImages() {
+                imagesData.forEach((data, index) => {
+                    let slide = document.createElement('div');
+                    slide.classList.add('slide');
+
+                    let img = document.createElement('img');
+                    img.setAttribute('data-src', data.url);
+                    img.alt = data.caption;
+                    img.classList.add('lazy');
+                    img.onclick = () => openFullscreen(data.url);
+
+                    let caption = document.createElement('div');
+                    caption.classList.add('caption');
+                    caption.textContent = data.caption;
+
+                    slide.appendChild(img);
+                    slide.appendChild(caption);
+                    carousel.appendChild(slide);
+                });
+
+                lazyLoad();
+            }
+
+            function lazyLoad() {
+                document.querySelectorAll('.lazy').forEach((img) => {
+                    img.src = img.getAttribute('data-src');
+                    img.classList.add('loaded');
+                });
+            }
+
+            function prevSlide() {
+                currentIndex =
+                    currentIndex > 0 ? currentIndex - 1 : totalImages - 1;
+                updateCarousel();
+            }
+            function nextSlide() {
+                currentIndex =
+                    currentIndex < totalImages - 1 ? currentIndex + 1 : 0;
+                updateCarousel();
+            }
+            function updateCarousel() {
+                carousel.style.transform = `translateX(${-currentIndex * 100}%)`;
+                positionIndicator.textContent = `${currentIndex + 1} / ${totalImages}`;
+            }
+            function openFullscreen(src) {
+                document.getElementById('fullscreenImage').src = src;
+                document.getElementById('fullscreen').style.display = 'flex';
+            }
+            function closeFullscreen() {
+                document.getElementById('fullscreen').style.display = 'none';
+            }
+
+            loadImages();
+        </script>
+    </body>
+</html>

@@ -1,26 +1,74 @@
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
-import { CloudRain, Wind, Thermometer, Waves, ChevronRight, AlertTriangle, Ship, Anchor, Image as ImageIcon, ChevronLeft } from 'lucide-react';
+import {
+    CloudRain,
+    Wind,
+    Thermometer,
+    Waves,
+    ChevronRight,
+    AlertTriangle,
+    Ship,
+    Anchor,
+    ChevronLeft,
+    ExternalLink,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 
-export default function Welcome() {
+interface DocumentItem {
+    id: number;
+    title: string;
+    category: string;
+    description?: string;
+    file_path: string;
+    file_type?: string;
+    file_size?: string;
+    created_at: string;
+}
+
+interface Props {
+    warningDocs?: DocumentItem[];
+}
+
+export default function Welcome({ warningDocs = [] }: Props) {
     // State for warning slider
     const [activeWarningSlide, setActiveWarningSlide] = useState(0);
-    const warningSlides = [
+
+    const defaultWarningSlides = [
         {
-            title: "Peringatan Dini Gelombang (1 Hari Ke Depan)",
-            desc: "Waspada gelombang tinggi 2.5 - 4.0 meter di Laut Banda dan Perairan Kep. Babar - Tanimbar.",
-            image: "https://via.placeholder.com/600x300/1e293b/ef4444?text=Peta+Gelombang+Hari+Ini" // Placeholder
+            title: 'Peringatan Dini Gelombang (1 Hari Ke Depan)',
+            desc: 'Waspada gelombang tinggi 2.5 - 4.0 meter di Laut Banda dan Perairan Kep. Babar - Tanimbar.',
+            image: 'https://via.placeholder.com/600x300/1e293b/ef4444?text=Peta+Gelombang+Hari+Ini',
+            url: '#',
         },
         {
-            title: "Peringatan Dini Gelombang (3 Hari Ke Depan)",
-            desc: "Potensi gelombang tinggi masih berlanjut di wilayah perairan selatan Maluku.",
-            image: "https://via.placeholder.com/600x300/1e293b/f59e0b?text=Peta+Gelombang+3+Hari+Kedepan" // Placeholder
-        }
+            title: 'Peringatan Dini Gelombang (3 Hari Ke Depan)',
+            desc: 'Potensi gelombang tinggi masih berlanjut di wilayah perairan selatan Maluku.',
+            image: 'https://via.placeholder.com/600x300/1e293b/f59e0b?text=Peta+Gelombang+3+Hari+Kedepan',
+            url: '#',
+        },
     ];
 
+    const warningSlides =
+        warningDocs.length > 0
+            ? warningDocs.map((doc) => ({
+                  title: doc.title,
+                  desc:
+                      doc.description ||
+                      'Rilis peringatan dini resmi Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon.',
+                  image:
+                      doc.file_type &&
+                      ['png', 'jpg', 'jpeg'].includes(
+                          doc.file_type.toLowerCase(),
+                      )
+                          ? `/storage/${doc.file_path}`
+                          : 'https://via.placeholder.com/600x300/1e293b/ef4444?text=Dokumen+Peringatan+Dini',
+                  url: `/storage/${doc.file_path}`,
+              }))
+            : defaultWarningSlides;
+
     useEffect(() => {
+        if (warningSlides.length <= 1) return;
         const timer = setInterval(() => {
             setActiveWarningSlide((prev) => (prev + 1) % warningSlides.length);
         }, 5000);
@@ -29,125 +77,197 @@ export default function Welcome() {
 
     return (
         <PublicLayout>
-            <Head title="Beranda - Stasiun Meteorologi Maritim Ambon" />
-            
+            <Head title="Beranda - Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon" />
+
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-slate-900 pt-16 pb-32">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
-                    <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+                    <svg
+                        className="h-full w-full"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
                         <defs>
-                            <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                                <path d="M0 40L40 0H20L0 20M40 40V20L20 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+                            <pattern
+                                id="grid-pattern"
+                                width="40"
+                                height="40"
+                                patternUnits="userSpaceOnUse"
+                            >
+                                <path
+                                    d="M0 40L40 0H20L0 20M40 40V20L20 40"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                />
                             </pattern>
                         </defs>
-                        <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+                        <rect
+                            width="100%"
+                            height="100%"
+                            fill="url(#grid-pattern)"
+                        />
                     </svg>
                 </div>
-                
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+                <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
                         <div className="text-center lg:text-left">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary-foreground font-medium text-sm mb-6">
-                                <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+                            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/20 px-3 py-1 text-sm font-medium text-primary-foreground">
+                                <span className="flex h-2 w-2 animate-pulse rounded-full bg-blue-400"></span>
                                 Informasi Cuaca Maritim Terkini
                             </div>
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
-                                Pantau Cuaca Perairan <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300">Maluku</span> Dengan Akurat
+                            <h1 className="mb-6 text-4xl leading-tight font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                                Pantau Cuaca Perairan{' '}
+                                <span className="bg-gradient-to-r from-blue-400 to-teal-300 bg-clip-text text-transparent">
+                                    Maluku
+                                </span>{' '}
+                                Dengan Akurat
                             </h1>
-                            <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                                Dapatkan prakiraan cuaca, peringatan dini gelombang tinggi, dan informasi iklim maritim terpercaya langsung dari sumber resminya.
+                            <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-slate-300 md:text-xl lg:mx-0">
+                                Dapatkan prakiraan cuaca, peringatan dini
+                                gelombang tinggi, dan informasi iklim maritim
+                                terpercaya langsung dari sumber resminya.
                             </p>
-
                         </div>
-                        
+
                         <div className="relative">
                             {/* Weather Widget Mockup & Warning Slider */}
-                            <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 shadow-2xl relative overflow-hidden flex flex-col gap-6">
-                                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500 rounded-full blur-3xl opacity-50"></div>
-                                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-teal-500 rounded-full blur-3xl opacity-50"></div>
-                                
+                            <div className="relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                                <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-500 opacity-50 blur-3xl"></div>
+                                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-24 w-24 rounded-full bg-teal-500 opacity-50 blur-3xl"></div>
+
                                 <div className="relative z-10 text-white">
-                                    <div className="flex justify-between items-start mb-6">
+                                    <div className="mb-6 flex items-start justify-between">
                                         <div>
-                                            <h3 className="text-2xl font-bold">Perairan Ambon</h3>
-                                            <p className="text-slate-300 mt-1">Hari ini, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                            <h3 className="text-2xl font-bold">
+                                                Perairan Ambon
+                                            </h3>
+                                            <p className="mt-1 text-slate-300">
+                                                Hari ini,{' '}
+                                                {new Date().toLocaleDateString(
+                                                    'id-ID',
+                                                    {
+                                                        day: 'numeric',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                    },
+                                                )}
+                                            </p>
                                         </div>
-                                        <div className="flex items-center justify-center h-14 w-14 bg-blue-500/20 rounded-full">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500/20">
                                             <CloudRain className="h-7 w-7 text-blue-300" />
                                         </div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
-                                            <div className="flex items-center gap-2 text-slate-400 mb-2">
+                                        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-4">
+                                            <div className="mb-2 flex items-center gap-2 text-slate-400">
                                                 <Waves className="h-4 w-4 text-teal-400" />
-                                                <span className="text-xs font-medium">Tinggi Gelombang</span>
+                                                <span className="text-xs font-medium">
+                                                    Tinggi Gelombang
+                                                </span>
                                             </div>
-                                            <div className="text-2xl font-bold">1.25 - 2.5<span className="text-sm text-slate-400 ml-1">m</span></div>
-                                            <div className="text-[10px] text-yellow-400 mt-1 font-medium bg-yellow-400/10 inline-block px-2 py-1 rounded">Kategori Sedang</div>
+                                            <div className="text-2xl font-bold">
+                                                1.25 - 2.5
+                                                <span className="ml-1 text-sm text-slate-400">
+                                                    m
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 inline-block rounded bg-yellow-400/10 px-2 py-1 text-[10px] font-medium text-yellow-400">
+                                                Kategori Sedang
+                                            </div>
                                         </div>
-                                        
-                                        <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
-                                            <div className="flex items-center gap-2 text-slate-400 mb-2">
+
+                                        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-4">
+                                            <div className="mb-2 flex items-center gap-2 text-slate-400">
                                                 <Wind className="h-4 w-4 text-blue-400" />
-                                                <span className="text-xs font-medium">Kecepatan Angin</span>
+                                                <span className="text-xs font-medium">
+                                                    Kecepatan Angin
+                                                </span>
                                             </div>
-                                            <div className="text-2xl font-bold">10 - 20<span className="text-sm text-slate-400 ml-1">knot</span></div>
-                                            <div className="text-[10px] text-slate-300 mt-1 font-medium">Tenggara - Selatan</div>
+                                            <div className="text-2xl font-bold">
+                                                10 - 20
+                                                <span className="ml-1 text-sm text-slate-400">
+                                                    knot
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 text-[10px] font-medium text-slate-300">
+                                                Tenggara - Selatan
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Warning Slider */}
-                                <div className="relative z-10 bg-slate-900/60 border border-slate-700/50 rounded-xl overflow-hidden group">
-                                    <div className="absolute top-3 left-3 z-20 bg-red-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 shadow-lg">
-                                        <AlertTriangle className="h-3 w-3" /> PERINGATAN DINI
+                                <div className="group relative z-10 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900/60">
+                                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1 rounded bg-red-500/90 px-2 py-1 text-[10px] font-bold text-white shadow-lg backdrop-blur-sm">
+                                        <AlertTriangle className="h-3 w-3" />{' '}
+                                        PERINGATAN DINI
                                     </div>
-                                    
+
                                     {/* Slider Images */}
-                                    <div className="relative h-40 w-full bg-black/50 overflow-hidden">
+                                    <div className="relative h-40 w-full overflow-hidden bg-black/50">
                                         {warningSlides.map((slide, index) => (
-                                            <div 
-                                                key={index} 
+                                            <div
+                                                key={index}
                                                 className={`absolute inset-0 transition-opacity duration-1000 ${index === activeWarningSlide ? 'opacity-100' : 'opacity-0'}`}
                                             >
-                                                <img 
-                                                    src={slide.image} 
-                                                    alt={slide.title} 
-                                                    className="w-full h-full object-cover opacity-60"
+                                                <img
+                                                    src={slide.image}
+                                                    alt={slide.title}
+                                                    className="h-full w-full object-cover opacity-60"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
                                                 <div className="absolute bottom-0 left-0 w-full p-4">
-                                                    <h4 className="font-semibold text-yellow-400 text-sm">{slide.title}</h4>
-                                                    <p className="text-xs text-slate-300 mt-1 line-clamp-2">{slide.desc}</p>
+                                                    <h4 className="text-sm font-semibold text-yellow-400">
+                                                        {slide.title}
+                                                    </h4>
+                                                    <p className="mt-1 line-clamp-2 text-xs text-slate-300">
+                                                        {slide.desc}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Slider Controls */}
-                                    <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button 
-                                            onClick={() => setActiveWarningSlide((prev) => (prev === 0 ? warningSlides.length - 1 : prev - 1))}
-                                            className="h-6 w-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/80"
+                                    <div className="absolute top-1/2 flex w-full -translate-y-1/2 justify-between px-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                        <button
+                                            onClick={() =>
+                                                setActiveWarningSlide((prev) =>
+                                                    prev === 0
+                                                        ? warningSlides.length -
+                                                          1
+                                                        : prev - 1,
+                                                )
+                                            }
+                                            className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
                                         </button>
-                                        <button 
-                                            onClick={() => setActiveWarningSlide((prev) => (prev + 1) % warningSlides.length)}
-                                            className="h-6 w-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/80"
+                                        <button
+                                            onClick={() =>
+                                                setActiveWarningSlide(
+                                                    (prev) =>
+                                                        (prev + 1) %
+                                                        warningSlides.length,
+                                                )
+                                            }
+                                            className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80"
                                         >
                                             <ChevronRight className="h-4 w-4" />
                                         </button>
                                     </div>
 
                                     {/* Slider Indicators */}
-                                    <div className="absolute bottom-2 right-4 z-20 flex gap-1">
+                                    <div className="absolute right-4 bottom-2 z-20 flex gap-1">
                                         {warningSlides.map((_, index) => (
-                                            <button 
+                                            <button
                                                 key={index}
-                                                onClick={() => setActiveWarningSlide(index)}
+                                                onClick={() =>
+                                                    setActiveWarningSlide(index)
+                                                }
                                                 className={`h-1.5 rounded-full transition-all ${index === activeWarningSlide ? 'w-4 bg-yellow-400' : 'w-1.5 bg-slate-500'}`}
                                             />
                                         ))}
@@ -158,64 +278,94 @@ export default function Welcome() {
                     </div>
                 </div>
             </section>
-            
+
             {/* Quick Access Menu (4 Cards) */}
-            <section className="py-16 -mt-16 relative z-20">
+            <section className="relative z-20 -mt-16 py-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                         {/* Card 1 */}
-                        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border p-6 hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full">
-                            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
+                        <div className="flex h-full flex-col rounded-2xl border bg-card p-6 text-card-foreground shadow-xl transition-transform duration-300 hover:-translate-y-2">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                 <Ship className="h-6 w-6" />
                             </div>
-                            <h3 className="text-lg font-bold mb-2">Prakiraan Area Pelayanan</h3>
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-grow">
-                                Informasi prakiraan cuaca khusus untuk pelabuhan dan area aktivitas maritim.
+                            <h3 className="mb-2 text-lg font-bold">
+                                Prakiraan Area Pelayanan
+                            </h3>
+                            <p className="mb-4 line-clamp-3 flex-grow text-sm text-muted-foreground">
+                                Informasi prakiraan cuaca khusus untuk pelabuhan
+                                dan area aktivitas maritim.
                             </p>
-                            <Link href="#" className="inline-flex items-center font-medium text-sm text-primary hover:underline mt-auto">
-                                Selengkapnya <ChevronRight className="ml-1 h-4 w-4" />
+                            <Link
+                                href="/pelabuhan"
+                                className="mt-auto inline-flex items-center text-sm font-medium text-primary hover:underline"
+                            >
+                                Selengkapnya{' '}
+                                <ChevronRight className="ml-1 h-4 w-4" />
                             </Link>
                         </div>
-                        
+
                         {/* Card 2 */}
-                        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border p-6 hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full">
-                            <div className="h-12 w-12 bg-teal-100 dark:bg-teal-900/30 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 mb-4">
+                        <div className="flex h-full flex-col rounded-2xl border bg-card p-6 text-card-foreground shadow-xl transition-transform duration-300 hover:-translate-y-2">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
                                 <Waves className="h-6 w-6" />
                             </div>
-                            <h3 className="text-lg font-bold mb-2">Prakiraan Area Penyeberangan</h3>
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-grow">
-                                Data cuaca perairan rute penyeberangan kapal ferry antar pulau di Maluku.
+                            <h3 className="mb-2 text-lg font-bold">
+                                Prakiraan Area Penyeberangan
+                            </h3>
+                            <p className="mb-4 line-clamp-3 flex-grow text-sm text-muted-foreground">
+                                Data cuaca perairan rute penyeberangan kapal
+                                ferry antar pulau di Maluku.
                             </p>
-                            <Link href="#" className="inline-flex items-center font-medium text-sm text-teal-600 dark:text-teal-400 hover:underline mt-auto">
-                                Selengkapnya <ChevronRight className="ml-1 h-4 w-4" />
-                            </Link>
+                            <a
+                                href="https://maritim.bmkg.go.id/cuaca/rute"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-auto inline-flex items-center text-sm font-medium text-teal-600 hover:underline dark:text-teal-400"
+                            >
+                                Buka BMKG Rute Penyeberangan{' '}
+                                <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                            </a>
                         </div>
-                        
+
                         {/* Card 3 */}
-                        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border p-6 hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full">
-                            <div className="h-12 w-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400 mb-4">
+                        <div className="flex h-full flex-col rounded-2xl border bg-card p-6 text-card-foreground shadow-xl transition-transform duration-300 hover:-translate-y-2">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
                                 <Thermometer className="h-6 w-6" />
                             </div>
-                            <h3 className="text-lg font-bold mb-2">Prakiraan Cuaca Provinsi</h3>
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-grow">
-                                Detail kondisi cuaca, suhu, dan kelembapan untuk seluruh wilayah provinsi Maluku.
+                            <h3 className="mb-2 text-lg font-bold">
+                                Prakiraan Cuaca Provinsi
+                            </h3>
+                            <p className="mb-4 line-clamp-3 flex-grow text-sm text-muted-foreground">
+                                Detail kondisi cuaca, suhu, dan kelembapan untuk
+                                seluruh wilayah provinsi Maluku.
                             </p>
-                            <Link href="#" className="inline-flex items-center font-medium text-sm text-amber-600 dark:text-amber-400 hover:underline mt-auto">
-                                Selengkapnya <ChevronRight className="ml-1 h-4 w-4" />
+                            <Link
+                                href="/provinsi"
+                                className="mt-auto inline-flex items-center text-sm font-medium text-amber-600 hover:underline dark:text-amber-400"
+                            >
+                                Selengkapnya{' '}
+                                <ChevronRight className="ml-1 h-4 w-4" />
                             </Link>
                         </div>
 
                         {/* Card 4 - Wisata Bahari */}
-                        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border p-6 hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full">
-                            <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
+                        <div className="flex h-full flex-col rounded-2xl border bg-card p-6 text-card-foreground shadow-xl transition-transform duration-300 hover:-translate-y-2">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                                 <Anchor className="h-6 w-6" />
                             </div>
-                            <h3 className="text-lg font-bold mb-2">Prakiraan Wisata Bahari</h3>
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-grow">
-                                Informasi cuaca kelautan khusus untuk lokasi-lokasi pariwisata bahari.
+                            <h3 className="mb-2 text-lg font-bold">
+                                Prakiraan Wisata Bahari
+                            </h3>
+                            <p className="mb-4 line-clamp-3 flex-grow text-sm text-muted-foreground">
+                                Informasi cuaca kelautan khusus untuk
+                                lokasi-lokasi pariwisata bahari.
                             </p>
-                            <Link href="#" className="inline-flex items-center font-medium text-sm text-emerald-600 dark:text-emerald-400 hover:underline mt-auto">
-                                Selengkapnya <ChevronRight className="ml-1 h-4 w-4" />
+                            <Link
+                                href="/wisata-bahari"
+                                className="mt-auto inline-flex items-center text-sm font-medium text-emerald-600 hover:underline dark:text-emerald-400"
+                            >
+                                Selengkapnya{' '}
+                                <ChevronRight className="ml-1 h-4 w-4" />
                             </Link>
                         </div>
                     </div>
@@ -223,73 +373,133 @@ export default function Welcome() {
             </section>
 
             {/* Infografis Section */}
-            <section className="py-16 bg-slate-50 dark:bg-slate-900/50">
+            <section className="bg-slate-50 py-16 dark:bg-slate-900/50">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-end mb-8">
+                    <div className="mb-8 flex items-end justify-between">
                         <div>
-                            <h2 className="text-3xl font-bold tracking-tight mb-2">Infografis & Publikasi</h2>
-                            <p className="text-muted-foreground">Informasi visual terkini seputar cuaca dan iklim.</p>
+                            <h2 className="mb-2 text-3xl font-bold tracking-tight">
+                                Infografis & Publikasi MFY
+                            </h2>
+                            <p className="text-muted-foreground">
+                                Informasi visual grafis ramalan cuaca maritim
+                                Maluku.
+                            </p>
                         </div>
-                        <Button variant="outline" className="hidden sm:flex">Lihat Semua</Button>
+                        <Link href="/mfy">
+                            <Button
+                                variant="outline"
+                                className="hidden sm:flex"
+                            >
+                                Lihat Semua 18 Wilayah
+                            </Button>
+                        </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3].map((item) => (
-                            <div key={item} className="group rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md border hover:shadow-xl transition-all duration-300 cursor-pointer">
-                                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-700 relative overflow-hidden">
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <ImageIcon className="h-12 w-12 text-slate-400 opacity-50" />
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {[
+                            {
+                                code: 'P.AH.01',
+                                title: 'Perairan Utara P. Buru',
+                                url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.01.png',
+                            },
+                            {
+                                code: 'P.AH.04',
+                                title: 'Perairan P. Ambon - P. Lease',
+                                url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.04.png',
+                            },
+                            {
+                                code: 'P.AH.10',
+                                title: 'Perairan Kep. Banda Neira',
+                                url: 'https://stamar-ambon.bmkg.go.id/content/MFY/P.AH.10.png',
+                            },
+                        ].map((item, idx) => (
+                            <Link
+                                key={idx}
+                                href="/mfy"
+                                className="group block overflow-hidden rounded-2xl border bg-white shadow-md transition-all duration-300 hover:shadow-xl dark:bg-slate-800"
+                            >
+                                <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+                                    <img
+                                        src={item.url}
+                                        alt={item.title}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute top-2.5 left-2.5 rounded bg-black/70 px-2 py-0.5 font-mono text-[10px] font-semibold text-white backdrop-blur-md">
+                                        {item.code}
                                     </div>
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-black text-sm font-semibold px-4 py-2 rounded-full transform translate-y-4 group-hover:translate-y-0">
-                                            Perbesar
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/20">
+                                        <span className="translate-y-3 transform rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-black opacity-0 shadow-lg transition-opacity duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                                            Buka Peta MFY
                                         </span>
                                     </div>
                                 </div>
                                 <div className="p-5">
-                                    <div className="text-xs text-primary font-medium mb-1">Infografis Cuaca</div>
-                                    <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                                        Prakiraan Cuaca Harian Wilayah Maluku dan Sekitarnya
+                                    <div className="mb-1 text-xs font-medium text-primary">
+                                        Visual Grafis MFY
+                                    </div>
+                                    <h3 className="line-clamp-1 text-lg font-semibold transition-colors group-hover:text-primary">
+                                        {item.title}
                                     </h3>
-                                    <p className="text-xs text-muted-foreground mt-3">Diperbarui: {new Date().toLocaleDateString('id-ID')}</p>
+                                    <p className="mt-2 text-xs text-muted-foreground">
+                                        Visual ramalan cuaca & gelombang maritim
+                                    </p>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                     <div className="mt-8 text-center sm:hidden">
-                        <Button variant="outline" className="w-full">Lihat Semua Infografis</Button>
+                        <Link href="/mfy">
+                            <Button variant="outline" className="w-full">
+                                Lihat Semua 18 Wilayah (MFY)
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </section>
-            
+
             {/* About Section */}
             <section className="py-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row items-center gap-12">
+                    <div className="flex flex-col items-center gap-12 lg:flex-row">
                         <div className="w-full lg:w-1/2">
-                            <div className="aspect-video bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg border relative flex items-center justify-center group">
-                                <CloudRain className="h-24 w-24 text-slate-400 opacity-20 group-hover:scale-110 transition-transform duration-700" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
-                                    <h4 className="text-white font-semibold text-lg">Gedung Stasiun Meteorologi Maritim Ambon</h4>
+                            <div className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border bg-slate-200 shadow-lg dark:bg-slate-800">
+                                <CloudRain className="h-24 w-24 text-slate-400 opacity-20 transition-transform duration-700 group-hover:scale-110" />
+                                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-8">
+                                    <h4 className="text-lg font-semibold text-white">
+                                        Gedung Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
+                                    </h4>
                                 </div>
                             </div>
                         </div>
                         <div className="w-full lg:w-1/2">
-                            <h2 className="text-3xl font-bold mb-6">Mengenal Lebih Dekat Stasiun Maritim Ambon</h2>
-                            <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                                Stasiun Meteorologi Maritim Ambon memiliki tugas pokok melaksanakan pengamatan, pengelolaan data, pelayanan jasa meteorologi maritim, dan pemeliharaan alat meteorologi maritim.
+                            <h2 className="mb-6 text-3xl font-bold">
+                                Mengenal Lebih Dekat Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
+                            </h2>
+                            <p className="mb-6 text-lg leading-relaxed text-muted-foreground">
+                                Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon memiliki tugas
+                                pokok melaksanakan pengamatan, pengelolaan data,
+                                pelayanan jasa meteorologi maritim, dan
+                                pemeliharaan alat meteorologi maritim.
                             </p>
-                            <p className="text-muted-foreground mb-8 leading-relaxed">
-                                Visi kami adalah mewujudkan BMKG yang handal, tanggap dan mampu dalam mendukung keselamatan pelayaran serta pembangunan nasional di wilayah Maluku yang berkarakteristik kepulauan.
+                            <p className="mb-8 leading-relaxed text-muted-foreground">
+                                Visi kami adalah mewujudkan BMKG yang handal,
+                                tanggap dan mampu dalam mendukung keselamatan
+                                pelayaran serta pembangunan nasional di wilayah
+                                Maluku yang berkarakteristik kepulauan.
                             </p>
-                            <Button variant="outline" className="h-11 px-6 rounded-full">
-                                Lihat Profil Lengkap
-                            </Button>
+                            <Link href="/sejarah">
+                                <Button
+                                    variant="outline"
+                                    className="h-11 rounded-full px-6"
+                                >
+                                    Lihat Profil & Sejarah Stasiun
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>
             </section>
-            
         </PublicLayout>
     );
 }

@@ -11,6 +11,7 @@ class Document extends Model
 
     protected $fillable = [
         'title',
+        'category',
         'description',
         'file_path',
         'file_type',

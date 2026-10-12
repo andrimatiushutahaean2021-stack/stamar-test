@@ -3,8 +3,11 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -25,14 +28,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
-        \Illuminate\Support\Facades\RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
+        RateLimiter::for('login', function (Request $request) {
             $email = (string) $request->input('email', '');
 
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute(3)->by($email.$request->ip());
+            return Limit::perMinute(3)->by($email.$request->ip());
         });
 
-        \Illuminate\Support\Facades\RateLimiter::for('two-factor', function (\Illuminate\Http\Request $request) {
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute(3)->by($request->session()->get('login.id').$request->ip());
+        RateLimiter::for('two-factor', function (Request $request) {
+            return Limit::perMinute(3)->by($request->session()->get('login.id').$request->ip());
         });
     }
 

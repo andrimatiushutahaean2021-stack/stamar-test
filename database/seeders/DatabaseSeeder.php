@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         // Hindari pembuatan user default 'admin' / 'test@example.com'.
         // Buat user admin spesifik untuk BMKG Ambon.
         $adminEmail = 'stamar.ambon@bmkg.go.id';
-        
-        if (!User::where('email', $adminEmail)->exists()) {
+
+        if (! User::where('email', $adminEmail)->exists()) {
             User::factory()->create([
                 'name' => 'Administrator Stamar Ambon',
                 'email' => $adminEmail,
