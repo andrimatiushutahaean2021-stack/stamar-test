@@ -32,7 +32,7 @@ export default function MfyUpload() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'json'];
+    const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
 
     const categories = [
         {
@@ -78,12 +78,26 @@ export default function MfyUpload() {
                 });
             } else {
                 setErrorMessage(
-                    `File "${file.name}" tidak didukung. Hanya file .pdf, .png, .jpg, dan .json yang diperbolehkan.`,
+                    `File "${file.name}" tidak didukung. Format JSON sudah dinonaktifkan. Hanya file .pdf, .png, .jpg, dan .jpeg yang diperbolehkan.`,
                 );
             }
         }
 
-        setSelectedFiles((prev) => [...prev, ...newFiles]);
+        const combined = [...selectedFiles, ...newFiles];
+        if (combined.length > 112) {
+            setErrorMessage('Maksimal 112 file yang dapat diunggah sekaligus.');
+            return;
+        }
+
+        const totalBytes = combined.reduce((acc, curr) => acc + curr.file.size, 0);
+        const MAX_TOTAL_BYTES = 112 * 1024 * 1024; // 112 MB
+        if (totalBytes > MAX_TOTAL_BYTES) {
+            const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
+            setErrorMessage(`Total ukuran berkas (${totalMb} MB) melebihi batas maksimal 112MB.`);
+            return;
+        }
+
+        setSelectedFiles(combined);
     };
 
     const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
@@ -329,7 +343,7 @@ export default function MfyUpload() {
                                 ref={fileInputRef}
                                 type="file"
                                 multiple
-                                accept=".pdf,.png,.jpg,.jpeg,.json"
+                                accept=".pdf,.png,.jpg,.jpeg"
                                 onChange={handleInputChange}
                                 className="hidden"
                             />
@@ -355,11 +369,7 @@ export default function MfyUpload() {
                                 </span>
                                 <span>&bull;</span>
                                 <span className="font-bold text-cyan-500">
-                                    PNG / JPG
-                                </span>
-                                <span>&bull;</span>
-                                <span className="font-bold text-amber-500">
-                                    JSON
+                                    PNG / JPG / JPEG
                                 </span>
                             </div>
                         </div>

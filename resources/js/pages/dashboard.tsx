@@ -13,13 +13,14 @@ import {
     Trash2,
     PlusCircle,
     MapPin,
+    Anchor,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DocumentItem {
     id: number;
     title: string;
-    category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'mfy' | 'bahari';
+    category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
     description?: string;
     file_path: string;
     file_type: string;
@@ -31,7 +32,8 @@ interface CategoryCounts {
     'peringatan-dini': number;
     provinsi: number;
     buletin: number;
-    mfy: number;
+    pelabuhan?: number;
+    mfy?: number;
     bahari: number;
 }
 
@@ -48,6 +50,7 @@ export default function Dashboard({
         'peringatan-dini': 0,
         provinsi: 0,
         buletin: 0,
+        pelabuhan: 0,
         mfy: 0,
         bahari: 0,
     },
@@ -96,18 +99,18 @@ export default function Dashboard({
             filterUrl: '/admin/documents?category=buletin&action=upload',
         },
         {
-            id: 'mfy',
-            title: '4. MFY & Grafis',
-            subtitle: 'Citra Grafis P.AH.01-18 & PDF',
-            folder: 'uploads/mfy/',
-            count: categoryCounts['mfy'] || 0,
-            icon: Compass,
+            id: 'pelabuhan',
+            title: '4. Cuaca Pelabuhan',
+            subtitle: 'Upload Dokumen Prakiraan Cuaca Pelabuhan',
+            folder: 'uploads/pelabuhan/',
+            count: (categoryCounts['pelabuhan'] ?? categoryCounts['mfy']) || 0,
+            icon: Anchor,
             color: 'text-cyan-500',
             bgColor: 'bg-cyan-500/10',
             borderColor: 'hover:border-cyan-500/50',
             badgeBg:
                 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-900',
-            filterUrl: '/admin/documents?category=mfy',
+            filterUrl: '/admin/documents?category=pelabuhan&action=upload',
         },
         {
             id: 'bahari',
@@ -134,7 +137,7 @@ export default function Dashboard({
     };
 
     const getCategoryBadge = (category: string) => {
-        const found = categoryCards.find((c) => c.id === category);
+        const found = categoryCards.find((c) => c.id === category || (c.id === 'pelabuhan' && category === 'mfy'));
         if (found) {
             const Icon = found.icon;
             return (
@@ -188,7 +191,7 @@ export default function Dashboard({
                             </span>
                             ,{' '}
                             <span className="font-semibold text-white">
-                                MFY & Grafis
+                                Cuaca Pelabuhan
                             </span>
                             , dan{' '}
                             <span className="font-semibold text-white">

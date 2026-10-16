@@ -19,10 +19,14 @@ import {
     Download,
     Eye,
     Plus,
+    Anchor,
+    CheckSquare,
+    Square,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -38,7 +42,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface Document {
     id: number;
     title: string;
-    category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'mfy' | 'bahari';
+    category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
+    region_code?: string | null;
+    region_number?: number | null;
+    forecast_date?: string | null;
+    period_type?: string | null;
     description: string | null;
     file_path: string;
     file_type: string | null;
@@ -51,7 +59,8 @@ interface CategoryCounts {
     'peringatan-dini': number;
     provinsi: number;
     buletin: number;
-    mfy: number;
+    pelabuhan?: number;
+    mfy?: number;
     bahari: number;
 }
 
@@ -60,6 +69,8 @@ interface Props {
     categoryCounts: CategoryCounts;
     currentCategory: string;
     initialAction?: string;
+    provinsiList?: Record<number, string>;
+    pelabuhanList?: Record<number, string>;
 }
 
 export default function DocumentIndex({
@@ -67,29 +78,46 @@ export default function DocumentIndex({
     categoryCounts,
     currentCategory,
     initialAction,
+    provinsiList = {},
+    pelabuhanList = {},
 }: Props) {
     const [selectedTab, setSelectedTab] = useState<string>(currentCategory);
     const [searchTerm, setSearchTerm] = useState('');
     const [copiedId, setCopiedId] = useState<number | null>(null);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isDeletingBatch, setIsDeletingBatch] = useState(false);
     const [showUploadModal, setShowUploadModal] = useState(
         initialAction === 'upload',
     );
 
     const defaultCat = (
-        ['peringatan-dini', 'provinsi', 'buletin', 'mfy', 'bahari'].includes(
+        ['peringatan-dini', 'provinsi', 'buletin', 'pelabuhan', 'mfy', 'bahari'].includes(
             selectedTab !== 'all' ? selectedTab : currentCategory,
         )
             ? selectedTab !== 'all'
                 ? selectedTab
                 : currentCategory
-            : 'buletin'
-    ) as 'peringatan-dini' | 'provinsi' | 'buletin' | 'mfy' | 'bahari';
+            : 'pelabuhan'
+    ) as 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'bahari';
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm<{
+        title: string;
+        category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
+        region_number: string | number;
+        forecast_date: string;
+        period_type: 'daily' | 'weekly';
+        description: string;
+        files: File[];
+        file: File | null;
+    }>({
         title: '',
         category: defaultCat,
+        region_number: '',
+        forecast_date: new Date().toISOString().split('T')[0],
+        period_type: 'daily',
         description: '',
-        file: null as File | null,
+        files: [],
+        file: null,
     });
 
     const categoryConfig = {
@@ -120,14 +148,23 @@ export default function DocumentIndex({
                 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-900',
             folder: 'uploads/buletin/',
         },
-        mfy: {
-            label: 'MFY',
-            icon: Compass,
+        pelabuhan: {
+            label: 'Cuaca Pelabuhan',
+            icon: Anchor,
             color: 'text-cyan-500',
             bgColor: 'bg-cyan-500/10',
             badgeBg:
                 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-900',
-            folder: 'uploads/mfy/',
+            folder: 'uploads/pelabuhan/',
+        },
+        mfy: {
+            label: 'Cuaca Pelabuhan',
+            icon: Anchor,
+            color: 'text-cyan-500',
+            bgColor: 'bg-cyan-500/10',
+            badgeBg:
+                'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-900',
+            folder: 'uploads/pelabuhan/',
         },
         bahari: {
             label: 'Wisata Bahari',
@@ -143,7 +180,7 @@ export default function DocumentIndex({
     const filteredDocuments = useMemo(() => {
         return documents.filter((doc) => {
             const matchesCategory =
-                selectedTab === 'all' || doc.category === selectedTab;
+                selectedTab === 'all' || doc.category === selectedTab || (selectedTab === 'pelabuhan' && doc.category === 'mfy');
             const matchesSearch =
                 doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (doc.description &&
@@ -153,6 +190,90 @@ export default function DocumentIndex({
             return matchesCategory && matchesSearch;
         });
     }, [documents, selectedTab, searchTerm]);
+
+    const isAllSelected = useMemo(() => {
+        if (filteredDocuments.length === 0) return false;
+        return filteredDocuments.every((doc) => selectedIds.includes(doc.id));
+    }, [filteredDocuments, selectedIds]);
+
+    const isSomeSelected = useMemo(() => {
+        return (
+            filteredDocuments.some((doc) => selectedIds.includes(doc.id)) &&
+            !isAllSelected
+        );
+    }, [filteredDocuments, selectedIds, isAllSelected]);
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) {
+            // Unselect all in current filtered list
+            const currentIds = new Set(filteredDocuments.map((doc) => doc.id));
+            setSelectedIds((prev) => prev.filter((id) => !currentIds.has(id)));
+        } else {
+            // Select all in current filtered list
+            const currentIds = filteredDocuments.map((doc) => doc.id);
+            setSelectedIds((prev) => Array.from(new Set([...prev, ...currentIds])));
+        }
+    };
+
+    const toggleSelectOne = (id: number) => {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+        );
+    };
+
+    const deleteBatch = () => {
+        const count = selectedIds.length;
+        if (count === 0) return;
+
+        if (
+            confirm(
+                `Apakah Anda yakin ingin menghapus ${count} file yang dipilih sekaligus? Tindakan ini tidak dapat dibatalkan.`,
+            )
+        ) {
+            setIsDeletingBatch(true);
+            router.post(
+                '/admin/documents/batch-delete',
+                { ids: selectedIds },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setSelectedIds([]);
+                    },
+                    onFinish: () => {
+                        setIsDeletingBatch(false);
+                    },
+                },
+            );
+        }
+    };
+
+    const clearCurrentCategory = () => {
+        const catLabel =
+            selectedTab === 'all'
+                ? 'SEMUA berkas dokumen'
+                : `seluruh berkas kategori "${categoryConfig[selectedTab as keyof typeof categoryConfig]?.label || selectedTab}"`;
+
+        if (
+            confirm(
+                `PERINGATAN: Apakah Anda benar-benar yakin ingin menghapus ${catLabel}? Tindakan ini akan menghapus semua file terkait di server secara permanen!`,
+            )
+        ) {
+            setIsDeletingBatch(true);
+            router.post(
+                '/admin/documents/clear-category',
+                { category: selectedTab },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setSelectedIds([]);
+                    },
+                    onFinish: () => {
+                        setIsDeletingBatch(false);
+                    },
+                },
+            );
+        }
+    };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -173,6 +294,9 @@ export default function DocumentIndex({
         ) {
             router.delete(`/admin/documents/${id}`, {
                 preserveScroll: true,
+                onSuccess: () => {
+                    setSelectedIds((prev) => prev.filter((item) => item !== id));
+                },
             });
         }
     };
@@ -198,7 +322,7 @@ export default function DocumentIndex({
                         </h1>
                         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                             Kelola berkas terklasifikasi ke dalam 5 folder:
-                            Peringatan Dini, Cuaca Provinsi, Buletin, MFY, dan
+                            Peringatan Dini, Cuaca Provinsi, Buletin, Cuaca Pelabuhan, dan
                             Wisata Bahari.
                         </p>
                     </div>
@@ -232,40 +356,41 @@ export default function DocumentIndex({
                                 Formulir Unggah File
                             </h3>
                             <span className="text-xs text-muted-foreground">
-                                Format didukung: PDF, PNG, JPG, JSON (Maks.
-                                50MB)
+                                Format didukung: PDF, PNG, JPG, JPEG (Maks. 112 File / Total Maks. 112MB)
                             </span>
                         </div>
 
                         <form onSubmit={submit} className="space-y-5">
-                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                {/* Judul File */}
-                                <div className="space-y-2">
-                                    <Label
-                                        htmlFor="title"
-                                        className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                    >
-                                        Judul / Nama File{' '}
-                                        <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                        id="title"
-                                        type="text"
-                                        placeholder="Contoh: Peringatan Gelombang Tinggi Laut Banda"
-                                        value={data.title}
-                                        onChange={(e) =>
-                                            setData('title', e.target.value)
-                                        }
-                                        required
-                                        className="h-11 rounded-xl"
-                                    />
-                                    {errors.title && (
-                                        <p className="text-xs text-red-500">
-                                            {errors.title}
-                                        </p>
-                                    )}
+                            {/* Kotak Petunjuk Sinkronisasi BMKG */}
+                            {(data.category === 'provinsi' || data.category === 'pelabuhan' || data.category === 'mfy') && (
+                                <div className="rounded-2xl border border-sky-200/70 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent p-4 text-xs dark:border-sky-500/30">
+                                    <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300">
+                                        <Anchor className="h-4 w-4" />
+                                        <span>Panduan Sinkronisasi Berkas Otomatis BMKG:</span>
+                                    </div>
+                                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 text-slate-600 dark:text-slate-300">
+                                        <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/30">
+                                            <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5">
+                                                📍 Cuaca Provinsi (18 Wilayah)
+                                            </span>
+                                            Awalan nama file: <code className="font-bold text-amber-700 dark:text-amber-300">P_AH001</code> s/d <code className="font-bold text-amber-700 dark:text-amber-300">P_AH018</code><br />
+                                            Contoh: <code className="text-[11px] text-slate-500">P_AH001_12102026.pdf</code>
+                                        </div>
+                                        <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
+                                            <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
+                                                ⚓ Cuaca Pelabuhan (37 Titik)
+                                            </span>
+                                            Awalan nama file: <code className="font-bold text-cyan-700 dark:text-cyan-300">AH001</code> s/d <code className="font-bold text-cyan-700 dark:text-cyan-300">AH037</code><br />
+                                            Contoh: <code className="text-[11px] text-slate-500">AH001_12102026.pdf</code>
+                                        </div>
+                                    </div>
+                                    <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                        * Jika nama file sudah diawali kode tersebut, sistem akan <strong>otomatis memetakan nomor urut daerah, tanggal prakiraan, dan nama wilayahnya</strong> ke tabel publik.
+                                    </p>
                                 </div>
+                            )}
 
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                 {/* Folder Kategori */}
                                 <div className="space-y-2">
                                     <Label
@@ -284,26 +409,22 @@ export default function DocumentIndex({
                                                 e.target.value as any,
                                             )
                                         }
-                                        className="h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+                                        className="h-12 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
                                     >
-                                        <option value="peringatan-dini">
-                                            ⚠️ 1. Peringatan Dini
-                                            (storage/peringatan-dini/)
+                                        <option value="pelabuhan">
+                                            ⚓ 1. Cuaca Pelabuhan (Format: AH001 - AH037)
                                         </option>
                                         <option value="provinsi">
-                                            📍 2. Cuaca Provinsi
-                                            (storage/provinsi/)
+                                            📍 2. Cuaca Provinsi (Format: P_AH001 - P_AH018)
+                                        </option>
+                                        <option value="peringatan-dini">
+                                            ⚠️ 3. Peringatan Dini
                                         </option>
                                         <option value="buletin">
-                                            📖 3. Buletin Maritim
-                                            (storage/buletin/)
-                                        </option>
-                                        <option value="mfy">
-                                            🧭 4. MFY (storage/mfy/)
+                                            📖 4. Buletin Maritim
                                         </option>
                                         <option value="bahari">
                                             🌊 5. Wisata Bahari
-                                            (storage/bahari/)
                                         </option>
                                     </select>
                                     {errors.category && (
@@ -312,63 +433,171 @@ export default function DocumentIndex({
                                         </p>
                                     )}
                                 </div>
+
+                                {/* File Input */}
+                                <div className="space-y-2">
+                                    <Label
+                                        htmlFor="file"
+                                        className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        Pilih Berkas File{' '}
+                                        <span className="text-red-500">*</span>
+                                        <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+                                            (Bisa pilih s.d. 112 file, total maks. 112MB)
+                                        </span>
+                                    </Label>
+                                    <Input
+                                        id="file"
+                                        type="file"
+                                        multiple
+                                        accept=".pdf,.png,.jpg,.jpeg"
+                                        onChange={(e) => {
+                                            const fileList = e.target.files;
+                                            if (fileList) {
+                                                const filesArr = Array.from(fileList);
+                                                const allowedExts = ['pdf', 'png', 'jpg', 'jpeg'];
+                                                const invalidFile = filesArr.find((f) => {
+                                                    const ext = f.name.split('.').pop()?.toLowerCase() || '';
+                                                    return !allowedExts.includes(ext);
+                                                });
+                                                if (invalidFile) {
+                                                    alert(`File "${invalidFile.name}" tidak didukung. Format JSON sudah dinonaktifkan. Hanya diperbolehkan berkas PDF, PNG, JPG, dan JPEG.`);
+                                                    e.target.value = '';
+                                                    setData('files', []);
+                                                    setData('file', null);
+                                                    return;
+                                                }
+                                                if (filesArr.length > 112) {
+                                                    alert('Maksimal 112 file yang dapat dipilih sekaligus.');
+                                                    e.target.value = '';
+                                                    setData('files', []);
+                                                    setData('file', null);
+                                                    return;
+                                                }
+                                                const totalBytes = filesArr.reduce((acc, curr) => acc + curr.size, 0);
+                                                const MAX_TOTAL_BYTES = 112 * 1024 * 1024; // 112 MB
+                                                if (totalBytes > MAX_TOTAL_BYTES) {
+                                                    const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
+                                                    alert(`Total ukuran berkas yang dipilih (${totalMb} MB) melebihi batas maksimal 112MB.`);
+                                                    e.target.value = '';
+                                                    setData('files', []);
+                                                    setData('file', null);
+                                                    return;
+                                                }
+                                                setData('files', filesArr);
+                                                setData('file', filesArr[0] || null);
+                                            }
+                                        }}
+                                        required
+                                        className="h-12 cursor-pointer rounded-xl bg-muted/40 pt-2.5"
+                                    />
+                                    {data.files && data.files.length > 0 && (
+                                        <div className="space-y-1.5 pt-1">
+                                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                                ✓ {data.files.length} file dipilih (Total: {(data.files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB / Batas 112MB)
+                                            </p>
+                                            {data.files.length > 1 && (
+                                                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto rounded-lg border border-border bg-background p-2">
+                                                    {data.files.slice(0, 37).map((f, i) => (
+                                                        <span key={i} className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+                                                            {f.name}
+                                                        </span>
+                                                    ))}
+                                                    {data.files.length > 37 && (
+                                                        <span className="text-[10px] text-muted-foreground self-center pl-1">
+                                                            +{data.files.length - 37} lainnya
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {errors.file && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.file}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Deskripsi */}
-                            <div className="space-y-2">
-                                <Label
-                                    htmlFor="description"
-                                    className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Deskripsi / Catatan Rilis (Opsional)
-                                </Label>
-                                <Input
-                                    id="description"
-                                    type="text"
-                                    placeholder="Contoh: Berlaku tanggal 07 - 10 Oktober 2026"
-                                    value={data.description}
-                                    onChange={(e) =>
-                                        setData('description', e.target.value)
-                                    }
-                                    className="h-11 rounded-xl"
-                                />
-                                {errors.description && (
-                                    <p className="text-xs text-red-500">
-                                        {errors.description}
-                                    </p>
-                                )}
-                            </div>
+                            {/* Additional metadata for Provinsi / Pelabuhan */}
+                            {(data.category === 'provinsi' || data.category === 'pelabuhan' || data.category === 'mfy') && (
+                                <div className="grid grid-cols-1 gap-5 md:grid-cols-3 rounded-2xl border border-border bg-muted/20 p-4">
+                                    {/* Pilihan Wilayah Satuan (Opsional jika multi-file) */}
+                                    <div className="space-y-1.5">
+                                        <Label
+                                            htmlFor="region_number"
+                                            className="text-xs font-semibold text-muted-foreground uppercase"
+                                        >
+                                            Wilayah Spesifik (Opsional)
+                                        </Label>
+                                        <select
+                                            id="region_number"
+                                            value={data.region_number}
+                                            onChange={(e) => setData('region_number', e.target.value)}
+                                            className="h-11 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                        >
+                                            <option value="">-- Otomatis Dari Nama File --</option>
+                                            {data.category === 'provinsi'
+                                                ? Object.entries(provinsiList).map(([num, name]) => (
+                                                      <option key={num} value={num}>
+                                                          P_AH{num.toString().padStart(3, '0')} - {name}
+                                                      </option>
+                                                  ))
+                                                : Object.entries(pelabuhanList).map(([num, name]) => (
+                                                      <option key={num} value={num}>
+                                                          AH{num.toString().padStart(3, '0')} - {name}
+                                                      </option>
+                                                  ))}
+                                        </select>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Biarkan otomatis jika mengunggah banyak berkas sekaligus.
+                                        </p>
+                                    </div>
 
-                            {/* File Input */}
-                            <div className="space-y-2">
-                                <Label
-                                    htmlFor="file"
-                                    className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Pilih Berkas File{' '}
-                                    <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="file"
-                                    type="file"
-                                    accept=".pdf,.png,.jpg,.jpeg,.json"
-                                    onChange={(e) =>
-                                        setData(
-                                            'file',
-                                            e.target.files
-                                                ? e.target.files[0]
-                                                : null,
-                                        )
-                                    }
-                                    required
-                                    className="h-12 cursor-pointer rounded-xl bg-muted/40 pt-2.5"
-                                />
-                                {errors.file && (
-                                    <p className="text-xs text-red-500">
-                                        {errors.file}
-                                    </p>
-                                )}
-                            </div>
+                                    {/* Tanggal Prakiraan */}
+                                    <div className="space-y-1.5">
+                                        <Label
+                                            htmlFor="forecast_date"
+                                            className="text-xs font-semibold text-muted-foreground uppercase"
+                                        >
+                                            Tanggal Berlaku Prakiraan
+                                        </Label>
+                                        <Input
+                                            id="forecast_date"
+                                            type="date"
+                                            value={data.forecast_date}
+                                            onChange={(e) => setData('forecast_date', e.target.value)}
+                                            className="h-11 rounded-xl text-xs"
+                                        />
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Default: Hari ini (atau terbaca dari nama file).
+                                        </p>
+                                    </div>
+
+                                    {/* Periode */}
+                                    <div className="space-y-1.5">
+                                        <Label
+                                            htmlFor="period_type"
+                                            className="text-xs font-semibold text-muted-foreground uppercase"
+                                        >
+                                            Periode Prakiraan
+                                        </Label>
+                                        <select
+                                            id="period_type"
+                                            value={data.period_type}
+                                            onChange={(e) => setData('period_type', e.target.value as any)}
+                                            className="h-11 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                        >
+                                            <option value="daily">Harian</option>
+                                            <option value="weekly">Mingguan</option>
+                                        </select>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Menentukan tab tampil di halaman publik.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex justify-end gap-3 pt-2">
                                 <Button
@@ -385,8 +614,12 @@ export default function DocumentIndex({
                                     className="rounded-xl px-6 font-bold"
                                 >
                                     {processing
-                                        ? 'Mengunggah file...'
-                                        : 'Simpan & Unggah Berkas'}
+                                        ? data.files.length > 1
+                                            ? `Mengunggah ${data.files.length} Berkas...`
+                                            : 'Mengunggah file...'
+                                        : data.files.length > 1
+                                          ? `Unggah ${data.files.length} Berkas Sekaligus`
+                                          : 'Simpan & Unggah Berkas'}
                                 </Button>
                             </div>
                         </form>
@@ -400,14 +633,16 @@ export default function DocumentIndex({
                             'peringatan-dini',
                             'provinsi',
                             'buletin',
-                            'mfy',
+                            'pelabuhan',
                             'bahari',
                         ] as const
                     ).map((catKey) => {
                         const conf = categoryConfig[catKey];
                         const Icon = conf.icon;
                         const count = categoryCounts
-                            ? categoryCounts[catKey]
+                            ? (catKey === 'pelabuhan'
+                                  ? (categoryCounts['pelabuhan'] ?? categoryCounts['mfy'] ?? 0)
+                                  : categoryCounts[catKey])
                             : 0;
                         const isSelected = selectedTab === catKey;
 
@@ -467,13 +702,15 @@ export default function DocumentIndex({
                                     'peringatan-dini',
                                     'provinsi',
                                     'buletin',
-                                    'mfy',
+                                    'pelabuhan',
                                     'bahari',
                                 ] as const
                             ).map((catKey) => {
                                 const conf = categoryConfig[catKey];
                                 const count = categoryCounts
-                                    ? categoryCounts[catKey]
+                                    ? (catKey === 'pelabuhan'
+                                          ? (categoryCounts['pelabuhan'] ?? categoryCounts['mfy'] ?? 0)
+                                          : categoryCounts[catKey])
                                     : 0;
                                 return (
                                     <button
@@ -491,25 +728,87 @@ export default function DocumentIndex({
                             })}
                         </div>
 
-                        {/* Search Input */}
-                        <div className="relative w-full md:w-72">
-                            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                type="text"
-                                placeholder="Cari nama dokumen..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="h-10 rounded-xl pl-10 text-xs"
-                            />
+                        {/* Search Input & Bulk Category Action */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+                            <div className="relative w-full md:w-64">
+                                <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    type="text"
+                                    placeholder="Cari nama dokumen..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="h-10 rounded-xl pl-10 text-xs"
+                                />
+                            </div>
+
+                            {filteredDocuments.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearCurrentCategory}
+                                    disabled={isDeletingBatch}
+                                    className="h-10 rounded-xl border-destructive/30 px-3 text-xs font-semibold text-destructive hover:bg-destructive/10 hover:border-destructive transition-colors shrink-0"
+                                    title="Hapus sekaligus semua berkas pada filter kategori ini"
+                                >
+                                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                    <span>Bersihkan Kategori ({filteredDocuments.length})</span>
+                                </Button>
+                            )}
                         </div>
                     </div>
+
+                    {/* Batch Selection Action Floating / Banner Bar */}
+                    {selectedIds.length > 0 && (
+                        <div className="flex flex-wrap items-center justify-between gap-3 bg-destructive/10 border-b border-destructive/20 px-4 py-3 sm:px-6">
+                            <div className="flex items-center gap-2">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground">
+                                    {selectedIds.length}
+                                </span>
+                                <span className="text-xs font-bold text-destructive">
+                                    {selectedIds.length} file dipilih
+                                </span>
+                                <span className="text-xs text-muted-foreground hidden sm:inline">
+                                    (dari {filteredDocuments.length} berkas ditampilkan)
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedIds([])}
+                                    className="h-8 rounded-lg text-xs"
+                                >
+                                    Batalkan Pilihan
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    disabled={isDeletingBatch}
+                                    onClick={deleteBatch}
+                                    className="h-8 gap-1.5 rounded-lg text-xs font-bold shadow-sm"
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <span>{isDeletingBatch ? 'Menghapus...' : `Hapus ${selectedIds.length} File Sekaligus`}</span>
+                                </Button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Table View */}
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
                                 <tr>
-                                    <th className="w-12 px-6 py-4 text-center">
+                                    <th className="w-10 px-4 py-4 text-center">
+                                        <Checkbox
+                                            checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                                            onCheckedChange={toggleSelectAll}
+                                            aria-label="Pilih semua file"
+                                            className="translate-y-0.5"
+                                        />
+                                    </th>
+                                    <th className="w-12 px-2 py-4 text-center">
                                         No
                                     </th>
                                     <th className="px-6 py-4">
@@ -529,7 +828,7 @@ export default function DocumentIndex({
                                 {filteredDocuments.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={6}
+                                            colSpan={7}
                                             className="px-6 py-16 text-center text-xs text-muted-foreground"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-3">
@@ -577,19 +876,30 @@ export default function DocumentIndex({
                                     </tr>
                                 ) : (
                                     filteredDocuments.map((doc, idx) => {
-                                        const cat = doc.category || 'mfy';
+                                        const cat = (doc.category === 'mfy' ? 'pelabuhan' : doc.category) || 'pelabuhan';
                                         const conf =
-                                            categoryConfig[cat] ||
-                                            categoryConfig['mfy'];
+                                            categoryConfig[cat as keyof typeof categoryConfig] ||
+                                            categoryConfig['pelabuhan'];
                                         const Icon = conf.icon;
                                         const isCopied = copiedId === doc.id;
+                                        const isSelected = selectedIds.includes(doc.id);
 
                                         return (
                                             <tr
                                                 key={doc.id}
-                                                className="group transition-colors hover:bg-muted/30"
+                                                className={`group transition-colors ${
+                                                    isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-muted/30'
+                                                }`}
                                             >
-                                                <td className="px-6 py-4 text-center font-mono text-xs text-muted-foreground">
+                                                <td className="px-4 py-4 text-center">
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        onCheckedChange={() => toggleSelectOne(doc.id)}
+                                                        aria-label={`Pilih file ${doc.title}`}
+                                                        className="translate-y-0.5"
+                                                    />
+                                                </td>
+                                                <td className="px-2 py-4 text-center font-mono text-xs text-muted-foreground">
                                                     {idx + 1}
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -603,18 +913,30 @@ export default function DocumentIndex({
                                                             <p className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary">
                                                                 {doc.title}
                                                             </p>
+                                                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                                                {doc.region_code && (
+                                                                    <span className="rounded-md border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary">
+                                                                        {doc.region_code} {doc.region_number ? `(#${doc.region_number})` : ''}
+                                                                    </span>
+                                                                )}
+                                                                {doc.forecast_date && (
+                                                                    <span className="rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                                                        📅 {new Date(doc.forecast_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                    </span>
+                                                                )}
+                                                                {doc.period_type && (
+                                                                    <span className="rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                                                        {doc.period_type === 'weekly' ? 'Mingguan' : 'Harian'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             {doc.description ? (
-                                                                <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                                                                    {
-                                                                        doc.description
-                                                                    }
+                                                                <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                                                                    {doc.description}
                                                                 </p>
                                                             ) : (
                                                                 <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
-                                                                    storage/
-                                                                    {
-                                                                        doc.file_path
-                                                                    }
+                                                                    storage/{doc.file_path}
                                                                 </p>
                                                             )}
                                                         </div>

@@ -12,9 +12,18 @@ class Document extends Model
     protected $fillable = [
         'title',
         'category',
+        'region_code',
+        'region_number',
+        'forecast_date',
+        'period_type',
         'description',
         'file_path',
         'file_type',
         'file_size',
+    ];
+
+    protected $casts = [
+        'forecast_date' => 'date',
+        'region_number' => 'integer',
     ];
 }

@@ -439,13 +439,6 @@ export default function Sejarah() {
                             <span>Prakiraan Pelabuhan</span>
                         </Link>
                         <Link
-                            href="/mfy"
-                            className="inline-flex items-center gap-2 rounded-full border bg-background px-5 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted"
-                        >
-                            <Waves className="h-4 w-4 text-primary" />
-                            <span>Peta & Visual MFY</span>
-                        </Link>
-                        <Link
                             href="/buletin"
                             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90"
                         >

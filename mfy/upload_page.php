@@ -227,7 +227,7 @@ $percent_used = round(($used_gb / $total_gb) * 100);
 
     <div class="upload-box">
         <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" id="fileUpload" name="files[]" multiple accept=".json, .pdf, .png" style="
+            <input type="file" id="fileUpload" name="files[]" multiple accept=".pdf, .png, .jpg, .jpeg" style="
     display: none;
 ">
             <label for="fileUpload">Choose Files</label>

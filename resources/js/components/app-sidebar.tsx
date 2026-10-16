@@ -7,6 +7,7 @@ import {
     BookOpen,
     Globe,
     CloudRain,
+    Anchor,
 } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -44,9 +45,9 @@ const mainNavItems: NavItem[] = [
         icon: BookOpen,
     },
     {
-        title: 'Upload File MFY & Grafis',
-        href: '/upload',
-        icon: UploadCloud,
+        title: 'Upload Cuaca Pelabuhan',
+        href: '/admin/documents?category=pelabuhan&action=upload',
+        icon: Anchor,
     },
 ];
 

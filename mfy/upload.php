@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']) && is_array
     $failedFiles = [];
 
     // Allowed extensions mapping strictly to allowed MIME types
-    $allowedExtensions = ['json', 'pdf', 'png'];
+    $allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
 
     foreach ($_FILES['files']['name'] as $key => $rawFileName) {
         $tmpName = $_FILES['files']['tmp_name'][$key];
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']) && is_array
 
         // MIME type validation
         $fileType = mime_content_type($tmpName);
-        $allowedTypes = ['application/json', 'application/pdf', 'image/png'];
+        $allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
         $maxFileSize = 100 * 1024 * 1024; // 100MB limit
 
         if (

@@ -35,7 +35,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             href: '#',
             dropdown: [
                 { name: 'Cuaca Provinsi Maluku', href: '/provinsi' },
-                { name: 'Peta & Visual MFY', href: '/mfy' },
                 { name: 'Area Pelabuhan', href: '/pelabuhan' },
                 {
                     name: 'Area Penyeberangan',
@@ -45,8 +44,34 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             ],
         },
         { name: 'Buletin', href: '/buletin' },
-        { name: 'Informasi', href: '#' },
-        { name: 'Kontak', href: '#' },
+        {
+            name: 'Informasi',
+            href: '/informasi',
+            dropdown: [
+                {
+                    name: 'Pelayanan Informasi & Jasa',
+                    href: '/informasi',
+                },
+                {
+                    name: 'Survei IKM (Kepuasan Masyarakat)',
+                    href: '/survey-ikm',
+                },
+                {
+                    name: 'Citra Satelit Cuaca',
+                    href: 'https://satelit.bmkg.go.id/',
+                },
+                {
+                    name: 'Citra Radar Cuaca',
+                    href: 'https://radar.bmkg.go.id/',
+                },
+                {
+                    name: 'BMKG Ocean Forecast (OFS)',
+                    href: 'https://maritim.bmkg.go.id/ofs/',
+                },
+            ],
+        },
+        { name: 'Survei IKM', href: '/survey-ikm' },
+        { name: 'Kontak', href: '#footer' },
     ];
 
     return (
@@ -209,7 +234,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             <main className="flex-grow">{children}</main>
 
             {/* Footer */}
-            <footer className="border-t border-slate-800 bg-slate-900 py-12 text-slate-300">
+            <footer id="footer" className="border-t border-slate-800 bg-slate-900 py-12 text-slate-300">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
                         <div className="col-span-1 md:col-span-2">
@@ -252,14 +277,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/mfy"
-                                        className="transition-colors hover:text-primary"
-                                    >
-                                        Peta & Visual MFY
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
                                         href="/pelabuhan"
                                         className="transition-colors hover:text-primary"
                                     >
@@ -292,6 +309,22 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         Buletin Cuaca Maritim
                                     </Link>
                                 </li>
+                                <li>
+                                    <Link
+                                        href="/informasi"
+                                        className="font-medium text-blue-400 transition-colors hover:text-primary"
+                                    >
+                                        Pelayanan Informasi & Jasa
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/survey-ikm"
+                                        className="transition-colors hover:text-primary"
+                                    >
+                                        Survei IKM (e-SKM) ↗
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
 
@@ -300,9 +333,20 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 Kontak & Lokasi
                             </h4>
                             <div className="space-y-2 text-sm text-slate-400">
-                                <p>Jl. Bandara Pattimura, Ambon, Maluku</p>
+                                <p>Jl. Amanlanite, Waimahu, Latuhalat, Nusaniwe, Ambon 97118</p>
                                 <p>Email: stamar.ambon@bmkg.go.id</p>
-                                <p>Telepon: (0911) 311025</p>
+                                <p>Telepon: (0911) 3834398</p>
+                                <p>
+                                    WhatsApp:{' '}
+                                    <a
+                                        href="https://wa.me/6281296265822"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-emerald-400 underline hover:text-emerald-300"
+                                    >
+                                        0812-9626-5822
+                                    </a>
+                                </p>
                                 <div className="pt-2">
                                     <span className="inline-block rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1 text-xs font-medium text-green-400">
                                         Pelayanan Operasional 24/7
