@@ -333,9 +333,49 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 Kontak & Lokasi
                             </h4>
                             <div className="space-y-2 text-sm text-slate-400">
-                                <p>Jl. Amanlanite, Waimahu, Latuhalat, Nusaniwe, Ambon 97118</p>
-                                <p>Email: stamar.ambon@bmkg.go.id</p>
-                                <p>Telepon: (0911) 3834398</p>
+                                {/* Alamat */}
+                                <p className="flex items-start gap-3">
+                                    <img
+                                        src="/images/map-pin.svg"
+                                        alt="Lokasi"
+                                        width="20"
+                                        height="20"
+                                        className="mt-1 h-5 w-5 shrink-0"
+                                    />
+
+                                    <span>
+                                        Jl. Amanlanite, Waimahu, Latuhalat,
+                                        Nusaniwe, Ambon 97118
+                                    </span>
+                                </p>
+                                {/* Email */}
+                                <p className="flex items-start gap-3">
+                                    <img
+                                        src="/images/mail.svg"
+                                        alt="Email"
+                                        className="mt-0.5 h-5 w-5 shrink-0"
+                                    />
+                                    <a
+                                        href="mailto:stamar.ambon@bmkg.go.id"
+                                        className="hover:text-white"
+                                    >
+                                        stamar.ambon@bmkg.go.id
+                                    </a>
+                                </p>
+                                {/* Telepon */}
+                                <p className="flex items-start gap-3">
+                                    <img
+                                        src="/images/phone.svg"
+                                        alt="Telepon"
+                                        className="mt-0.5 h-5 w-5 shrink-0"
+                                    />
+                                    <a
+                                        href="tel:+629113834398"
+                                        className="hover:text-white"
+                                    >
+                                        (0911) 3834398
+                                    </a>
+                                </p>
                                 <p>
                                     WhatsApp:{' '}
                                     <a
