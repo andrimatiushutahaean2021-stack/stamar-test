@@ -27,7 +27,7 @@ export default function Login({ status }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: 'stamar.ambon@bmkg.go.id',
         password: '',
-        remember: true,
+        remember: false,
     });
 
     const submit: FormEventHandler = (e) => {
@@ -153,27 +153,11 @@ export default function Login({ status }: Props) {
                             <InputError message={errors.password} />
                         </div>
 
-                        {/* Remember me & Encryption Badge */}
-                        <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="remember"
-                                    checked={data.remember}
-                                    onCheckedChange={(checked) =>
-                                        setData('remember', Boolean(checked))
-                                    }
-                                    className="rounded-md border-slate-600 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label
-                                    htmlFor="remember"
-                                    className="cursor-pointer text-xs text-slate-400 select-none"
-                                >
-                                    Ingat sesi login
-                                </Label>
-                            </div>
-                            <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
-                                <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />{' '}
-                                Sesi Terenkripsi
+                        {/* Security Badge */}
+                        <div className="flex items-center justify-end pt-1">
+                            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                                <ShieldCheck className="h-4 w-4 text-emerald-400" />{' '}
+                                Sesi Terenkripsi & Aman
                             </span>
                         </div>
 

@@ -1,325 +1,410 @@
 import { Head } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     ChevronLeft,
     ChevronRight,
-    CloudRain,
-    Sun,
-    Wind,
-    Waves,
-    Thermometer,
+    Clock,
+    ImageOff,
     MapPin,
+    Maximize2,
     Palmtree,
+    X,
 } from 'lucide-react';
 
-export default function WisataBahariBuku() {
-    // Current spread state (0, 1, 2)
-    const [currentSpread, setCurrentSpread] = useState(0);
+interface DocumentItem {
+    id: number;
+    title: string;
+    category: string;
+    forecast_date?: string;
+    description?: string;
+    file_path: string;
+    file_type?: string;
+    created_at: string;
+}
 
-    const totalSpreads = 3;
+interface Props {
+    documents?: DocumentItem[];
+}
 
-    const nextPage = () => {
-        if (currentSpread < totalSpreads - 1)
-            setCurrentSpread((prev) => prev + 1);
-    };
+/**
+ * Daftar destinasi mengikuti halaman lama (stamar-ambon.bmkg.go.id).
+ * Gambar dicocokkan dari judul/nama file: berisi nama destinasi (mis. "liang.png")
+ * atau memakai penomoran lama "slideN" (slide1 = cover, slide2 = Liang, dst).
+ */
+const DESTINATIONS = [
+    { key: 'liang', name: 'Pantai Liang', slide: 2 },
+    { key: 'ora', name: 'Pantai Ora', slide: 3 },
+    { key: 'morela', name: 'Pantai Morela', slide: 4 },
+    { key: 'hukurila', name: 'Pantai Hukurila', slide: 5 },
+    { key: 'natsepa', name: 'Pantai Natsepa', slide: 6 },
+    { key: 'jikumerasa', name: 'Pantai Jikumerasa', slide: 7 },
+] as const;
 
-    const prevPage = () => {
-        if (currentSpread > 0) setCurrentSpread((prev) => prev - 1);
-    };
+const COVER_KEYWORDS = ['cover', 'sampul'];
+const IMAGE_TYPES = ['png', 'jpg', 'jpeg', 'webp'];
+const BATCH_WINDOW_MS = 10 * 60 * 1000;
 
-    const todayDate = new Date().toLocaleDateString('id-ID', {
+const isImage = (doc: DocumentItem) => {
+    const ext = (doc.file_type || doc.file_path.split('.').pop() || '').toLowerCase();
+    return IMAGE_TYPES.includes(ext);
+};
+
+const searchText = (doc: DocumentItem) =>
+    `${doc.title} ${doc.file_path.split('/').pop() ?? ''}`.toLowerCase();
+
+const slideNumber = (doc: DocumentItem) => {
+    const m = searchText(doc).match(/slide[\s_-]*0*(\d+)(?!\d)/);
+    return m ? Number(m[1]) : null;
+};
+
+const matchesWord = (text: string, word: string) =>
+    new RegExp(`(^|[^a-z])${word}([^a-z]|$)`).test(text);
+
+const prettyTitle = (doc: DocumentItem) =>
+    doc.title.replace(/\.(png|jpe?g|webp)$/i, '').replace(/[_-]+/g, ' ');
+
+const formatUpdated = (iso: string) =>
+    new Date(iso).toLocaleString('id-ID', {
         weekday: 'long',
-        year: 'numeric',
-        month: 'long',
         day: 'numeric',
-    });
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }) + ' WIT';
 
-    // Content definitions for destinations
-    const destinations = {
-        liang: {
-            title: 'Pantai Liang',
-            subtitle: 'Maluku Tengah',
-            weather: 'Hujan Ringan',
-            temp: '28°C',
-            wind: '10-15 Knot',
-            wave: 'Sedang (1.25m)',
-            prose: 'Tersembunyi di balik rimbunnya pepohonan, Pantai Liang menyajikan keindahan pesisir yang magis. Hari ini, langit diperkirakan sedikit mendung dengan curah hujan ringan yang mungkin turun di siang hari. Angin berhembus sejuk dari arah timur laut, membawa aroma laut yang khas. Sangat cocok untuk bersantai di tepian tanpa terik yang menyengat.',
-        },
-        ora: {
-            title: 'Pantai Ora',
-            subtitle: 'Seram Utara',
-            weather: 'Cerah Berawan',
-            temp: '31°C',
-            wind: '5-10 Knot',
-            wave: 'Tenang (0.5m)',
-            prose: 'Permata tersembunyi Pulau Seram ini menyambut Anda dengan perairan yang jernih bak kristal. Matahari bersinar cerah diselingi awan tipis, memberikan pencahayaan sempurna untuk menjelajahi terumbu karang. Arus terpantau sangat tenang hari ini, menjadikannya waktu yang paling ideal untuk aktivitas menyelam.',
-        },
-        natsepa: {
-            title: 'Pantai Natsepa',
-            subtitle: 'Pulau Ambon',
-            weather: 'Berawan Tebal',
-            temp: '26°C',
-            wind: '15-20 Knot',
-            wave: 'Tinggi (2.0m)',
-            prose: 'Dikenal sebagai ikon pariwisata Ambon, Natsepa hari ini diselimuti awan tebal. Hembusan angin pesisir terasa lebih kuat dari biasanya, mengundang deburan ombak yang cukup tinggi merengkuh pasir putih. Wisatawan sangat disarankan untuk tidak berenang ke tengah, namun menikmati rujak khas di tepian tetaplah pilihan yang sempurna.',
-        },
-        hukurila: {
-            title: 'Pantai Hukurila',
-            subtitle: 'Leitimur Selatan',
-            weather: 'Cerah',
-            temp: '30°C',
-            wind: '10-12 Knot',
-            wave: 'Sedang (1.0m)',
-            prose: 'Pesisir berkarang Hukurila menampilkan sisi eksotisnya di bawah langit biru tanpa cela. Cahaya matahari memantul indah di atas riak gelombang yang bersahabat. Kondisi cuaca yang prima ini sangat memanjakan para fotografer lanskap maupun pecinta keheningan alam laut Maluku.',
-        },
+type Slide = { doc: DocumentItem; label: string };
+
+export default function WisataBahari({ documents = [] }: Props) {
+    const { cover, destinationDocs, extras, latest } = useMemo(() => {
+        // documents sudah urut terbaru dulu dari server
+        const images = documents.filter(isImage);
+        const used = new Set<number>();
+
+        const pick = (predicate: (d: DocumentItem) => boolean) => {
+            const found = images.find((d) => !used.has(d.id) && predicate(d));
+            if (found) used.add(found.id);
+            return found;
+        };
+
+        const destinationDocs = Object.fromEntries(
+            DESTINATIONS.map((dest) => [
+                dest.key,
+                pick(
+                    (d) =>
+                        matchesWord(searchText(d), dest.key) ||
+                        slideNumber(d) === dest.slide,
+                ),
+            ]),
+        ) as Record<string, DocumentItem | undefined>;
+
+        const cover = pick(
+            (d) =>
+                COVER_KEYWORDS.some((k) => searchText(d).includes(k)) ||
+                slideNumber(d) === 1,
+        );
+
+        // Gambar lain dari unggahan terakhir yang tidak cocok dengan slot mana pun
+        const latest = images[0];
+        const extras = latest
+            ? images.filter(
+                  (d) =>
+                      !used.has(d.id) &&
+                      new Date(latest.created_at).getTime() -
+                          new Date(d.created_at).getTime() <=
+                          BATCH_WINDOW_MS,
+              )
+            : [];
+
+        return { cover, destinationDocs, extras, latest };
+    }, [documents]);
+
+    // Urutan gambar untuk lightbox
+    const slides: Slide[] = useMemo(
+        () => [
+            ...(cover ? [{ doc: cover, label: 'Prakiraan Wisata Bahari' }] : []),
+            ...DESTINATIONS.flatMap((dest) => {
+                const doc = destinationDocs[dest.key];
+                return doc ? [{ doc, label: dest.name }] : [];
+            }),
+            ...extras.map((doc) => ({ doc, label: prettyTitle(doc) })),
+        ],
+        [cover, destinationDocs, extras],
+    );
+
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [activeDest, setActiveDest] = useState<string | null>(null);
+
+    const openDoc = (doc: DocumentItem) => {
+        const idx = slides.findIndex((s) => s.doc.id === doc.id);
+        if (idx >= 0) setLightboxIndex(idx);
     };
 
-    // Helper component to render a destination page
-    const DestinationPage = ({
-        data,
-        pageNumber,
-    }: {
-        data: any;
-        pageNumber: number;
-    }) => (
-        <div className="relative flex h-full flex-col">
-            <h2 className="mb-1 inline-block border-b-2 border-slate-300 pb-4 font-serif text-3xl font-bold text-slate-800">
-                {data.title}
-            </h2>
-            <h3 className="mt-2 mb-8 flex items-center gap-1 text-sm font-bold tracking-widest text-slate-500 uppercase">
-                <MapPin className="h-4 w-4" /> {data.subtitle}
-            </h3>
+    const step = (delta: number) =>
+        setLightboxIndex((i) =>
+            i === null ? i : (i + delta + slides.length) % slides.length,
+        );
 
-            <div className="flex-grow">
-                <p className="mb-8 text-justify font-serif text-lg leading-loose text-slate-700 first-letter:float-left first-letter:mt-[-5px] first-letter:mr-3 first-letter:text-5xl first-letter:font-bold first-letter:text-rose-700">
-                    {data.prose}
-                </p>
+    useEffect(() => {
+        if (lightboxIndex === null) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setLightboxIndex(null);
+            if (e.key === 'ArrowRight') step(1);
+            if (e.key === 'ArrowLeft') step(-1);
+        };
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKey);
+        return () => {
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', onKey);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lightboxIndex, slides.length]);
 
-                <div className="mt-8 rounded-lg bg-slate-800 p-6 text-slate-100 shadow-inner">
-                    <h4 className="mb-6 border-b border-slate-600 pb-2 text-center text-xs font-bold tracking-widest text-rose-300 uppercase">
-                        Catatan Cuaca Hari Ini
-                    </h4>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-                        <div className="flex items-center gap-3">
-                            {data.weather.includes('Hujan') ? (
-                                <CloudRain className="h-6 w-6 text-blue-300" />
-                            ) : (
-                                <Sun className="h-6 w-6 text-amber-300" />
-                            )}
-                            <div>
-                                <p className="text-[10px] text-slate-400 uppercase">
-                                    Kondisi
-                                </p>
-                                <p className="text-sm font-semibold">
-                                    {data.weather}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Thermometer className="h-6 w-6 text-rose-300" />
-                            <div>
-                                <p className="text-[10px] text-slate-400 uppercase">
-                                    Suhu Udara
-                                </p>
-                                <p className="text-sm font-semibold">
-                                    {data.temp}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Wind className="h-6 w-6 text-teal-300" />
-                            <div>
-                                <p className="text-[10px] text-slate-400 uppercase">
-                                    Angin
-                                </p>
-                                <p className="text-sm font-semibold">
-                                    {data.wind}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Waves className="h-6 w-6 text-cyan-300" />
-                            <div>
-                                <p className="text-[10px] text-slate-400 uppercase">
-                                    Gelombang
-                                </p>
-                                <p className="text-sm font-semibold">
-                                    {data.wave}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="mt-8 border-t border-slate-300 pt-4 text-center font-serif text-xs text-slate-400">
-                — {pageNumber} —
-            </div>
-        </div>
-    );
+    const active = lightboxIndex !== null ? slides[lightboxIndex] : null;
+    const hasContent = slides.length > 0;
 
     return (
         <PublicLayout>
-            <Head title="Buku Cuaca Wisata Bahari" />
+            <Head title="Prakiraan Cuaca Wisata Bahari - BMKG Stamar Ambon">
+                <meta
+                    name="description"
+                    content="Prakiraan cuaca resmi destinasi wisata bahari Maluku: Pantai Liang, Ora, Morela, Hukurila, Natsepa, dan Jikumerasa dari Stasiun Meteorologi Maritim Ambon."
+                />
+            </Head>
 
-            {/* Background Desk (Wood/Dark Leather texture) */}
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[#2c3e50] bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] px-4 py-12">
-                {/* Controls Top */}
-                <div className="mb-8 flex w-full max-w-5xl items-center justify-between text-slate-300">
-                    <h1 className="font-serif text-2xl tracking-wider italic">
-                        Jurnal Maritim Maluku
-                    </h1>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={prevPage}
-                            disabled={currentSpread === 0}
-                            className="flex items-center gap-2 rounded-full bg-slate-800/80 px-4 py-2 shadow-lg backdrop-blur-sm transition-all hover:bg-slate-800 disabled:opacity-30"
-                        >
-                            <ChevronLeft className="h-4 w-4" /> Buka Halaman
-                            Sebelumnya
-                        </button>
-                        <button
-                            onClick={nextPage}
-                            disabled={currentSpread === totalSpreads - 1}
-                            className="flex items-center gap-2 rounded-full bg-slate-800/80 px-4 py-2 shadow-lg backdrop-blur-sm transition-all hover:bg-slate-800 disabled:opacity-30"
-                        >
-                            Balik Halaman <ChevronRight className="h-4 w-4" />
-                        </button>
+            <div className="min-h-screen bg-slate-50 pb-24 dark:bg-[#0B1120]">
+                {/* Hero */}
+                <div className="relative overflow-hidden bg-slate-900 pt-12 pb-16 lg:pt-20 lg:pb-24">
+                    <div className="pointer-events-none absolute top-0 left-1/4 h-96 w-96 rounded-full bg-emerald-500 opacity-40 mix-blend-screen blur-[128px]" />
+                    <div className="pointer-events-none absolute right-1/4 bottom-0 h-96 w-96 rounded-full bg-cyan-400 opacity-30 mix-blend-screen blur-[128px]" />
+
+                    <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
+                            <Palmtree className="h-4 w-4 text-emerald-300" />
+                            <span>{DESTINATIONS.length} Destinasi Wisata Bahari Maluku</span>
+                        </div>
+                        <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                            Prakiraan Cuaca Wisata Bahari
+                        </h1>
+                        <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                            Periksa kondisi cuaca, angin, dan gelombang di destinasi
+                            wisata bahari sebelum berangkat demi keselamatan
+                            perjalanan Anda.
+                        </p>
+                        {latest && (
+                            <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-emerald-200">
+                                <Clock className="h-3.5 w-3.5" />
+                                Diperbarui {formatUpdated(latest.created_at)}
+                            </p>
+                        )}
                     </div>
                 </div>
 
-                {/* The Book Container */}
-                <div className="relative flex w-full max-w-5xl flex-col rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-700 md:flex-row">
-                    {/* Book Spine Shadow Effect */}
-                    <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 z-50 -ml-8 hidden w-16 bg-gradient-to-r from-transparent via-black/20 to-transparent md:block"></div>
-
-                    {/* LEFT PAGE */}
-                    <div className="relative min-h-[700px] w-full rounded-l-sm border-r border-slate-300/50 bg-[#f4f1ea] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] p-10 shadow-[inset_-15px_0_30px_rgba(0,0,0,0.05)] md:w-1/2 lg:p-14">
-                        {/* Spread 0: Cover / Title */}
-                        {currentSpread === 0 && (
-                            <div className="relative flex h-full flex-col items-center justify-center border-4 border-slate-800 p-8 text-center">
-                                <div className="absolute top-4 right-4 bottom-4 left-4 border border-slate-800/30"></div>
-                                <Palmtree className="mb-8 h-24 w-24 text-slate-800 opacity-80" />
-                                <h1 className="mb-6 font-serif text-4xl leading-tight font-black tracking-widest text-slate-900 uppercase lg:text-5xl">
-                                    Catatan <br />
-                                    Cuaca
-                                    <br />
-                                    Bahari
-                                </h1>
-                                <div className="mx-auto mb-8 h-1 w-16 bg-rose-600"></div>
-                                <p className="mb-12 font-serif text-lg text-slate-600 italic">
-                                    Provinsi Maluku
-                                </p>
-
-                                <p className="mt-auto w-full border-t border-slate-400 pt-8 text-xs font-bold tracking-widest uppercase">
-                                    BMKG Stasiun Maritim Ambon
-                                </p>
+                <div className="relative z-20 container mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+                    {!hasContent ? (
+                        <div className="mx-auto flex max-w-2xl flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+                                <ImageOff className="h-8 w-8" />
                             </div>
-                        )}
-
-                        {/* Spread 1: Pantai Liang */}
-                        {currentSpread === 1 && (
-                            <DestinationPage
-                                data={destinations.liang}
-                                pageNumber={2}
-                            />
-                        )}
-
-                        {/* Spread 2: Pantai Natsepa */}
-                        {currentSpread === 2 && (
-                            <DestinationPage
-                                data={destinations.natsepa}
-                                pageNumber={4}
-                            />
-                        )}
-                    </div>
-
-                    {/* RIGHT PAGE */}
-                    <div className="relative min-h-[700px] w-full rounded-r-sm bg-[#f4f1ea] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] p-10 shadow-[inset_15px_0_30px_rgba(0,0,0,0.05)] md:w-1/2 lg:p-14">
-                        {/* Spread 0: Foreword / Intro */}
-                        {currentSpread === 0 && (
-                            <div className="flex h-full flex-col">
-                                <h2 className="mb-8 border-b-2 border-slate-300 pb-4 font-serif text-2xl font-bold text-slate-800">
-                                    Kata Pengantar
+                            <h2 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
+                                Belum ada prakiraan yang dirilis
+                            </h2>
+                            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                                Prakiraan wisata bahari akan tampil di sini setelah
+                                dirilis oleh Stasiun Meteorologi Maritim Ambon.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr] lg:gap-8">
+                            {/* Navigasi destinasi: chip horizontal di HP, sidebar di desktop */}
+                            <aside className="sticky top-20 z-30 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-28 lg:mx-0 lg:h-fit lg:rounded-2xl lg:border lg:p-5 dark:border-slate-700 dark:bg-slate-800/95">
+                                <h2 className="mb-3 hidden text-xs font-semibold tracking-wider text-slate-500 uppercase lg:block dark:text-slate-400">
+                                    Pilih Destinasi
                                 </h2>
+                                <nav
+                                    aria-label="Destinasi wisata bahari"
+                                    className="flex snap-x gap-2 overflow-x-auto [scrollbar-width:none] lg:flex-col lg:gap-1 lg:overflow-visible [&::-webkit-scrollbar]:hidden"
+                                >
+                                    {DESTINATIONS.map((dest) => (
+                                        <a
+                                            key={dest.key}
+                                            id={`nav-bahari-${dest.key}`}
+                                            href={`#${dest.key}`}
+                                            onClick={() => setActiveDest(dest.key)}
+                                            className={`flex shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                                                activeDest === dest.key
+                                                    ? 'bg-emerald-600 text-white lg:bg-emerald-50 lg:text-emerald-700 dark:lg:bg-emerald-950/60 dark:lg:text-emerald-300'
+                                                    : 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 lg:bg-transparent dark:bg-slate-700/60 dark:text-slate-200 dark:hover:bg-slate-700 lg:dark:bg-transparent'
+                                            }`}
+                                        >
+                                            <MapPin className="hidden h-3.5 w-3.5 lg:block" />
+                                            {dest.name.replace('Pantai ', '')}
+                                        </a>
+                                    ))}
+                                </nav>
+                            </aside>
 
-                                <div className="flex-grow">
-                                    <p className="mb-6 text-justify font-serif text-lg leading-loose text-slate-700">
-                                        Selamat datang di lembaran jurnal cuaca
-                                        maritim BMKG. Melalui lembaran-lembaran
-                                        buku ini, kami mencoba menceritakan
-                                        kondisi alam kepada Anda dengan cara
-                                        yang berbeda.
-                                    </p>
-                                    <p className="mb-6 text-justify font-serif text-lg leading-loose text-slate-700">
-                                        Maluku dianugerahi dengan pesisir pantai
-                                        yang luar biasa indah. Namun, keindahan
-                                        laut tidak pernah lepas dari dinamika
-                                        cuaca yang menaunginya. Memahami cuaca
-                                        adalah langkah pertama dalam menghargai
-                                        dan menikmati alam bahari dengan aman.
-                                    </p>
-                                    <p className="mb-8 text-justify font-serif text-lg leading-loose text-slate-700">
-                                        Silakan buka halaman selanjutnya untuk
-                                        membaca prakiraan cuaca di beberapa
-                                        destinasi wisata pantai terpopuler di
-                                        Maluku pada hari ini,{' '}
-                                        <span className="font-bold">
-                                            {todayDate}
-                                        </span>
-                                        .
-                                    </p>
+                            <main className="flex flex-col gap-8">
+                                {/* Cover */}
+                                {cover && (
+                                    <button
+                                        id="bahari-cover"
+                                        type="button"
+                                        onClick={() => openDoc(cover)}
+                                        className="group relative mx-auto w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 transition-transform active:scale-[0.98] dark:bg-slate-800 dark:ring-slate-700"
+                                    >
+                                        <img
+                                            src={`/storage/${cover.file_path}`}
+                                            alt="Cover Prakiraan Wisata Bahari"
+                                            className="aspect-[3/4] w-full bg-slate-200 object-cover dark:bg-slate-900"
+                                        />
+                                        <ZoomHint />
+                                    </button>
+                                )}
 
-                                    <div className="text-right">
-                                        <p className="font-serif text-slate-600 italic">
-                                            Salam hangat,
-                                        </p>
-                                        <p className="mt-2 text-sm font-bold tracking-wider uppercase">
-                                            Prakirawan BMKG
-                                        </p>
-                                    </div>
+                                {/* Kartu destinasi (potret 3:4) */}
+                                <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3">
+                                    {DESTINATIONS.map((dest) => {
+                                        const doc = destinationDocs[dest.key];
+                                        return (
+                                            <div
+                                                key={dest.key}
+                                                id={dest.key}
+                                                className="scroll-mt-40 lg:scroll-mt-28"
+                                            >
+                                                {doc ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openDoc(doc)}
+                                                        className="group relative block w-full overflow-hidden rounded-2xl bg-white text-left shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] dark:bg-slate-800 dark:ring-slate-700"
+                                                    >
+                                                        <img
+                                                            src={`/storage/${doc.file_path}`}
+                                                            alt={`Prakiraan cuaca ${dest.name}`}
+                                                            loading="lazy"
+                                                            className="aspect-[3/4] w-full bg-slate-200 object-cover dark:bg-slate-900"
+                                                        />
+                                                        <ZoomHint />
+                                                        <div className="truncate border-t border-slate-100 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 dark:border-slate-700 dark:text-slate-100">
+                                                            {dest.name}
+                                                        </div>
+                                                    </button>
+                                                ) : (
+                                                    <div className="overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white/60 dark:border-slate-700 dark:bg-slate-800/40">
+                                                        <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 p-4 text-center text-slate-400">
+                                                            <ImageOff className="h-8 w-8" />
+                                                            <span className="text-xs">
+                                                                Prakiraan belum tersedia
+                                                            </span>
+                                                        </div>
+                                                        <div className="truncate border-t border-dashed border-slate-300 px-3 py-2.5 text-center text-sm font-semibold text-slate-500 dark:border-slate-700">
+                                                            {dest.name}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Gambar tambahan yang namanya tidak cocok dengan destinasi */}
+                                    {extras.map((doc) => (
+                                        <button
+                                            key={doc.id}
+                                            type="button"
+                                            onClick={() => openDoc(doc)}
+                                            className="group relative block w-full overflow-hidden rounded-2xl bg-white text-left shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-800 dark:ring-slate-700"
+                                        >
+                                            <img
+                                                src={`/storage/${doc.file_path}`}
+                                                alt={prettyTitle(doc)}
+                                                loading="lazy"
+                                                className="aspect-[3/4] w-full bg-slate-200 object-cover dark:bg-slate-900"
+                                            />
+                                            <ZoomHint />
+                                            <div className="truncate border-t border-slate-100 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 capitalize dark:border-slate-700 dark:text-slate-100">
+                                                {prettyTitle(doc)}
+                                            </div>
+                                        </button>
+                                    ))}
                                 </div>
-
-                                <div className="mt-8 border-t border-slate-300 pt-4 text-center font-serif text-xs text-slate-400">
-                                    — 1 —
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Spread 1: Pantai Ora */}
-                        {currentSpread === 1 && (
-                            <DestinationPage
-                                data={destinations.ora}
-                                pageNumber={3}
-                            />
-                        )}
-
-                        {/* Spread 2: Pantai Hukurila */}
-                        {currentSpread === 2 && (
-                            <DestinationPage
-                                data={destinations.hukurila}
-                                pageNumber={5}
-                            />
-                        )}
-
-                        {/* Floating "Next Page" hint if not on last page */}
-                        {currentSpread < totalSpreads - 1 && (
-                            <div
-                                onClick={nextPage}
-                                className="absolute right-4 bottom-10 hidden cursor-pointer items-center gap-1 text-xs font-bold tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-800 md:flex"
-                            >
-                                Balik <ChevronRight className="h-4 w-4" />
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-8 font-serif text-sm text-slate-400 italic">
-                    Gunakan tombol di atas atau klik tulisan "Balik" di pojok
-                    halaman untuk membaca halaman selanjutnya.
+                            </main>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Lightbox */}
+            {active && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={active.label}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-md"
+                    onClick={() => setLightboxIndex(null)}
+                >
+                    <button
+                        type="button"
+                        aria-label="Tutup"
+                        className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+                        onClick={() => setLightboxIndex(null)}
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+                    {slides.length > 1 && (
+                        <>
+                            <button
+                                type="button"
+                                aria-label="Sebelumnya"
+                                className="absolute left-2 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 sm:left-4"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    step(-1);
+                                }}
+                            >
+                                <ChevronLeft className="h-6 w-6" />
+                            </button>
+                            <button
+                                type="button"
+                                aria-label="Berikutnya"
+                                className="absolute right-2 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 sm:right-4"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    step(1);
+                                }}
+                            >
+                                <ChevronRight className="h-6 w-6" />
+                            </button>
+                        </>
+                    )}
+                    <figure
+                        className="flex max-h-full flex-col items-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            key={active.doc.id}
+                            src={`/storage/${active.doc.file_path}`}
+                            alt={active.label}
+                            className="max-h-[80vh] max-w-[90vw] animate-in rounded-xl object-contain shadow-2xl duration-200 zoom-in-95 fade-in"
+                        />
+                        <figcaption className="mt-3 text-center text-sm font-medium text-slate-200">
+                            {active.label}
+                            <span className="ml-2 text-slate-400">
+                                {lightboxIndex! + 1} / {slides.length}
+                            </span>
+                        </figcaption>
+                    </figure>
+                </div>
+            )}
         </PublicLayout>
+    );
+}
+
+function ZoomHint() {
+    return (
+        <span className="pointer-events-none absolute top-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
+            <Maximize2 className="h-3 w-3" /> Perbesar
+        </span>
     );
 }

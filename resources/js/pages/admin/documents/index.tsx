@@ -22,6 +22,11 @@ import {
     Anchor,
     CheckSquare,
     Square,
+    Sparkles,
+    Zap,
+    Layers,
+    ArrowRight,
+    Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +47,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface Document {
     id: number;
     title: string;
-    category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
+    category: 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
     region_code?: string | null;
     region_number?: number | null;
     forecast_date?: string | null;
@@ -56,6 +61,7 @@ interface Document {
 
 interface CategoryCounts {
     all: number;
+    infografis?: number;
     'peringatan-dini': number;
     provinsi: number;
     buletin: number;
@@ -90,19 +96,26 @@ export default function DocumentIndex({
         initialAction === 'upload',
     );
 
+    const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+    const tomorrowStr = useMemo(() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().split('T')[0];
+    }, []);
+
     const defaultCat = (
-        ['peringatan-dini', 'provinsi', 'buletin', 'pelabuhan', 'mfy', 'bahari'].includes(
+        ['infografis', 'peringatan-dini', 'provinsi', 'buletin', 'pelabuhan', 'mfy', 'bahari'].includes(
             selectedTab !== 'all' ? selectedTab : currentCategory,
         )
             ? selectedTab !== 'all'
                 ? selectedTab
                 : currentCategory
             : 'pelabuhan'
-    ) as 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'bahari';
+    ) as 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'bahari';
 
     const { data, setData, post, processing, errors, reset } = useForm<{
         title: string;
-        category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
+        category: 'auto' | 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
         region_number: string | number;
         forecast_date: string;
         period_type: 'daily' | 'weekly';
@@ -111,7 +124,7 @@ export default function DocumentIndex({
         file: File | null;
     }>({
         title: '',
-        category: defaultCat,
+        category: 'auto',
         region_number: '',
         forecast_date: new Date().toISOString().split('T')[0],
         period_type: 'daily',
@@ -121,6 +134,15 @@ export default function DocumentIndex({
     });
 
     const categoryConfig = {
+        infografis: {
+            label: 'Infografis & Peta',
+            icon: ImageIcon,
+            color: 'text-indigo-500',
+            bgColor: 'bg-indigo-500/10',
+            badgeBg:
+                'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900',
+            folder: 'uploads/infografis/',
+        },
         'peringatan-dini': {
             label: 'Peringatan Dini',
             icon: AlertTriangle,
@@ -275,8 +297,96 @@ export default function DocumentIndex({
         }
     };
 
+    const processFilesSelection = (filesArr: File[]): boolean => {
+        const allowedExts = ['pdf', 'png', 'jpg', 'jpeg'];
+        const invalidFile = filesArr.find((f) => {
+            const ext = f.name.split('.').pop()?.toLowerCase() || '';
+            return !allowedExts.includes(ext);
+        });
+        if (invalidFile) {
+            alert(`File "${invalidFile.name}" tidak didukung. Format didukung: PDF, PNG, JPG, dan JPEG.`);
+            return false;
+        }
+
+        // Khusus peringatan-dini dan infografis, format berkas wajib .png
+        if (data.category === 'peringatan-dini' || data.category === 'infografis') {
+            const nonPngFile = filesArr.find((f) => !f.name.toLowerCase().endsWith('.png'));
+            if (nonPngFile) {
+                const label = data.category === 'peringatan-dini' ? 'Peringatan Dini Gelombang' : 'Infografis Cuaca';
+                alert(`File "${nonPngFile.name}" ditolak. Kategori ${label} saat ini wajib berformat gambar .PNG.`);
+                return false;
+            }
+        } else if (data.category === 'auto') {
+            const invalidWarning = filesArr.find((f) => {
+                const lower = f.name.toLowerCase();
+                const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
+                return isWarning && !lower.endsWith('.png');
+            });
+            if (invalidWarning) {
+                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk fitur Peringatan Dini saat ini wajib .PNG.`);
+                return false;
+            }
+
+            const invalidInfografis = filesArr.find((f) => {
+                const lower = f.name.toLowerCase();
+                const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
+                return isInfografis && !lower.endsWith('.png');
+            });
+            if (invalidInfografis) {
+                alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis saat ini wajib .PNG.`);
+                return false;
+            }
+        }
+
+        if (filesArr.length > 112) {
+            alert('Maksimal 112 file yang dapat dipilih sekaligus.');
+            return false;
+        }
+
+        const totalBytes = filesArr.reduce((acc, curr) => acc + curr.size, 0);
+        if (totalBytes > 112 * 1024 * 1024) {
+            alert(`Total ukuran berkas (${(totalBytes / (1024 * 1024)).toFixed(2)} MB) melebihi batas 112MB.`);
+            return false;
+        }
+
+        setData('files', filesArr);
+        setData('file', filesArr[0] || null);
+        return true;
+    };
+
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validasi khusus: jika kategori peringatan-dini atau infografis, pastikan format file wajib .png
+        if (data.category === 'peringatan-dini' || data.category === 'infografis') {
+            const nonPng = data.files.find((f) => !f.name.toLowerCase().endsWith('.png'));
+            if (nonPng) {
+                const label = data.category === 'peringatan-dini' ? 'Peringatan Dini Gelombang' : 'Infografis Cuaca';
+                alert(`File "${nonPng.name}" ditolak. Kategori ${label} saat ini wajib berformat gambar .PNG.`);
+                return;
+            }
+        } else if (data.category === 'auto') {
+            const invalidWarning = data.files.find((f) => {
+                const lower = f.name.toLowerCase();
+                const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
+                return isWarning && !lower.endsWith('.png');
+            });
+            if (invalidWarning) {
+                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk fitur Peringatan Dini saat ini wajib .PNG.`);
+                return;
+            }
+
+            const invalidInfografis = data.files.find((f) => {
+                const lower = f.name.toLowerCase();
+                const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
+                return isInfografis && !lower.endsWith('.png');
+            });
+            if (invalidInfografis) {
+                alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis saat ini wajib .PNG.`);
+                return;
+            }
+        }
+
         post('/admin/documents', {
             onSuccess: () => {
                 reset();
@@ -321,8 +431,8 @@ export default function DocumentIndex({
                             Manajemen File & Folder Upload
                         </h1>
                         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                            Kelola berkas terklasifikasi ke dalam 5 folder:
-                            Peringatan Dini, Cuaca Provinsi, Buletin, Cuaca Pelabuhan, dan
+                            Kelola berkas terklasifikasi ke dalam 6 folder:
+                            Infografis & Peta, Peringatan Dini, Cuaca Provinsi, Buletin, Cuaca Pelabuhan, dan
                             Wisata Bahari.
                         </p>
                     </div>
@@ -348,288 +458,377 @@ export default function DocumentIndex({
                 </div>
 
                 {/* Upload Form Card (Expandable) */}
+                {/* Upload Form Card (Expandable) */}
                 {showUploadModal && (
                     <div className="animate-in rounded-3xl border border-border bg-card p-6 shadow-xl duration-300 slide-in-from-top-3">
-                        <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
-                            <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
-                                <UploadCloud className="h-5 w-5 text-primary" />{' '}
-                                Formulir Unggah File
-                            </h3>
-                            <span className="text-xs text-muted-foreground">
-                                Format didukung: PDF, PNG, JPG, JPEG (Maks. 112 File / Total Maks. 112MB)
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4">
+                            <div>
+                                <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
+                                    <Sparkles className="h-5 w-5 text-amber-500" />
+                                    Smart Forecaster Dropzone & Upload
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Seret berkas campuran (Pelabuhan, Provinsi, Wisata Bahari, Buletin, Peringatan Dini) sekaligus tanpa perlu isi form rumit.
+                                </p>
+                            </div>
+                            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                Maks. 112 File • Total 112MB • PDF / PNG / JPG
                             </span>
                         </div>
 
                         <form onSubmit={submit} className="space-y-5">
-                            {/* Kotak Petunjuk Sinkronisasi BMKG */}
-                            {(data.category === 'provinsi' || data.category === 'pelabuhan' || data.category === 'mfy') && (
-                                <div className="rounded-2xl border border-sky-200/70 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent p-4 text-xs dark:border-sky-500/30">
-                                    <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300">
-                                        <Anchor className="h-4 w-4" />
-                                        <span>Panduan Sinkronisasi Berkas Otomatis BMKG:</span>
-                                    </div>
-                                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 text-slate-600 dark:text-slate-300">
-                                        <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/30">
-                                            <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5">
-                                                📍 Cuaca Provinsi (18 Wilayah)
-                                            </span>
-                                            Awalan nama file: <code className="font-bold text-amber-700 dark:text-amber-300">P_AH001</code> s/d <code className="font-bold text-amber-700 dark:text-amber-300">P_AH018</code><br />
-                                            Contoh: <code className="text-[11px] text-slate-500">P_AH001_12102026.pdf</code>
-                                        </div>
-                                        <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
-                                            <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
-                                                ⚓ Cuaca Pelabuhan (37 Titik)
-                                            </span>
-                                            Awalan nama file: <code className="font-bold text-cyan-700 dark:text-cyan-300">AH001</code> s/d <code className="font-bold text-cyan-700 dark:text-cyan-300">AH037</code><br />
-                                            Contoh: <code className="text-[11px] text-slate-500">AH001_12102026.pdf</code>
-                                        </div>
-                                    </div>
-                                    <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                                        * Jika nama file sudah diawali kode tersebut, sistem akan <strong>otomatis memetakan nomor urut daerah, tanggal prakiraan, dan nama wilayahnya</strong> ke tabel publik.
-                                    </p>
+                            {/* Kotak Petunjuk Format Penamaan Berkas */}
+                            <div className="rounded-2xl border border-sky-200/70 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent p-4 text-xs dark:border-sky-500/30">
+                                <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300">
+                                    <Zap className="h-4 w-4 text-amber-500" />
+                                    <span>Pola Klasifikasi Otomatis yang Terdeteksi Sistem:</span>
                                 </div>
-                            )}
-
-                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                {/* Folder Kategori */}
-                                <div className="space-y-2">
-                                    <Label
-                                        htmlFor="category"
-                                        className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                    >
-                                        Klasifikasi Folder{' '}
-                                        <span className="text-red-500">*</span>
-                                    </Label>
-                                    <select
-                                        id="category"
-                                        value={data.category}
-                                        onChange={(e) =>
-                                            setData(
-                                                'category',
-                                                e.target.value as any,
-                                            )
-                                        }
-                                        className="h-12 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
-                                    >
-                                        <option value="pelabuhan">
-                                            ⚓ 1. Cuaca Pelabuhan (Format: AH001 - AH037)
-                                        </option>
-                                        <option value="provinsi">
-                                            📍 2. Cuaca Provinsi (Format: P_AH001 - P_AH018)
-                                        </option>
-                                        <option value="peringatan-dini">
-                                            ⚠️ 3. Peringatan Dini
-                                        </option>
-                                        <option value="buletin">
-                                            📖 4. Buletin Maritim
-                                        </option>
-                                        <option value="bahari">
-                                            🌊 5. Wisata Bahari
-                                        </option>
-                                    </select>
-                                    {errors.category && (
-                                        <p className="text-xs text-red-500">
-                                            {errors.category}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* File Input */}
-                                <div className="space-y-2">
-                                    <Label
-                                        htmlFor="file"
-                                        className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                    >
-                                        Pilih Berkas File{' '}
-                                        <span className="text-red-500">*</span>
-                                        <span className="ml-1 text-[11px] font-normal text-muted-foreground">
-                                            (Bisa pilih s.d. 112 file, total maks. 112MB)
+                                <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5 text-slate-600 dark:text-slate-300">
+                                    <div className="rounded-xl border border-indigo-200/50 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
+                                        <span className="font-bold text-indigo-800 dark:text-indigo-300 block mb-0.5">
+                                            🖼️ Infografis Cuaca (Khusus PNG)
                                         </span>
-                                    </Label>
-                                    <Input
-                                        id="file"
+                                        Format: <code className="font-bold text-indigo-700 dark:text-indigo-300 font-mono">.png</code> (P_AH / AH / infografis)<br />
+                                        <span className="text-[10px] text-muted-foreground">Contoh: P_AH001.png atau AH001.png</span>
+                                    </div>
+                                    <div className="rounded-xl border border-rose-200/50 bg-rose-50/50 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/30">
+                                        <span className="font-bold text-rose-800 dark:text-rose-300 block mb-0.5">
+                                            ⚠️ Peringatan Dini (Khusus PNG)
+                                        </span>
+                                        Format: <code className="font-bold text-rose-700 dark:text-rose-300 font-mono">.png</code> (peringatan / warning / dini)<br />
+                                        <span className="text-[10px] text-muted-foreground">Contoh: peringatan_dini_1hari.png</span>
+                                    </div>
+                                    <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
+                                        <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
+                                            ⚓ Cuaca Pelabuhan (37 Titik)
+                                        </span>
+                                        Awalan nama: <code className="font-bold text-cyan-700 dark:text-cyan-300 font-mono">AH001</code> s/d <code className="font-bold text-cyan-700 dark:text-cyan-300 font-mono">AH037</code><br />
+                                        <span className="text-[10px] text-muted-foreground">Contoh: AH001_20102026.pdf</span>
+                                    </div>
+                                    <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/30">
+                                        <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5">
+                                            📍 Cuaca Provinsi (18 Wilayah)
+                                        </span>
+                                        Awalan nama: <code className="font-bold text-amber-700 dark:text-amber-300 font-mono">P_AH001</code> s/d <code className="font-bold text-amber-700 dark:text-amber-300 font-mono">P_AH018</code><br />
+                                        <span className="text-[10px] text-muted-foreground">Contoh: P_AH001_20102026.pdf</span>
+                                    </div>
+                                    <div className="rounded-xl border border-teal-200/50 bg-teal-50/50 p-2.5 dark:border-teal-900/40 dark:bg-teal-950/30">
+                                        <span className="font-bold text-teal-800 dark:text-teal-300 block mb-0.5">
+                                            🌊 Wisata Bahari / Slide
+                                        </span>
+                                        Nama berisi: <code className="font-bold text-teal-700 dark:text-teal-300 font-mono">slide1..7</code>, nama pantai (<code className="font-mono text-[10px]">liang, ora</code>)<br />
+                                        <span className="text-[10px] text-muted-foreground">Contoh: slide2_liang.png</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dropzone Area Besar & Elegan */}
+                            <div className="space-y-3">
+                                <div
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                            processFilesSelection(Array.from(e.dataTransfer.files));
+                                        }
+                                    }}
+                                    className={`relative flex min-h-[160px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
+                                        data.files.length > 0
+                                            ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/20'
+                                            : 'border-border bg-muted/10 hover:border-primary hover:bg-muted/30'
+                                    }`}
+                                >
+                                    <input
+                                        id="smart-file-upload"
                                         type="file"
                                         multiple
                                         accept=".pdf,.png,.jpg,.jpeg"
                                         onChange={(e) => {
                                             const fileList = e.target.files;
-                                            if (fileList) {
-                                                const filesArr = Array.from(fileList);
-                                                const allowedExts = ['pdf', 'png', 'jpg', 'jpeg'];
-                                                const invalidFile = filesArr.find((f) => {
-                                                    const ext = f.name.split('.').pop()?.toLowerCase() || '';
-                                                    return !allowedExts.includes(ext);
-                                                });
-                                                if (invalidFile) {
-                                                    alert(`File "${invalidFile.name}" tidak didukung. Format JSON sudah dinonaktifkan. Hanya diperbolehkan berkas PDF, PNG, JPG, dan JPEG.`);
+                                            if (fileList && fileList.length > 0) {
+                                                const ok = processFilesSelection(Array.from(fileList));
+                                                if (!ok) {
                                                     e.target.value = '';
                                                     setData('files', []);
                                                     setData('file', null);
-                                                    return;
                                                 }
-                                                if (filesArr.length > 112) {
-                                                    alert('Maksimal 112 file yang dapat dipilih sekaligus.');
-                                                    e.target.value = '';
-                                                    setData('files', []);
-                                                    setData('file', null);
-                                                    return;
-                                                }
-                                                const totalBytes = filesArr.reduce((acc, curr) => acc + curr.size, 0);
-                                                const MAX_TOTAL_BYTES = 112 * 1024 * 1024; // 112 MB
-                                                if (totalBytes > MAX_TOTAL_BYTES) {
-                                                    const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
-                                                    alert(`Total ukuran berkas yang dipilih (${totalMb} MB) melebihi batas maksimal 112MB.`);
-                                                    e.target.value = '';
-                                                    setData('files', []);
-                                                    setData('file', null);
-                                                    return;
-                                                }
-                                                setData('files', filesArr);
-                                                setData('file', filesArr[0] || null);
                                             }
                                         }}
-                                        required
-                                        className="h-12 cursor-pointer rounded-xl bg-muted/40 pt-2.5"
+                                        className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
                                     />
-                                    {data.files && data.files.length > 0 && (
-                                        <div className="space-y-1.5 pt-1">
-                                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                                ✓ {data.files.length} file dipilih (Total: {(data.files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB / Batas 112MB)
-                                            </p>
-                                            {data.files.length > 1 && (
-                                                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto rounded-lg border border-border bg-background p-2">
-                                                    {data.files.slice(0, 37).map((f, i) => (
-                                                        <span key={i} className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
-                                                            {f.name}
-                                                        </span>
-                                                    ))}
-                                                    {data.files.length > 37 && (
-                                                        <span className="text-[10px] text-muted-foreground self-center pl-1">
-                                                            +{data.files.length - 37} lainnya
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
+
+                                    <div className="pointer-events-none flex flex-col items-center gap-2">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+                                            <UploadCloud className="h-6 w-6" />
                                         </div>
-                                    )}
-                                    {errors.file && (
-                                        <p className="text-xs text-red-500">
-                                            {errors.file}
-                                        </p>
-                                    )}
+                                        <div className="text-center">
+                                            <p className="text-sm font-bold text-foreground">
+                                                {data.files.length > 0
+                                                    ? `${data.files.length} Berkas Siap Diproses!`
+                                                    : 'Tarik & Letakkan (Drag & Drop) File ke Sini'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                Atau klik di area ini untuk memilih berkas dari komputer (Bisa blok puluhan file sekaligus)
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {/* Preview Klasifikasi Cerdas Sebelum Diunggah */}
+                                {data.files && data.files.length > 0 && (() => {
+                                    const detectedCounts = {
+                                        infografis: 0,
+                                        pelabuhan: 0,
+                                        provinsi: 0,
+                                        bahari: 0,
+                                        buletin: 0,
+                                        'peringatan-dini': 0,
+                                        lainnya: 0,
+                                    };
+
+                                    data.files.forEach((f) => {
+                                        const name = f.name.toLowerCase();
+                                        const isPng = name.endsWith('.png');
+
+                                        if (name.includes('peringatan') || name.includes('warning') || name.includes('dini') || name.includes('gelombang')) {
+                                            detectedCounts['peringatan-dini']++;
+                                        } else if (
+                                            ['infografis', 'grafis', 'peta', 'infographic', 'map'].some((kw) => name.includes(kw)) ||
+                                            (isPng && (/^(?:p[._\-\s]?ah)[._\-\s]?0*[1-9]/i.test(name) || /^ah[._\-\s]?0*[1-9]/i.test(name)))
+                                        ) {
+                                            detectedCounts.infografis++;
+                                        } else if (/^(?:p[._\-\s]?ah)[._\-\s]?0*[1-9]/i.test(name)) {
+                                            detectedCounts.provinsi++;
+                                        } else if (/^ah[._\-\s]?0*[1-9]/i.test(name)) {
+                                            detectedCounts.pelabuhan++;
+                                        } else if (
+                                            ['bahari', 'wisata', 'slide', 'pantai', 'liang', 'ora', 'morela', 'hukurila', 'natsepa', 'jikumerasa', 'cover', 'sampul'].some((kw) => name.includes(kw))
+                                        ) {
+                                            detectedCounts.bahari++;
+                                        } else if (name.includes('buletin') || name.includes('bulletin')) {
+                                            detectedCounts.buletin++;
+                                        } else {
+                                            detectedCounts.lainnya++;
+                                        }
+                                    });
+
+                                    return (
+                                        <div className="rounded-2xl border border-emerald-300/60 bg-emerald-500/10 p-4 text-xs dark:border-emerald-600/40">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                                    <Check className="h-4 w-4 text-emerald-500" />
+                                                    {data.files.length} Berkas Terdeteksi (Total: {(data.files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB):
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setData('files', []);
+                                                        setData('file', null);
+                                                    }}
+                                                    className="text-xs text-red-500 hover:underline font-semibold"
+                                                >
+                                                    Batalkan Pilihan
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-2.5 flex flex-wrap gap-2">
+                                                {detectedCounts.infografis > 0 && (
+                                                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-1 font-semibold text-indigo-800 dark:text-indigo-200">
+                                                        🖼️ {detectedCounts.infografis} Infografis & Peta
+                                                    </span>
+                                                )}
+                                                {detectedCounts.pelabuhan > 0 && (
+                                                    <span className="rounded-lg bg-cyan-500/20 px-2.5 py-1 font-semibold text-cyan-800 dark:text-cyan-200">
+                                                        ⚓ {detectedCounts.pelabuhan} Cuaca Pelabuhan
+                                                    </span>
+                                                )}
+                                                {detectedCounts.provinsi > 0 && (
+                                                    <span className="rounded-lg bg-amber-500/20 px-2.5 py-1 font-semibold text-amber-800 dark:text-amber-200">
+                                                        📍 {detectedCounts.provinsi} Cuaca Provinsi
+                                                    </span>
+                                                )}
+                                                {detectedCounts.bahari > 0 && (
+                                                    <span className="rounded-lg bg-teal-500/20 px-2.5 py-1 font-semibold text-teal-800 dark:text-teal-200">
+                                                        🌊 {detectedCounts.bahari} Wisata Bahari
+                                                    </span>
+                                                )}
+                                                {detectedCounts.buletin > 0 && (
+                                                    <span className="rounded-lg bg-purple-500/20 px-2.5 py-1 font-semibold text-purple-800 dark:text-purple-200">
+                                                        📖 {detectedCounts.buletin} Buletin
+                                                    </span>
+                                                )}
+                                                {detectedCounts['peringatan-dini'] > 0 && (
+                                                    <span className="rounded-lg bg-red-500/20 px-2.5 py-1 font-semibold text-red-800 dark:text-red-200">
+                                                        ⚠️ {detectedCounts['peringatan-dini']} Peringatan Dini
+                                                    </span>
+                                                )}
+                                                {detectedCounts.lainnya > 0 && (
+                                                    <span className="rounded-lg bg-slate-500/20 px-2.5 py-1 font-medium text-slate-700 dark:text-slate-300">
+                                                        📁 {detectedCounts.lainnya} Berkas Umum
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Scrollable File Tags */}
+                                            <div className="mt-3 flex max-h-24 flex-wrap gap-1 overflow-y-auto rounded-lg border border-border bg-background/80 p-2">
+                                                {data.files.slice(0, 40).map((f, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"
+                                                    >
+                                                        {f.name}
+                                                    </span>
+                                                ))}
+                                                {data.files.length > 40 && (
+                                                    <span className="self-center pl-1 text-[10px] font-semibold text-muted-foreground">
+                                                        +{data.files.length - 40} file lainnya...
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
-                            {/* Additional metadata for Provinsi / Pelabuhan */}
-                            {(data.category === 'provinsi' || data.category === 'pelabuhan' || data.category === 'mfy') && (
-                                <div className="grid grid-cols-1 gap-5 md:grid-cols-3 rounded-2xl border border-border bg-muted/20 p-4">
-                                    {/* Pilihan Wilayah Satuan (Opsional jika multi-file) */}
-                                    <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="region_number"
-                                            className="text-xs font-semibold text-muted-foreground uppercase"
-                                        >
-                                            Wilayah Spesifik (Opsional)
-                                        </Label>
-                                        <select
-                                            id="region_number"
-                                            value={data.region_number}
-                                            onChange={(e) => setData('region_number', e.target.value)}
-                                            className="h-11 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
-                                        >
-                                            <option value="">-- Otomatis Dari Nama File --</option>
-                                            {data.category === 'provinsi'
-                                                ? Object.entries(provinsiList).map(([num, name]) => (
-                                                      <option key={num} value={num}>
-                                                          P_AH{num.toString().padStart(3, '0')} - {name}
-                                                      </option>
-                                                  ))
-                                                : Object.entries(pelabuhanList).map(([num, name]) => (
-                                                      <option key={num} value={num}>
-                                                          AH{num.toString().padStart(3, '0')} - {name}
-                                                      </option>
-                                                  ))}
-                                        </select>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Biarkan otomatis jika mengunggah banyak berkas sekaligus.
+                            {/* Pengaturan Target Periode & Tanggal Prakiraan (Jelas & Terbuka) */}
+                            <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+                                    <div>
+                                        <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                                            <span>📅 Target Tab & Tanggal Prakiraan:</span>
+                                        </h4>
+                                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                                            Pilih tab tujuan file ini akan ditampilkan di halaman publik (Pelabuhan, Provinsi, Infografis)
                                         </p>
                                     </div>
-
-                                    {/* Tanggal Prakiraan */}
-                                    <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="forecast_date"
-                                            className="text-xs font-semibold text-muted-foreground uppercase"
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setData((prev) => ({
+                                                    ...prev,
+                                                    forecast_date: todayStr,
+                                                    period_type: 'daily',
+                                                }));
+                                            }}
+                                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all ${
+                                                data.period_type === 'daily'
+                                                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-500/20'
+                                                    : 'bg-background hover:bg-muted text-foreground border-border'
+                                            }`}
                                         >
-                                            Tanggal Berlaku Prakiraan
+                                            📅 Tab 1: Harian (24 Jam)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setData((prev) => ({
+                                                    ...prev,
+                                                    forecast_date: tomorrowStr,
+                                                    period_type: 'weekly',
+                                                }));
+                                            }}
+                                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all ${
+                                                data.period_type === 'weekly'
+                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-500/20'
+                                                    : 'bg-background hover:bg-muted text-foreground border-border'
+                                            }`}
+                                        >
+                                            🌊 Tab 2: Mingguan (3 Hari)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="category" className="text-xs font-semibold text-muted-foreground uppercase">
+                                            Kategori Target
+                                        </Label>
+                                        <select
+                                            id="category"
+                                            value={data.category}
+                                            onChange={(e) => setData('category', e.target.value as any)}
+                                            className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                        >
+                                            <option value="auto">⚡ Otomatis Cerdas (Rekomendasi)</option>
+                                            <option value="infografis">🖼️ Infografis Cuaca Visual (PNG)</option>
+                                            <option value="pelabuhan">⚓ Cuaca Pelabuhan (PDF)</option>
+                                            <option value="provinsi">📍 Cuaca Provinsi (PDF)</option>
+                                            <option value="bahari">🌊 Wisata Bahari</option>
+                                            <option value="buletin">📖 Buletin Maritim</option>
+                                            <option value="peringatan-dini">⚠️ Peringatan Dini Gelombang (.PNG)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="forecast_date" className="text-xs font-semibold text-muted-foreground uppercase">
+                                            Tanggal Berlaku
                                         </Label>
                                         <Input
                                             id="forecast_date"
                                             type="date"
                                             value={data.forecast_date}
                                             onChange={(e) => setData('forecast_date', e.target.value)}
-                                            className="h-11 rounded-xl text-xs"
+                                            className="h-10 rounded-xl text-xs"
                                         />
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Default: Hari ini (atau terbaca dari nama file).
-                                        </p>
                                     </div>
 
-                                    {/* Periode */}
                                     <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="period_type"
-                                            className="text-xs font-semibold text-muted-foreground uppercase"
-                                        >
-                                            Periode Prakiraan
+                                        <Label htmlFor="period_type" className="text-xs font-semibold text-muted-foreground uppercase">
+                                            Periode
                                         </Label>
                                         <select
                                             id="period_type"
                                             value={data.period_type}
                                             onChange={(e) => setData('period_type', e.target.value as any)}
-                                            className="h-11 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                            className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
                                         >
-                                            <option value="daily">Harian</option>
-                                            <option value="weekly">Mingguan</option>
+                                            <option value="daily">Harian (Tab 1 - 24 Jam)</option>
+                                            <option value="weekly">Mingguan (Tab 2 - 3 Hari)</option>
                                         </select>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Menentukan tab tampil di halaman publik.
-                                        </p>
                                     </div>
                                 </div>
-                            )}
+                            </div>
 
-                            <div className="flex justify-end gap-3 pt-2">
+                            {/* Tombol Simpan & Submit */}
+                            <div className="flex items-center justify-end gap-3 pt-2">
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => setShowUploadModal(false)}
+                                    onClick={() => {
+                                        reset();
+                                        setShowUploadModal(false);
+                                    }}
                                     className="rounded-xl"
                                 >
                                     Batal
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={processing}
-                                    className="rounded-xl px-6 font-bold"
+                                    disabled={processing || data.files.length === 0}
+                                    className="h-11 gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 font-bold text-white shadow-lg hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50"
                                 >
+                                    <Sparkles className="h-4 w-4" />
                                     {processing
-                                        ? data.files.length > 1
-                                            ? `Mengunggah ${data.files.length} Berkas...`
-                                            : 'Mengunggah file...'
-                                        : data.files.length > 1
-                                          ? `Unggah ${data.files.length} Berkas Sekaligus`
-                                          : 'Simpan & Unggah Berkas'}
+                                        ? `Sedang Memproses ${data.files.length} Berkas...`
+                                        : data.files.length > 0
+                                          ? `Proses & Terbitkan ${data.files.length} Berkas Sekaligus`
+                                          : 'Pilih / Seret Berkas Dulu'}
                                 </Button>
                             </div>
                         </form>
                     </div>
                 )}
 
-                {/* 5 Classification Folders Metric Cards */}
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                {/* 6 Classification Folders Metric Cards */}
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                     {(
                         [
+                            'infografis',
                             'peringatan-dini',
                             'provinsi',
                             'buletin',
@@ -699,6 +898,7 @@ export default function DocumentIndex({
 
                             {(
                                 [
+                                    'infografis',
                                     'peringatan-dini',
                                     'provinsi',
                                     'buletin',

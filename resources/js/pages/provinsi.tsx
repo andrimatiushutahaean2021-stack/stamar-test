@@ -168,7 +168,7 @@ export default function Provinsi({ documents = [] }: Props) {
                     <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
                             <MapPin className="h-4 w-4 text-amber-300" />
-                            <span>Area Perairan Provinsi Maluku (18 Wilayah)</span>
+                            <span>Area Perairan Provinsi Maluku</span>
                         </div>
                         <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
                             Prakiraan Cuaca Perairan Provinsi
@@ -177,7 +177,7 @@ export default function Provinsi({ documents = [] }: Props) {
                             BMKG Stasiun Meteorologi Maritim Ambon
                         </h2>
                         <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                            Akses dokumen PDF rincian tinggi gelombang, arah angin, dan peringatan dini cuaca 18 wilayah perairan Provinsi Maluku secara sinkron dan terstandar (Kode P_AH).
+                            Informasi rincian prakiraan cuaca, tinggi gelombang, arah angin, serta peringatan dini di seluruh wilayah perairan Provinsi Maluku secara berkala.
                         </p>
                     </div>
                 </div>
@@ -222,12 +222,12 @@ export default function Provinsi({ documents = [] }: Props) {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                                        Prakiraan Cuaca Perairan — {activeTab === 'tab1' ? tab1Info.label : tab2Info.label}
-                                    </h3>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                        Daftar 18 Wilayah Perairan Maluku (Format Resmi P_AH001 s/d P_AH018)
-                                    </p>
-                                </div>
+                                         Prakiraan Cuaca Perairan — {activeTab === 'tab1' ? tab1Info.label : tab2Info.label}
+                                     </h3>
+                                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                         Daftar Wilayah Perairan Maluku
+                                     </p>
+                                 </div>
                             </div>
                             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/70 dark:text-amber-300">
                                 <Clock className="h-3.5 w-3.5" />
@@ -246,8 +246,8 @@ export default function Provinsi({ documents = [] }: Props) {
                                         <th className="px-5 py-3.5">
                                             NAMA PERAIRAN
                                         </th>
-                                        <th className="w-36 px-4 py-3.5 text-center">
-                                            UNDUH FILE
+                                        <th className="w-44 px-4 py-3.5 text-center">
+                                            LIHAT PRAKIRAAN
                                         </th>
                                         <th className="w-56 px-5 py-3.5 text-left">
                                             WAKTU PEMBAHARUAN
@@ -261,7 +261,7 @@ export default function Provinsi({ documents = [] }: Props) {
                                         const defaultCode = `P_AH${padNumber}`;
                                         const activeDateKey = activeTab === 'tab1' ? tab1Info.dateKey : tab2Info.dateKey;
 
-                                        // Cari dokumen yang cocok dengan nomor perairan & tanggal batch aktif
+                                        // Cari dokumen yang cocok dengan nomor perairan & tab aktif
                                         const doc = documents.find((d) => {
                                             const isMatchRegion =
                                                 d.region_number === regionNumber ||
@@ -272,15 +272,22 @@ export default function Provinsi({ documents = [] }: Props) {
                                             if (!isMatchRegion) return false;
 
                                             const docDate = d.forecast_date ? d.forecast_date.split('T')[0] : d.created_at.split('T')[0];
-                                            return docDate === activeDateKey;
-                                        }) || documents.find((d) => {
+                                            if (tab1Info.dateKey !== tab2Info.dateKey) {
+                                                return docDate === activeDateKey;
+                                            }
+                                            if (activeTab === 'tab1') {
+                                                return docDate === tab1Info.dateKey || d.period_type === 'daily';
+                                            } else {
+                                                return docDate === tab2Info.dateKey || d.period_type === 'weekly';
+                                            }
+                                        }) || (tab1Info.dateKey === tab2Info.dateKey ? documents.find((d) => {
                                             return (
                                                 d.region_number === regionNumber ||
                                                 (d.region_code && d.region_code.toUpperCase() === defaultCode) ||
                                                 new RegExp(`\\bP[._\\-\\s]?AH[._\\-\\s]?0*${regionNumber}\\b`, 'i').test(d.title || '') ||
                                                 new RegExp(`\\bP[._\\-\\s]?AH[._\\-\\s]?0*${regionNumber}\\b`, 'i').test(d.file_path || '')
                                             );
-                                        });
+                                        }) : undefined);
 
                                         return (
                                             <tr
@@ -291,14 +298,9 @@ export default function Provinsi({ documents = [] }: Props) {
                                                     {regionNumber}
                                                 </td>
                                                 <td className="px-5 py-3">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-semibold text-slate-800 dark:text-slate-100">
-                                                            {wilayah}
-                                                        </span>
-                                                        <span className="rounded bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-amber-700 border border-amber-200/60 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                                                            {doc?.region_code || defaultCode}
-                                                        </span>
-                                                    </div>
+                                                    <span className="font-semibold text-slate-800 dark:text-slate-100">
+                                                        {wilayah}
+                                                    </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
                                                     {doc ? (
@@ -308,7 +310,7 @@ export default function Provinsi({ documents = [] }: Props) {
                                                             rel="noopener noreferrer"
                                                             className="font-bold text-amber-600 hover:text-amber-800 underline dark:text-amber-400 dark:hover:text-amber-300 text-xs tracking-wide"
                                                         >
-                                                            LIHAT PDF
+                                                            LIHAT PRAKIRAAN
                                                         </a>
                                                     ) : (
                                                         <span className="text-xs text-slate-400 dark:text-slate-500">

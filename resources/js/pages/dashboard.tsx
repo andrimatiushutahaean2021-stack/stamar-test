@@ -14,13 +14,14 @@ import {
     PlusCircle,
     MapPin,
     Anchor,
+    Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DocumentItem {
     id: number;
     title: string;
-    category: 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
+    category: 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
     description?: string;
     file_path: string;
     file_type: string;
@@ -29,6 +30,7 @@ interface DocumentItem {
 }
 
 interface CategoryCounts {
+    infografis?: number;
     'peringatan-dini': number;
     provinsi: number;
     buletin: number;
@@ -47,6 +49,7 @@ export default function Dashboard({
     recentDocuments = [],
     totalDocuments = 0,
     categoryCounts = {
+        infografis: 0,
         'peringatan-dini': 0,
         provinsi: 0,
         buletin: 0,
@@ -57,8 +60,22 @@ export default function Dashboard({
 }: DashboardProps) {
     const categoryCards = [
         {
+            id: 'infografis',
+            title: '1. Infografis Cuaca',
+            subtitle: 'Upload Peta Visual & Rilis Harian',
+            folder: 'uploads/infografis/',
+            count: categoryCounts['infografis'] || 0,
+            icon: ImageIcon,
+            color: 'text-indigo-500',
+            bgColor: 'bg-indigo-500/10',
+            borderColor: 'hover:border-indigo-500/50',
+            badgeBg:
+                'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900',
+            filterUrl: '/admin/documents?category=infografis&action=upload',
+        },
+        {
             id: 'peringatan-dini',
-            title: '1. Peringatan Dini',
+            title: '2. Peringatan Dini',
             subtitle: 'Cuaca Ekstrem & Gelombang Tinggi',
             folder: 'uploads/peringatan-dini/',
             count: categoryCounts['peringatan-dini'] || 0,
@@ -72,7 +89,7 @@ export default function Dashboard({
         },
         {
             id: 'provinsi',
-            title: '2. Cuaca Provinsi',
+            title: '3. Cuaca Provinsi',
             subtitle: 'Upload Prakiraan Cuaca Provinsi Maluku',
             folder: 'uploads/provinsi/',
             count: categoryCounts['provinsi'] || 0,
@@ -86,7 +103,7 @@ export default function Dashboard({
         },
         {
             id: 'buletin',
-            title: '3. Buletin Maritim',
+            title: '4. Buletin Maritim',
             subtitle: 'Upload Majalah Digital & E-Magazine',
             folder: 'uploads/buletin/',
             count: categoryCounts['buletin'] || 0,
@@ -100,7 +117,7 @@ export default function Dashboard({
         },
         {
             id: 'pelabuhan',
-            title: '4. Cuaca Pelabuhan',
+            title: '5. Cuaca Pelabuhan',
             subtitle: 'Upload Dokumen Prakiraan Cuaca Pelabuhan',
             folder: 'uploads/pelabuhan/',
             count: (categoryCounts['pelabuhan'] ?? categoryCounts['mfy']) || 0,
@@ -114,7 +131,7 @@ export default function Dashboard({
         },
         {
             id: 'bahari',
-            title: '5. Wisata Bahari',
+            title: '6. Wisata Bahari',
             subtitle: 'Wisata Bahari & Keselamatan Pantai',
             folder: 'uploads/bahari/',
             count: categoryCounts['bahari'] || 0,
@@ -231,12 +248,12 @@ export default function Dashboard({
                             Klasifikasi Folder Upload Berkas
                         </h2>
                         <p className="text-xs text-muted-foreground">
-                            Struktur 5 folder penyimpanan berkas publikasi BMKG
+                            Struktur 6 folder penyimpanan berkas publikasi BMKG
                         </p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     {categoryCards.map((cat) => {
                         const Icon = cat.icon;
                         return (

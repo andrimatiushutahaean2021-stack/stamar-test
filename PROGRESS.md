@@ -43,15 +43,165 @@ Tampilan antarmuka website telah disesuaikan agar informatif, dinamis, dan berte
 
 ---
 
-## 🚀 3. Tindak Lanjut (Next Steps)
+## 🛡️ 3. Analisis Keamanan & Efisiensi Jalur Upload Forecaster
 
-Saat Anda melanjutkan pekerjaan di hari berikutnya, silakan fokus pada hal-hal berikut:
+Menindaklanjuti masukan terkait alur kerja forecaster lama (yang terbiasa menggunakan FileZilla / MobaXterm) vs kebutuhan sistem modern yang aman:
 
-1. **Integrasi Data API Dinamis:** Menghubungkan Widget Cuaca React dan _Slider_ Peringatan Dini di `welcome.tsx` dengan database atau sumber API BMKG.
-2. **Dashboard Admin (CMS):** Membangun UI Admin untuk fitur unggah PDF Buletin Maritim, memastikan validasi tipe MIME PDF saat proses upload agar terhindar dari _Webshell_.
-3. **Audit Logging:** Mengembangkan sistem _log_ untuk melacak aktivitas admin yang mengubah data (sesuai kaidah keamanan aplikasi).
-4. **Persiapan Deployment Nginx:** Menerapkan _server block hardening_ di Nginx untuk mengunci folder unggahan (`storage/app/public`) agar script PHP tidak dapat dieksekusi dari dalam folder tersebut.
+| Aspek Keamanan | 🌐 Web Dropzone Cerdas (Panel Admin) | 📁 SFTP / FTP Langsung (FileZilla / MobaXterm) |
+| :--- | :--- | :--- |
+| **Penyusupan Webshell / Malware** | ✅ **Sangat Aman.** Backend Laravel memeriksa *MIME Type binary* (`finfo`), nama file dibersihkan (*sanitized*), dan ekstensi berbahaya (`.php`, `.phtml`, `.sh`, `.exe`) otomatis ditolak. | ❌ **Sangat Berisiko.** FileZilla mengunggah langsung ke *filesystem* server. Jika komputer staf terkena *malware* atau file `.php` tersusup, server bisa langsung dieksekusi peretas (penyebab insiden *defacement* web lama). |
+| **Akses Port Server** | ✅ **Aman.** Hanya port web standar (HTTPS / 443) yang dibuka ke publik. | ❌ **Berisiko.** Port FTP (21) atau SSH (22) harus dibuka ke jaringan publik, rentan diserang *brute-force botnet* secara masif. |
+| **Manajemen Kredensial** | ✅ **Ketat.** Dilindungi pembatasan *rate-limit* (maks 3x percobaan login/menit), CSRF protection, dan sesi terotentikasi Laravel Fortify. | ❌ **Rentan Bocor.** Password FTP/SSH sering tersimpan secara *plain-text* di aplikasi FileZilla lokal dan rawan dicuri *stealer trojan*. |
+| **Pencatatan Jejak Audit** | ✅ **Tercatat Jelas.** Identitas user yang login, riwayat waktu, dan berkas yang diproses terekam di database. | ❌ **Sulit Dipantau.** Sulit membedakan aktivitas normal forecaster dengan lalu lintas mencurigakan. |
+
+> **Rekomendasi Keputusan Arsitektur:**
+> Membangun fitur **"Smart Bulk Dropzone"** di dalam panel admin web. Forecaster tetap mendapatkan kecepatan seperti FileZilla (sekali drag & drop puluhan file pelabuhan, provinsi, dan wisata bahari sekaligus tanpa perlu mengisi form/dropdown berulang), namun seluruh proses tetap melalui validasi keamanan backend Laravel yang ketat.
+
+---
+
+## 🚀 4. Fitur Baru: Smart Forecaster Bulk Dropzone (Selesai)
+
+- **Smart Dropzone Panel Admin:**
+    - Forecaster dapat melakukan drag & drop puluhan berkas campuran sekaligus (Pelabuhan, Provinsi, Wisata Bahari, Buletin, Peringatan Dini) tanpa perlu mengisi formulir/dropdown berulang.
+    - Dilengkapi *Live Auto-Detection* yang langsung membaca dan menghitung jenis file berdasarkan pola kode BMKG (`AH...`, `P_AH...`, `slide...`).
+    - Backend Laravel tervalidasi binary `finfo`, sanitasi ekstensi, dan direct storage routing.
+
+---
+
+## ⚠️ 5. PANDUAN PENTING DEPLOYMENT KE SERVER BMKG (Wajib Dibaca!)
+
+Ketika proyek siap dipindahkan ke server operasional BMKG menggunakan **NetBird** dan **MobaXterm**, **JANGAN** langsung drag-and-drop seluruh folder dari Windows begitu saja! Ikuti aturan baku berikut:
+
+### A. Persiapan Akses Server:
+1. **Nyalakan NetBird VPN:** Pastikan status NetBird terhubung agar laptop masuk ke jaringan private/intranet BMKG.
+2. **Koneksi MobaXterm:** Buka sesi SSH MobaXterm menuju IP Server BMKG.
+3. **Backup Web Lama (Wajib):** 
+   - Di terminal MobaXterm, kompres folder website lama ke format zip sebelum diubah/dihapus:
+     ```bash
+     zip -r backup_weblama_$(date +%Y%m%d).zip /var/www/html/weblama
+     ```
+
+### B. Larangan Keras Saat Upload File:
+### B. Alat Otomatis Pencegah Kesalahan (Anti-Error Deployment Tools):
+Telah dibuatkan 2 script pengaman agar Anda tidak perlu cemas lupa atau salah saat deploy:
+
+1. **Di Laptop Anda (Windows): `buat-paket-deploy.bat`**
+   - Cukup klik 2x file ini di Windows.
+   - Script akan otomatis menjalankan `npm run build` dan mengompres seluruh project menjadi file **`stamar-deploy-siap.zip`**.
+   - Folder berbahaya (`node_modules/`, `vendor/`, `.env` lokal, `.git`) **otomatis disaring dan tidak ikut**.
+   - Yang Anda upload via MobaXterm cukup file zip ini saja!
+
+2. **Di Server Linux: `deploy.sh`**
+   - Setelah zip diekstrak di server (`unzip -o stamar-deploy-siap.zip`), cukup jalankan:
+     ```bash
+     bash deploy.sh
+     ```
+   - **Fitur Penyelamat Otomatis:**
+     - Jika ada folder `node_modules` atau `vendor` bawaan Windows yang tidak sengaja tertumpah, script akan langsung mendeteksi dan menghapusnya otomatis.
+     - Otomatis mengecek dan mengonfigurasi `.env`.
+     - Otomatis menjalankan `composer install --no-dev`.
+     - Otomatis menjalankan `php artisan migrate --force`.
+     - Otomatis membuat symlink `storage:link`.
+     - Otomatis mengaktifkan cache produksi (`config:cache`, `route:cache`, `view:cache`).
+     - Otomatis mengatur hak akses folder (`chmod 775`).
+
+### C. Panduan Simulasi Praktik Deployment Bertahap (4 Fase):
+
+```
+[Laptop Windows]                            [Server BMKG Linux]
+1. Dobel klik buat-paket-deploy.bat  -->    3. NetBird & MobaXterm Konek
+2. Menghasilkan stamar-deploy-siap.zip -->    4. Backup web lama (zip)
+                                            5. Drop & unzip stamar-deploy-siap.zip
+                                            6. Jalankan: bash deploy.sh
+                                            --> WEBSITE LIVE!
+```
+
+- **Fase 1 (Di Laptop):**
+  1. Buka folder proyek di Windows Explorer.
+  2. Klik 2x `buat-paket-deploy.bat`. Tunggu sampai muncul notifikasi sukses.
+  3. File `stamar-deploy-siap.zip` siap dikirim.
+- **Fase 2 (Koneksi):**
+  1. Nyalakan NetBird VPN sampai status hijau (*Connected*).
+  2. Buka MobaXterm, buat sesi SSH ke IP Server BMKG.
+- **Fase 3 (Backup Aman Web Lama):**
+  1. Di terminal MobaXterm: `cd /var/www/html`
+  2. Kompres arsip: `zip -r backup_weblama_$(date +%Y%m%d).zip *`
+- **Fase 4 (Eksekusi & Live):**
+  1. Drag & drop `stamar-deploy-siap.zip` ke panel kiri MobaXterm (`/var/www/html`).
+  2. Ekstrak di terminal: `unzip -o stamar-deploy-siap.zip`
+  3. Eksekusi script otomatis: `bash deploy.sh`
+  4. Website baru selesai dideploy dan live!
+
+---
+
+---
+
+## 🌟 6. Integrasi 5 Fitur Unggulan Website Stamar Ambon (Selesai)
+
+Berdasarkan perbandingan dengan website lama (`https://stamar-ambon.bmkg.go.id/`), seluruh 5 fitur telah berhasil dibangun dan diintegrasikan dengan estetika maritim modern, tata letak yang efisien, dan sistem unggah otomatis:
+
+1. **Infografis Cuaca Visual & Peta Rilis Harian:**
+   - **Upload & Bulk Dropzone:** Terintegrasi penuh ke dalam *Smart Forecaster Dropzone* pada [DocumentController.php](file:///e:/herd/test/app/Http/Controllers/Admin/DocumentController.php) dan [index.tsx](file:///e:/herd/test/resources/js/pages/admin/documents/index.tsx). Forecaster cukup drag & drop file dengan nama mengandung `infografis`, `peta`, atau `grafis` untuk otomatis terdeteksi dan diklasifikasikan ke folder `infografis`.
+   - **Tampilan Beranda:** Menampilkan section khusus *Infografis & Peta Rilis Terkini* di [welcome.tsx](file:///e:/herd/test/resources/js/pages/welcome.tsx) dilengkapi modal perbesar gambar (*lightbox preview*) dan tombol unduh langsung beresolusi tinggi.
+   - **Halaman Khusus:** Disediakan halaman publik mandiri [infografis.tsx](file:///e:/herd/test/resources/js/pages/infografis.tsx) dengan fitur pencarian dan filter arsip.
+
+2. **Galeri Foto Kegiatan & Dokumentasi Lapangan:**
+   - Menampilkan dokumentasi nyata aktivitas Stamar Ambon di [welcome.tsx](file:///e:/herd/test/resources/js/pages/welcome.tsx), seperti:
+     - Sekolah Lapang Cuaca Nelayan (SLCN) bagi nelayan tradisional.
+     - Pemeliharaan & kalibrasi sensor AWS / alat meteorologi laut Latuhalat.
+     - Koordinasi keselamatan pelayaran bersama KSOP dan Pelindo.
+     - Kunjungan edukasi mahasiswa & siswa.
+   - Dilengkapi filter kategori dinamis (*SLCN*, *Operasional*, *Kemitraan*) dan modal *lightbox*.
+
+3. **Kolom Berita & Siaran Pers Resmi Stamar Ambon:**
+   - Menyajikan kartu berita dan siaran pers resmi BMKG Stamar Ambon di [welcome.tsx](file:///e:/herd/test/resources/js/pages/welcome.tsx).
+   - Dilengkapi modal interaktif (*Press Release Reader*) agar pengunjung dapat membaca siaran pers secara lengkap tanpa tautan rusak.
+
+4. **Link Ekosistem Resmi BMKG & Unduh Aplikasi Info BMKG:**
+   - Footer pada [public-layout.tsx](file:///e:/herd/test/resources/js/layouts/public-layout.tsx) telah dirapikan menjadi 4 kolom proporsional:
+     1. Profil & Identitas Stamar Ambon + Status Operasional 24/7.
+     2. Layanan & Prakiraan (Provinsi, Pelabuhan, Penyeberangan, Wisata Bahari, Infografis, Cuaca 10 Kota, Buletin, IKM).
+     3. Ekosistem Resmi BMKG (BMKG Pusat, InaTEWS, CEWS, Dit. Meteorologi Maritim, BBMKG Wilayah IV, STMKG, Satelit Himawari).
+     4. Aplikasi Mobile Info BMKG (Tombol unduh resmi Google Play Store & Apple App Store) + Kontak WhatsApp dan Sosial Media.
+
+5. **Prakiraan Cuaca Darat 10 Kota / Kabupaten Maluku:**
+   - Disediakan halaman interaktif [cuaca-maluku.tsx](file:///e:/herd/test/resources/js/pages/cuaca-maluku.tsx) untuk 10 ibukota kab/kota di Maluku (Kota Ambon, Masohi, Namlea, Kota Tual, Dobo, Saumlaki, Bula, Piru, Tiakur/Kisar, dan Namrole/Leksula).
+   - Menampilkan suhu real-time (°C), kondisi cuaca, kelembapan, kecepatan/arah angin, prospek cuaca 3 harian, dan tautan langsung ke server BMKG Pusat.
+   - Terhubung langsung pada menu navigasi *Prakiraan* di [public-layout.tsx](file:///e:/herd/test/resources/js/layouts/public-layout.tsx) dan kartu akses cepat di [welcome.tsx](file:///e:/herd/test/resources/js/pages/welcome.tsx).
+
+---
+
+## 🚀 7. Pemisahan Fitur Infografis vs Prakiraan & Penyempurnaan Tab Tanggal (20 Oktober 2026)
+
+Menjawab kebutuhan penyajian data operasional BMKG dan pengalaman publik yang bersih serta profesional:
+
+1. **Pemisahan Total Format Berkas (PDF vs PNG):**
+   - **Fitur Prakiraan Cuaca:** Halaman `/pelabuhan` dan `/provinsi` khusus menyajikan berkas resmi **PDF** dengan aksi **"Lihat Prakiraan"**.
+   - **Fitur Infografis Cuaca:** Disediakan halaman khusus [infografis-pelabuhan.tsx](file:///e:/herd/test/resources/js/pages/infografis-pelabuhan.tsx) dan [infografis-provinsi.tsx](file:///e:/herd/test/resources/js/pages/infografis-provinsi.tsx) khusus berkas visual **PNG** dengan aksi **"Lihat Infografis"**.
+   - **Viewer Modal Interaktif:** Dilengkapi popup modal gambar dengan fitur Zoom In, Zoom Out, Reset, dan Layar Penuh (Fullscreen) untuk kenyamanan pengunjung membaca peta/grafis.
+
+2. **Pembersihan Tampilan Publik:**
+   - Menghapus seluruh keterangan teknis yang berbau format file seperti `(format png/format berkas pdf)`.
+   - Menyembunyikan kode teknis penamaan file seperti `AH` atau `P_AH` dari publik.
+   - Menghilangkan badge jumlah wilayah agar tampilan tabel lebih rapi, minimalis, dan elegan.
+
+3. **Penyempurnaan Pembeda Tanggal (Sliding Window):**
+   - Mengatasi kendala berkas tidak muncul pada tab tanggal:
+     - 112 berkas Batch 2 (periode 20–23 Oktober) telah dinormalisasi di database dengan `forecast_date = 2026-10-20` dan `period_type = weekly`.
+     - Logika pencocokan di [pelabuhan.tsx](file:///e:/herd/test/resources/js/pages/pelabuhan.tsx), [provinsi.tsx](file:///e:/herd/test/resources/js/pages/provinsi.tsx), [infografis-pelabuhan.tsx](file:///e:/herd/test/resources/js/pages/infografis-pelabuhan.tsx), dan [infografis-provinsi.tsx](file:///e:/herd/test/resources/js/pages/infografis-provinsi.tsx) disempurnakan sehingga Tab 1 dan Tab 2 membaca file secara terisolasi dan presisi.
+   - **Mekanisme Rolling Otomatis:** Forecaster tidak perlu mengunggah 2 kali setiap hari. Cukup 1 kali upload untuk rilis mendatang (Tab 2), maka berkas hari sebelumnya otomatis bergeser menempati Tab 1.
+
+4. **Penyempurnaan Panel Upload Admin:**
+   - Kolom **"Target Tab & Tanggal Prakiraan"** di [admin/documents/index.tsx](file:///e:/herd/test/resources/js/pages/admin/documents/index.tsx) kini terbuka secara transparan.
+   - Disediakan tombol pintas 1-klik:
+     - 📅 **Tab 1: Harian (24 Jam)** -> Otomatis mengisi tanggal hari ini (`daily`).
+     - 🌊 **Tab 2: Mingguan (3 Hari)** -> Otomatis mengisi tanggal besok (`weekly`).
+   - Sistem auto-classifier di backend [DocumentController.php](file:///e:/herd/test/app/Http/Controllers/Admin/DocumentController.php) otomatis memilah berkas PNG ke Infografis dan berkas PDF ke Prakiraan.
+
+5. **Verifikasi Build:**
+   - Perintah `npm run build` telah dijalankan dan lulus 100% tanpa error TypeScript maupun styling.
 
 ---
 
 _Catatan: Anda dapat selalu merujuk ke file ini (`PROGRESS.md`) kapan pun Anda membuka kembali workspace Anda._
+

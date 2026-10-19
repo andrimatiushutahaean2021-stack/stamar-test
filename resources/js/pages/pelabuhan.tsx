@@ -190,7 +190,7 @@ export default function Pelabuhan({ documents = [] }: Props) {
                     <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
                             <Anchor className="h-4 w-4 text-blue-300" />
-                            <span>Area Pelayanan 37 Pelabuhan Maluku</span>
+                            <span>Area Pelayanan Pelabuhan Maluku</span>
                         </div>
                         <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
                             Prakiraan Cuaca Maritim Pelabuhan
@@ -199,7 +199,7 @@ export default function Pelabuhan({ documents = [] }: Props) {
                             BMKG Stasiun Meteorologi Maritim Ambon
                         </h2>
                         <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                            Informasi cuaca maritim, tinggi gelombang, dan angin di 37 titik pelabuhan dan penyeberangan Maluku yang diperbarui setiap hari kerja (Kode AH).
+                            Informasi prakiraan cuaca maritim, tinggi gelombang, dan kondisi angin di area pelabuhan dan penyeberangan Maluku yang diperbarui secara berkala.
                         </p>
                     </div>
                 </div>
@@ -244,12 +244,12 @@ export default function Pelabuhan({ documents = [] }: Props) {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                                        Prakiraan Cuaca Pelabuhan — {activeTab === 'tab1' ? tab1Info.label : tab2Info.label}
-                                    </h3>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                        37 Titik Pelabuhan Maluku (Format Resmi AH001 s/d AH037)
-                                    </p>
-                                </div>
+                                         Prakiraan Cuaca Pelabuhan — {activeTab === 'tab1' ? tab1Info.label : tab2Info.label}
+                                     </h3>
+                                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                         Daftar Pelabuhan & Penyeberangan Maluku
+                                     </p>
+                                 </div>
                             </div>
                             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-950/70 dark:text-blue-300">
                                 <Clock className="h-3.5 w-3.5" />
@@ -268,8 +268,8 @@ export default function Pelabuhan({ documents = [] }: Props) {
                                         <th className="px-5 py-3.5">
                                             NAMA PERAIRAN / PELABUHAN
                                         </th>
-                                        <th className="w-36 px-4 py-3.5 text-center">
-                                            UNDUH FILE
+                                        <th className="w-44 px-4 py-3.5 text-center">
+                                            LIHAT PRAKIRAAN
                                         </th>
                                         <th className="w-56 px-5 py-3.5 text-left">
                                             WAKTU PEMBAHARUAN
@@ -283,7 +283,7 @@ export default function Pelabuhan({ documents = [] }: Props) {
                                         const defaultCode = `AH${padNumber}`;
                                         const activeDateKey = activeTab === 'tab1' ? tab1Info.dateKey : tab2Info.dateKey;
 
-                                        // Cari dokumen yang cocok dengan nomor pelabuhan & tanggal batch aktif
+                                        // Cari dokumen yang cocok dengan nomor pelabuhan & tab aktif
                                         const doc = documents.find((d) => {
                                             const isMatchRegion =
                                                 d.region_number === regionNumber ||
@@ -293,22 +293,23 @@ export default function Pelabuhan({ documents = [] }: Props) {
 
                                             if (!isMatchRegion) return false;
 
-                                            // Cocokkan tanggal
                                             const docDate = d.forecast_date ? d.forecast_date.split('T')[0] : d.created_at.split('T')[0];
-                                            return docDate === activeDateKey;
-                                        }) || documents.find((d) => {
-                                            // Fallback jika hanya ada 1 versi diunggah
+                                            if (tab1Info.dateKey !== tab2Info.dateKey) {
+                                                return docDate === activeDateKey;
+                                            }
+                                            if (activeTab === 'tab1') {
+                                                return docDate === tab1Info.dateKey || d.period_type === 'daily';
+                                            } else {
+                                                return docDate === tab2Info.dateKey || d.period_type === 'weekly';
+                                            }
+                                        }) || (tab1Info.dateKey === tab2Info.dateKey ? documents.find((d) => {
                                             return (
                                                 d.region_number === regionNumber ||
                                                 (d.region_code && d.region_code.toUpperCase() === defaultCode) ||
                                                 new RegExp(`\\bAH[._\\-\\s]?0*${regionNumber}\\b`, 'i').test(d.title || '') ||
                                                 new RegExp(`\\bAH[._\\-\\s]?0*${regionNumber}\\b`, 'i').test(d.file_path || '')
                                             );
-                                        });
-
-                                        const type = activeTab === 'tab1' ? '06102026' : '07102026';
-                                        const fallbackUrl = `https://stamar-ambon.bmkg.go.id/content/MFY/AH${padNumber}_${type}.pdf`;
-                                        const targetUrl = doc ? `/storage/${doc.file_path}` : fallbackUrl;
+                                        }) : undefined);
 
                                         return (
                                             <tr
@@ -319,24 +320,25 @@ export default function Pelabuhan({ documents = [] }: Props) {
                                                     {regionNumber}
                                                 </td>
                                                 <td className="px-5 py-3">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-semibold text-slate-800 dark:text-slate-100">
-                                                            {pelabuhan}
-                                                        </span>
-                                                        <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-blue-700 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                                                            {doc?.region_code || defaultCode}
-                                                        </span>
-                                                    </div>
+                                                    <span className="font-semibold text-slate-800 dark:text-slate-100">
+                                                        {pelabuhan}
+                                                    </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <a
-                                                        href={targetUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="font-bold text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300 text-xs tracking-wide"
-                                                    >
-                                                        LIHAT PDF
-                                                    </a>
+                                                    {doc ? (
+                                                        <a
+                                                            href={`/storage/${doc.file_path}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-bold text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300 text-xs tracking-wide"
+                                                        >
+                                                            LIHAT PRAKIRAAN
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                                                            -
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-5 py-3 text-xs text-slate-600 dark:text-slate-300 font-mono">
                                                     {doc ? formatWitTime(doc.created_at) : '-'}
