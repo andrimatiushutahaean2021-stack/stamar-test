@@ -376,13 +376,19 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         (0911) 3834398
                                     </a>
                                 </p>
-                                <p>
-                                    WhatsApp:{' '}
+                            
+                                {/* WhatsApp */}
+                                <p className="flex items-start gap-3">
+                                        <img
+                                            src="/images/whatsapp.svg"
+                                            alt="WhatsApp"
+                                            className="mt-0.5 h-5 w-5 shrink-0"
+                                        />
                                     <a
                                         href="https://wa.me/6281296265822"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-emerald-400 underline hover:text-emerald-300"
+                                        className="text-emerald-400 hover:text-emerald-300"
                                     >
                                         0812-9626-5822
                                     </a>
@@ -392,6 +398,42 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         Pelayanan Operasional 24/7
                                     </span>
                                 </div>
+                                
+                                {/* Media Sosial STAMAR AMBON */}
+                                <div className="pt-3">                                
+                                    <div className="flex items-center gap-3">
+                                        {/* Instagram */}
+                                        <a
+                                            href="https://www.instagram.com/bmkg.maritim.ambon?xtok=MXZ2MjNhZXdqYzZsNg=="
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label="Instagram STAMAR Ambon"
+                                            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-pink-500/20"
+                                        >
+                                            <img
+                                                src="/images/instagram.svg"
+                                                alt="Instagram"
+                                                className="h-5 w-5"
+                                            />
+                                        </a>
+
+                                        {/* TikTok */}
+                                        <a
+                                            href="https://www.tiktok.com/@bmkg.maritim.ambon?_r=1&_t=ZS-9Ag3qD0VOFc"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label="TikTok STAMAR Ambon"
+                                            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-slate-700"
+                                        >
+                                            <img
+                                                src="/images/tiktok.svg"
+                                                alt=""
+                                                className="h-5 w-5"
+                                            />
+                                        </a>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
