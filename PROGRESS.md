@@ -203,5 +203,27 @@ Menjawab kebutuhan penyajian data operasional BMKG dan pengalaman publik yang be
 
 ---
 
+## 🛠️ 8. Refaktor & Penyederhanaan Panel Admin & Manajemen File (20 Oktober 2026)
+
+Menjawab masukan terkait efisiensi tampilan admin dan penanganan elemen/halaman ganda (*double*):
+
+1. **Penyelesaian Double Layout & Double Category di Halaman Dokumen:**
+   - Menghapus wrapper bersarang `<AppLayout>` di [admin/documents/index.tsx](file:///e:/herd/test/resources/js/pages/admin/documents/index.tsx) karena sudah dibungkus otomatis oleh [app.tsx](file:///e:/herd/test/resources/js/app.tsx), mengeliminasi header/breadcrumb ganda.
+   - Menghapus 6 kartu folder metrik raksasa yang menduplikasi baris filter tab persis di bawahnya.
+   - Menyatukan filter kategori menjadi satu bar tab interaktif yang elegan, dilengkapi ikon dan badge counter jumlah berkas per kategori.
+   - Menyederhanakan form upload dengan menyembunyikan kotak panjang pola klasifikasi ke dalam tombol toggle (*"Lihat Pola Format Nama"*).
+
+2. **Redesain Halaman Dashboard (`/dashboard`):**
+   - Mengubah [dashboard.tsx](file:///e:/herd/test/resources/js/pages/dashboard.tsx) dari yang sebelumnya menjiplak halaman manajemen berkas menjadi **Panel Kontrol Operasional / Executive Dashboard** yang sesungguhnya.
+   - Menyajikan KPI statistik berkas, status distribusi per saluran publikasi, dan pratinjau ringkas 6 berkas terbaru.
+
+3. **Perampingan Navigasi Sidebar:**
+   - Merampingkan [app-sidebar.tsx](file:///e:/herd/test/resources/js/components/app-sidebar.tsx) dari 4 menu upload yang berulang menjadi 2 menu utama: **Dashboard Panel** dan **Manajemen File & Dokumen**.
+
+4. **Koreksi Type TypeScript:**
+   - Memperbaiki tipe gambar lightbox pada [galeri.tsx](file:///e:/herd/test/resources/js/pages/galeri.tsx) sehingga verifikasi `npm run types:check` lulus 100% tanpa error.
+
+---
+
 _Catatan: Anda dapat selalu merujuk ke file ini (`PROGRESS.md`) kapan pun Anda membuka kembali workspace Anda._
 

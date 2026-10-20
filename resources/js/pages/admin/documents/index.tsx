@@ -1,5 +1,4 @@
 import { Head, useForm, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { useState, useMemo } from 'react';
 import {
@@ -95,6 +94,7 @@ export default function DocumentIndex({
     const [showUploadModal, setShowUploadModal] = useState(
         initialAction === 'upload',
     );
+    const [showNamingGuide, setShowNamingGuide] = useState(false);
 
     const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
     const tomorrowStr = useMemo(() => {
@@ -419,10 +419,8 @@ export default function DocumentIndex({
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
             <Head title="Manajemen File & Folder Upload - Admin STAMAR" />
-
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 {/* Header Title & Actions */}
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
@@ -477,49 +475,56 @@ export default function DocumentIndex({
                         </div>
 
                         <form onSubmit={submit} className="space-y-5">
-                            {/* Kotak Petunjuk Format Penamaan Berkas */}
-                            <div className="rounded-2xl border border-sky-200/70 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent p-4 text-xs dark:border-sky-500/30">
-                                <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300">
-                                    <Zap className="h-4 w-4 text-amber-500" />
-                                    <span>Pola Klasifikasi Otomatis yang Terdeteksi Sistem:</span>
+                            {/* Kotak Petunjuk Format Penamaan Berkas (Ringkas & Collapsible) */}
+                            <div className="rounded-2xl border border-border bg-muted/20 p-3 text-xs">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 font-semibold text-foreground">
+                                        <Zap className="h-4 w-4 text-amber-500" />
+                                        <span>Sistem otomatis mendeteksi kategori berdasarkan nama berkas</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNamingGuide(!showNamingGuide)}
+                                        className="text-xs font-semibold text-primary hover:underline"
+                                    >
+                                        {showNamingGuide ? 'Sembunyikan Pola' : 'Lihat Pola Format Nama'}
+                                    </button>
                                 </div>
-                                <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5 text-slate-600 dark:text-slate-300">
-                                    <div className="rounded-xl border border-indigo-200/50 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                                        <span className="font-bold text-indigo-800 dark:text-indigo-300 block mb-0.5">
-                                            🖼️ Infografis Cuaca (Khusus PNG)
-                                        </span>
-                                        Format: <code className="font-bold text-indigo-700 dark:text-indigo-300 font-mono">.png</code> (P_AH / AH / infografis)<br />
-                                        <span className="text-[10px] text-muted-foreground">Contoh: P_AH001.png atau AH001.png</span>
+
+                                {showNamingGuide && (
+                                    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5 pt-3 border-t border-border text-slate-600 dark:text-slate-300">
+                                        <div className="rounded-xl border border-indigo-200/50 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
+                                            <span className="font-bold text-indigo-800 dark:text-indigo-300 block mb-0.5">
+                                                🖼️ Infografis Cuaca (.PNG)
+                                            </span>
+                                            Format: <code className="font-bold text-indigo-700 dark:text-indigo-300 font-mono">P_AH / AH / infografis</code>
+                                        </div>
+                                        <div className="rounded-xl border border-rose-200/50 bg-rose-50/50 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/30">
+                                            <span className="font-bold text-rose-800 dark:text-rose-300 block mb-0.5">
+                                                ⚠️ Peringatan Dini (.PNG)
+                                            </span>
+                                            Format: <code className="font-bold text-rose-700 dark:text-rose-300 font-mono">peringatan / warning / dini</code>
+                                        </div>
+                                        <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
+                                            <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
+                                                ⚓ Cuaca Pelabuhan (PDF)
+                                            </span>
+                                            Awalan: <code className="font-bold text-cyan-700 dark:text-cyan-300 font-mono">AH001 .. AH037</code>
+                                        </div>
+                                        <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/30">
+                                            <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5">
+                                                📍 Cuaca Provinsi (PDF)
+                                            </span>
+                                            Awalan: <code className="font-bold text-amber-700 dark:text-amber-300 font-mono">P_AH001 .. P_AH018</code>
+                                        </div>
+                                        <div className="rounded-xl border border-teal-200/50 bg-teal-50/50 p-2.5 dark:border-teal-900/40 dark:bg-teal-950/30">
+                                            <span className="font-bold text-teal-800 dark:text-teal-300 block mb-0.5">
+                                                🌊 Wisata Bahari
+                                            </span>
+                                            Nama: <code className="font-bold text-teal-700 dark:text-teal-300 font-mono">slide1..7, pantai</code>
+                                        </div>
                                     </div>
-                                    <div className="rounded-xl border border-rose-200/50 bg-rose-50/50 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/30">
-                                        <span className="font-bold text-rose-800 dark:text-rose-300 block mb-0.5">
-                                            ⚠️ Peringatan Dini (Khusus PNG)
-                                        </span>
-                                        Format: <code className="font-bold text-rose-700 dark:text-rose-300 font-mono">.png</code> (peringatan / warning / dini)<br />
-                                        <span className="text-[10px] text-muted-foreground">Contoh: peringatan_dini_1hari.png</span>
-                                    </div>
-                                    <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
-                                        <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
-                                            ⚓ Cuaca Pelabuhan (37 Titik)
-                                        </span>
-                                        Awalan nama: <code className="font-bold text-cyan-700 dark:text-cyan-300 font-mono">AH001</code> s/d <code className="font-bold text-cyan-700 dark:text-cyan-300 font-mono">AH037</code><br />
-                                        <span className="text-[10px] text-muted-foreground">Contoh: AH001_20102026.pdf</span>
-                                    </div>
-                                    <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/30">
-                                        <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5">
-                                            📍 Cuaca Provinsi (18 Wilayah)
-                                        </span>
-                                        Awalan nama: <code className="font-bold text-amber-700 dark:text-amber-300 font-mono">P_AH001</code> s/d <code className="font-bold text-amber-700 dark:text-amber-300 font-mono">P_AH018</code><br />
-                                        <span className="text-[10px] text-muted-foreground">Contoh: P_AH001_20102026.pdf</span>
-                                    </div>
-                                    <div className="rounded-xl border border-teal-200/50 bg-teal-50/50 p-2.5 dark:border-teal-900/40 dark:bg-teal-950/30">
-                                        <span className="font-bold text-teal-800 dark:text-teal-300 block mb-0.5">
-                                            🌊 Wisata Bahari / Slide
-                                        </span>
-                                        Nama berisi: <code className="font-bold text-teal-700 dark:text-teal-300 font-mono">slide1..7</code>, nama pantai (<code className="font-mono text-[10px]">liang, ora</code>)<br />
-                                        <span className="text-[10px] text-muted-foreground">Contoh: slide2_liang.png</span>
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
                             {/* Dropzone Area Besar & Elegan */}
@@ -824,105 +829,73 @@ export default function DocumentIndex({
                     </div>
                 )}
 
-                {/* 6 Classification Folders Metric Cards */}
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                    {(
-                        [
-                            'infografis',
-                            'peringatan-dini',
-                            'provinsi',
-                            'buletin',
-                            'pelabuhan',
-                            'bahari',
-                        ] as const
-                    ).map((catKey) => {
-                        const conf = categoryConfig[catKey];
-                        const Icon = conf.icon;
-                        const count = categoryCounts
-                            ? (catKey === 'pelabuhan'
-                                  ? (categoryCounts['pelabuhan'] ?? categoryCounts['mfy'] ?? 0)
-                                  : categoryCounts[catKey])
-                            : 0;
-                        const isSelected = selectedTab === catKey;
-
-                        return (
-                            <button
-                                key={catKey}
-                                onClick={() =>
-                                    setSelectedTab(isSelected ? 'all' : catKey)
-                                }
-                                className={`flex items-center justify-between rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 ${
-                                    isSelected
-                                        ? 'scale-[1.02] border-primary bg-primary/10 ring-2 ring-primary/20'
-                                        : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30'
-                                }`}
-                            >
-                                <div className="space-y-1">
-                                    <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                        <span>{conf.label}</span>
-                                    </p>
-                                    <h3 className="text-xl font-bold text-foreground">
-                                        {count} Berkas
-                                    </h3>
-                                    <p className="font-mono text-[10px] text-muted-foreground">
-                                        {conf.folder}
-                                    </p>
-                                </div>
-                                <div
-                                    className={`rounded-xl p-3 ${conf.bgColor} ${conf.color}`}
-                                >
-                                    <Icon className="h-5 w-5" />
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-
                 {/* Main Management Table Card */}
                 <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
                     {/* Filter Tabs & Search Bar */}
                     <div className="flex flex-col justify-between gap-4 border-b border-border bg-muted/20 p-4 sm:p-6 md:flex-row md:items-center">
                         {/* Filter Tabs */}
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <button
                                 onClick={() => setSelectedTab('all')}
-                                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                                     selectedTab === 'all'
                                         ? 'bg-primary text-primary-foreground shadow-sm'
-                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                        : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                             >
-                                Semua ({categoryCounts?.all || documents.length}
-                                )
+                                <Layers className="h-3.5 w-3.5" />
+                                <span>Semua</span>
+                                <span
+                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                        selectedTab === 'all'
+                                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                                            : 'bg-background text-muted-foreground border border-border'
+                                    }`}
+                                >
+                                    {categoryCounts?.all || documents.length}
+                                </span>
                             </button>
 
                             {(
                                 [
                                     'infografis',
-                                    'peringatan-dini',
-                                    'provinsi',
-                                    'buletin',
                                     'pelabuhan',
+                                    'provinsi',
                                     'bahari',
+                                    'buletin',
+                                    'peringatan-dini',
                                 ] as const
                             ).map((catKey) => {
                                 const conf = categoryConfig[catKey];
+                                const Icon = conf.icon;
                                 const count = categoryCounts
                                     ? (catKey === 'pelabuhan'
                                           ? (categoryCounts['pelabuhan'] ?? categoryCounts['mfy'] ?? 0)
                                           : categoryCounts[catKey])
                                     : 0;
+                                const isSelected = selectedTab === catKey;
+
                                 return (
                                     <button
                                         key={catKey}
                                         onClick={() => setSelectedTab(catKey)}
-                                        className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
-                                            selectedTab === catKey
-                                                ? 'bg-primary text-primary-foreground shadow-sm'
-                                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                        className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                                            isSelected
+                                                ? 'bg-primary text-primary-foreground shadow-sm font-bold'
+                                                : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
                                         }`}
                                     >
-                                        {conf.label} ({count})
+                                        <Icon className="h-3.5 w-3.5" />
+                                        <span>{conf.label}</span>
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                isSelected
+                                                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                                                    : 'bg-background text-muted-foreground border border-border'
+                                            }`}
+                                        >
+                                            {count}
+                                        </span>
                                     </button>
                                 );
                             })}
@@ -1265,6 +1238,9 @@ export default function DocumentIndex({
                     </div>
                 </div>
             </div>
-        </AppLayout>
     );
 }
+
+DocumentIndex.layout = {
+    breadcrumbs,
+};

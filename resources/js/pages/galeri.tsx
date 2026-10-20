@@ -13,7 +13,8 @@ import { useState, useMemo } from 'react';
 export default function Galeri() {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [activeLightbox, setActiveLightbox] = useState<{
-        url: string;
+        image?: string;
+        url?: string;
         title: string;
         date: string;
         location: string;
@@ -224,7 +225,7 @@ export default function Galeri() {
 
                         <div className="max-h-[65vh] overflow-auto flex items-center justify-center rounded-2xl bg-black/50 p-2">
                             <img
-                                src={activeLightbox.url}
+                                src={activeLightbox.image || activeLightbox.url}
                                 alt={activeLightbox.title}
                                 className="max-h-[63vh] w-auto rounded-xl object-contain shadow-2xl"
                             />

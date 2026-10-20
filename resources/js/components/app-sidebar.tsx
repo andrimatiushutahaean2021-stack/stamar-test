@@ -30,24 +30,9 @@ const mainNavItems: NavItem[] = [
         icon: LayoutDashboard,
     },
     {
-        title: 'Semua Dokumen PDF',
+        title: 'Manajemen File & Dokumen',
         href: '/admin/documents',
         icon: FileText,
-    },
-    {
-        title: 'Upload Cuaca Provinsi',
-        href: '/admin/documents?category=provinsi&action=upload',
-        icon: MapPin,
-    },
-    {
-        title: 'Upload Buletin Maritim',
-        href: '/admin/documents?category=buletin&action=upload',
-        icon: BookOpen,
-    },
-    {
-        title: 'Upload Cuaca Pelabuhan',
-        href: '/admin/documents?category=pelabuhan&action=upload',
-        icon: Anchor,
     },
 ];
 
