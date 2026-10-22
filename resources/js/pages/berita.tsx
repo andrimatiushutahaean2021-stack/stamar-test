@@ -113,7 +113,7 @@ export default function Berita() {
                                 <Newspaper className="h-3.5 w-3.5" />
                                 <span>Publikasi & Rilis Resmi Stasiun</span>
                             </div>
-                            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-4xl">
                                 Berita & Siaran Pers
                             </h1>
                             <p className="mt-4 text-sm text-slate-300 sm:text-base">
@@ -129,7 +129,7 @@ export default function Berita() {
                                         placeholder="Cari berita atau siaran pers..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-12 w-full rounded-2xl border-white/20 bg-slate-800/80 pl-11 pr-4 text-sm text-white shadow-xl placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                                        className="h-12 w-full rounded-lg border-white/20 bg-slate-800/80 pl-11 pr-4 text-sm text-white shadow-sm placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
                                     />
                                 </div>
                             </div>
@@ -146,9 +146,9 @@ export default function Berita() {
                                     <button
                                         key={tab.key}
                                         onClick={() => setSelectedCategory(tab.key)}
-                                        className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                                        className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
                                             selectedCategory === tab.key
-                                                ? 'bg-blue-600 text-white shadow-lg'
+                                                ? 'bg-blue-600 text-white shadow-sm'
                                                 : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
                                         }`}
                                     >
@@ -167,18 +167,18 @@ export default function Berita() {
                             {filteredArticles.map((article) => (
                                 <div
                                     key={article.id}
-                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+                                    className="group flex flex-col justify-between overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
                                 >
                                     <div>
                                         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-800">
                                             <img
                                                 src={article.image}
                                                 alt={article.title}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                className="h-full w-full object-cover transition-transform duration-500 "
                                                 loading="lazy"
                                             />
                                             <div className="absolute top-3 left-3">
-                                                <span className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-bold text-white shadow-md">
+                                                <span className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
                                                     {article.category}
                                                 </span>
                                             </div>
@@ -203,7 +203,7 @@ export default function Berita() {
                                             type="button"
                                             variant="outline"
                                             onClick={() => setActiveArticle(article)}
-                                            className="w-full justify-between rounded-xl text-xs font-bold border-slate-200 group-hover:border-blue-600 group-hover:bg-blue-50 dark:border-slate-800 dark:group-hover:bg-blue-950/20"
+                                            className="w-full justify-between rounded-lg text-xs font-bold border-slate-200 group-hover:border-blue-600 group-hover:bg-blue-50 dark:border-slate-800 dark:group-hover:bg-blue-950/20"
                                         >
                                             <span>Baca Siaran Pers Lengkap</span>
                                             <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
@@ -213,7 +213,7 @@ export default function Berita() {
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
                             <Newspaper className="h-12 w-12 text-slate-400 opacity-40 mb-3" />
                             <h3 className="text-base font-bold text-slate-900 dark:text-white">
                                 Tidak ada berita yang sesuai
@@ -229,11 +229,11 @@ export default function Berita() {
             {/* Modal Detail Berita */}
             {activeArticle && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200"
                     onClick={() => setActiveArticle(null)}
                 >
                     <div
-                        className="relative max-h-[88vh] max-w-2xl w-full overflow-y-auto rounded-3xl border border-border bg-card p-6 shadow-2xl text-foreground"
+                        className="relative max-h-[88vh] max-w-2xl w-full overflow-y-auto rounded-lg border border-border bg-card p-6 shadow-sm text-foreground"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-start justify-between border-b border-border pb-4 mb-4">
@@ -241,7 +241,7 @@ export default function Berita() {
                                 <span className="rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-3 py-1 text-xs font-bold">
                                     {activeArticle.category}
                                 </span>
-                                <h2 className="mt-2 text-xl font-black leading-snug">
+                                <h2 className="mt-2 text-xl font-bold leading-snug">
                                     {activeArticle.title}
                                 </h2>
                                 <p className="mt-1 text-xs text-muted-foreground">
@@ -251,13 +251,13 @@ export default function Berita() {
                             <button
                                 type="button"
                                 onClick={() => setActiveArticle(null)}
-                                className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 shrink-0 ml-3"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 shrink-0 ml-3"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
-                        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl mb-5">
+                        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg mb-5">
                             <img
                                 src={activeArticle.image}
                                 alt={activeArticle.title}
@@ -276,7 +276,7 @@ export default function Berita() {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setActiveArticle(null)}
-                                className="rounded-xl text-xs font-semibold"
+                                className="rounded-lg text-xs font-semibold"
                             >
                                 Tutup Berita
                             </Button>

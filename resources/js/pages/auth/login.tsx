@@ -51,17 +51,19 @@ export default function Login({ status }: Props) {
                 <div className="mb-8 text-center">
                     <Link
                         href="/"
-                        className="group mb-4 inline-flex items-center gap-3"
+                        className="group mb-5 inline-flex items-center justify-center gap-3.5"
                     >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-400/30 bg-blue-600 text-white shadow-xl shadow-blue-600/30 transition-transform duration-300 group-hover:scale-105">
-                            <CloudRain className="h-7 w-7" />
-                        </div>
+                        <img
+                            src="/images/logo-bmkg.png"
+                            alt="Logo BMKG"
+                            className="h-13 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
+                        />
                         <div className="text-left">
-                            <span className="block text-xl leading-tight font-extrabold tracking-tight text-white">
-                                STAMAR AMBON
+                            <span className="block text-sm font-extrabold tracking-tight text-white leading-tight sm:text-base">
+                                Badan Meteorologi Klimatologi Dan Geofisika
                             </span>
-                            <span className="text-xs font-semibold tracking-wider text-cyan-400">
-                                BMKG MALUKU
+                            <span className="mt-0.5 block text-xs font-medium text-slate-400 leading-tight">
+                                Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
                             </span>
                         </div>
                     </Link>

@@ -16,6 +16,7 @@ export default function Galeri() {
         image?: string;
         url?: string;
         title: string;
+        caption?: string;
         date: string;
         location: string;
         desc: string;
@@ -25,63 +26,69 @@ export default function Galeri() {
     const galleryItems = [
         {
             id: 1,
-            title: 'Sekolah Lapang Cuaca Nelayan (SLCN) Wilayah Teluk Ambon',
-            category: 'slcn',
-            categoryName: 'Sekolah Lapang (SLCN)',
-            date: '18 Oktober 2026',
-            location: 'Dermaga Latuhalat, Teluk Ambon',
-            image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1000&q=80',
-            desc: 'Edukasi pemahaman navigasi cuaca laut, membaca tabel tinggi gelombang, dan mitigasi bahaya awan badai bagi nelayan tradisional.',
+            title: 'Kunjungan Lapangan & Pengamatan Port Meteorological Officer',
+            category: 'operasional',
+            categoryName: 'Operasional & Pelayaran',
+            date: 'Oktober 2026',
+            location: 'Pelabuhan Slamet Riyadi',
+            image: '/images/galeri/galeri-1.jpg',
+            caption: 'Port Meteorological Officer',
+            desc: 'Kegiatan Port Meteorological Officer (PMO) dalam rangka koordinasi teknis, pengamatan cuaca laut, dan keselamatan pelayaran bersama mitra maritim di atas kapal.',
         },
         {
             id: 2,
-            title: 'Pemeliharaan & Kalibrasi Sensor AWS Maritim Stasiun',
-            category: 'operasional',
-            categoryName: 'Operasional & Alat',
-            date: '25 September 2026',
-            location: 'Stasiun Meteorologi Latuhalat',
-            image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80',
-            desc: 'Teknisi BMKG melakukan kalibrasi sensor anemometer, barometer digital, dan pemancar data satelit otomatis.',
+            title: 'Upacara Peringatan HUT Kemerdekaan Republik Indonesia Ke-81',
+            category: 'kegiatan',
+            categoryName: 'Kegiatan Stasiun',
+            date: '17 Agustus 2026',
+            location: 'Halaman Kantor Stamet Penerbangan Pattimura Ambon',
+            image: '/images/galeri/galeri-2.jpg',
+            caption: 'Peringatan HUT RI Ke-81',
+            desc: 'Peringatan HUT ke-81 Republik Indonesia bersama di halaman kantor Stamet Penerbangan Pattimura Ambon dengan busana adat nusantara.',
         },
         {
             id: 3,
-            title: 'Koordinasi Keselamatan Pelayaran bersama KSOP & Pelindo',
-            category: 'kemitraan',
-            categoryName: 'Kemitraan Stakeholder',
-            date: '14 September 2026',
-            location: 'Pelabuhan Yos Sudarso Ambon',
-            image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1000&q=80',
-            desc: 'Rapat koordinasi kesiapsiagaan peringatan dini gelombang tinggi guna menjamin zero-accident kapal penyeberangan.',
+            title: 'Edukasi Cuaca Maritim - BMKG Goes To School',
+            category: 'edukasi',
+            categoryName: 'Edukasi & Sosialisasi',
+            date: 'September 2026',
+            location: 'Aula SMA Negeri 1 Ambon',
+            image: '/images/galeri/galeri-3.jpg',
+            caption: 'BMKG Goes To School',
+            desc: 'Sosialisasi dan edukasi pengenalan cuaca maritim, pemahaman bahaya gelombang laut, dan mitigasi dini bencana pesisir kepada siswa-siswi SMA Negeri 1 Ambon.',
         },
         {
             id: 4,
-            title: 'Kunjungan Edukasi Maritim Mahasiswa Fakultas Perikanan & Kelautan',
-            category: 'edukasi',
-            categoryName: 'Edukasi & Sosialisasi',
-            date: '28 Agustus 2026',
-            location: 'Ruang Forecaster Stamar Ambon',
-            image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1000&q=80',
-            desc: 'Pengenalan teknologi radar cuaca maritim dan pemodelan BMKG Ocean Forecast System (OFS) kepada generasi muda.',
+            title: 'Apel Bersama Peringatan Hari Meteorologi Klimatologi dan Geofisika Ke-79',
+            category: 'kegiatan',
+            categoryName: 'Kegiatan Stasiun',
+            date: 'Juli 2026',
+            location: 'Stasiun Meteorologi Maritim Yos Soedarso Ambon',
+            image: '/images/galeri/galeri-4.jpg',
+            caption: 'Peringatan HMKG 2026',
+            desc: 'Apel bersama peringatan HMKG 2026 dengan semangat BMKG Hebat, Indonesia Berdaulat, Adil dan Makmur.',
         },
         {
             id: 5,
-            title: 'Pengamatan Lapangan Dinamika Suhu & Arus Perairan Banda Neira',
-            category: 'operasional',
-            categoryName: 'Operasional & Alat',
-            date: '10 Agustus 2026',
-            location: 'Perairan Banda Neira, Maluku Tengah',
-            image: 'https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=1000&q=80',
-            desc: 'Survei dan validasi data in-situ kondisi oseanografi laut dalam untuk verifikasi model gelombang maritim BMKG.',
+            title: 'Aksi Bersih Pantai & Pelabuhan oleh Tim Maritimers Ambon',
+            category: 'kemitraan',
+            categoryName: 'Aksi Lingkungan & Kemitraan',
+            date: 'Agustus 2026',
+            location: 'Dermaga Kontainer Pelabuhan Yos Sudarso',
+            image: '/images/galeri/galeri-5.jpg',
+            caption: 'Aksi Bersih Pelabuhan Maritim',
+            desc: 'Aksi nyata peduli kelestarian laut dan kebersihan dermaga pelabuhan yang diinisiasi oleh komunitas Maritimers BMKG Stamar Ambon.',
         },
         {
             id: 6,
-            title: 'Sosialisasi Keselamatan Berlayar bagi Nakhoda Kapal Cepat',
+            title: 'Sekolah Lapang Cuaca Nelayan (SLCN) Kota Ambon 2026',
             category: 'slcn',
             categoryName: 'Sekolah Lapang (SLCN)',
-            date: '22 Juli 2026',
-            location: 'Pelabuhan Tulehu, Maluku Tengah',
-            image: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?auto=format&fit=crop&w=1000&q=80',
-            desc: 'Penyerahan panduan praktis membaca cuaca pelabuhan dan peringatan dini sebelum keberangkatan rute Tulehu - Kailolo.',
+            date: '2026',
+            location: 'Balai Kota Ambon',
+            image: '/images/galeri/galeri-6.jpg',
+            caption: 'SLCN Kota Ambon 2026',
+            desc: 'Pelaksanaan Sekolah Lapang Cuaca Nelayan (SLCN) 2026 di Balai Kota Ambon guna meningkatkan literasi informasi cuaca maritim dan keselamatan melaut para nelayan.',
         },
     ];
 
@@ -99,15 +106,15 @@ export default function Galeri() {
                 <div className="relative overflow-hidden bg-slate-900 pt-14 pb-20 text-white lg:pt-20 lg:pb-24">
                     <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="mx-auto max-w-3xl text-center">
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-400/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300">
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300">
                                 <Camera className="h-3.5 w-3.5" />
                                 <span>Dokumentasi Resmi Kegiatan Stasiun</span>
                             </div>
-                            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-4xl">
                                 Galeri Foto Stamar Ambon
                             </h1>
                             <p className="mt-4 text-sm text-slate-300 sm:text-base">
-                                Rekam jejak pelaksanaan Sekolah Lapang Cuaca Nelayan (SLCN), pemeliharaan alat meteorologi kelautan, serta kolaborasi antar lembaga maritim di Maluku.
+                                Rekam jejak kegiatan Sekolah Lapang Cuaca Nelayan (SLCN), operasional cuaca maritim, edukasi BMKG Goes to School, aksi lingkungan, serta agenda resmi BMKG di Maluku.
                             </p>
 
                             {/* Category Filter Pills */}
@@ -115,16 +122,17 @@ export default function Galeri() {
                                 {[
                                     { key: 'all', label: 'Semua Foto' },
                                     { key: 'slcn', label: 'Sekolah Lapang (SLCN)' },
-                                    { key: 'operasional', label: 'Operasional & Alat' },
-                                    { key: 'kemitraan', label: 'Kemitraan Stakeholder' },
-                                    { key: 'edukasi', label: 'Edukasi & Sosialisasi' },
+                                    { key: 'operasional', label: 'Operasional Pelayaran' },
+                                    { key: 'edukasi', label: 'Edukasi Sekolah' },
+                                    { key: 'kemitraan', label: 'Aksi Lingkungan' },
+                                    { key: 'kegiatan', label: 'Kegiatan Stasiun' },
                                 ].map((tab) => (
                                     <button
                                         key={tab.key}
                                         onClick={() => setSelectedCategory(tab.key)}
-                                        className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                                        className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
                                             selectedCategory === tab.key
-                                                ? 'bg-teal-500 text-white shadow-lg'
+                                                ? 'bg-blue-500 text-white shadow-sm'
                                                 : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
                                         }`}
                                     >
@@ -142,25 +150,30 @@ export default function Galeri() {
                         {filteredItems.map((item) => (
                             <div
                                 key={item.id}
-                                className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+                                className="group flex flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
                             >
                                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-800">
                                     <img
                                         src={item.image}
                                         alt={item.title}
-                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        className="h-full w-full object-cover transition-transform duration-500 "
                                         loading="lazy"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60" />
-                                    <div className="absolute top-3 left-3">
-                                        <span className="rounded-full bg-teal-600/90 px-3 py-1 text-[10px] font-bold text-white shadow-md">
+                                    <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                                        <span className="rounded-full bg-blue-600/95 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
                                             {item.categoryName}
                                         </span>
+                                        {item.caption && (
+                                            <span className="rounded-full bg-slate-900/80 px-2.5 py-1 text-[10px] font-medium text-slate-200 shadow-sm border border-white/10">
+                                                {item.caption}
+                                            </span>
+                                        )}
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setActiveLightbox(item)}
-                                        className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 text-slate-900 shadow-lg backdrop-blur-sm transition-transform hover:scale-110"
+                                        className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/90 text-slate-900 shadow-sm transition-transform "
                                         title="Perbesar Foto"
                                     >
                                         <ZoomIn className="h-4 w-4" />
@@ -168,7 +181,7 @@ export default function Galeri() {
                                 </div>
                                 <div className="flex flex-1 flex-col justify-between p-5">
                                     <div>
-                                        <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-600 transition-colors line-clamp-2 dark:text-white dark:group-hover:text-teal-400">
+                                        <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 dark:text-white dark:group-hover:text-blue-400">
                                             {item.title}
                                         </h3>
                                         <p className="mt-2 text-xs leading-relaxed text-slate-600 line-clamp-3 dark:text-slate-400">
@@ -177,11 +190,11 @@ export default function Galeri() {
                                     </div>
                                     <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
                                         <span className="flex items-center gap-1">
-                                            <Calendar className="h-3.5 w-3.5 text-teal-500" />
+                                            <Calendar className="h-3.5 w-3.5 text-blue-500" />
                                             {item.date}
                                         </span>
                                         <span className="flex items-center gap-1 font-medium">
-                                            <MapPin className="h-3.5 w-3.5 text-teal-500" />
+                                            <MapPin className="h-3.5 w-3.5 text-blue-500" />
                                             {item.location.split(',')[0]}
                                         </span>
                                     </div>
@@ -195,19 +208,26 @@ export default function Galeri() {
             {/* Lightbox Modal */}
             {activeLightbox && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 animate-in fade-in duration-200"
                     onClick={() => setActiveLightbox(null)}
                 >
                     <div
-                        className="relative max-h-[90vh] max-w-4xl w-full overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 p-6 shadow-2xl text-white"
+                        className="relative max-h-[90vh] max-w-4xl w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950 p-6 shadow-sm text-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
                             <div>
-                                <span className="rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold text-teal-300">
-                                    {activeLightbox.categoryName}
-                                </span>
-                                <h3 className="text-base font-bold text-white sm:text-lg mt-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[10px] font-bold text-blue-300">
+                                        {activeLightbox.categoryName}
+                                    </span>
+                                    {activeLightbox.caption && (
+                                        <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-[10px] font-medium text-slate-300 border border-slate-700">
+                                            {activeLightbox.caption}
+                                        </span>
+                                    )}
+                                </div>
+                                <h3 className="text-base font-bold text-white sm:text-lg mt-1.5">
                                     {activeLightbox.title}
                                 </h3>
                                 <p className="text-xs text-slate-400 mt-0.5">
@@ -217,17 +237,17 @@ export default function Galeri() {
                             <button
                                 type="button"
                                 onClick={() => setActiveLightbox(null)}
-                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div className="max-h-[65vh] overflow-auto flex items-center justify-center rounded-2xl bg-black/50 p-2">
+                        <div className="max-h-[65vh] overflow-auto flex items-center justify-center rounded-lg bg-black/50 p-2">
                             <img
                                 src={activeLightbox.image || activeLightbox.url}
                                 alt={activeLightbox.title}
-                                className="max-h-[63vh] w-auto rounded-xl object-contain shadow-2xl"
+                                className="max-h-[63vh] w-auto rounded-lg object-contain shadow-sm"
                             />
                         </div>
 

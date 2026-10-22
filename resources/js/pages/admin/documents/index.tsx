@@ -1,6 +1,6 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import { BreadcrumbItem } from '@/types';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     FileText,
     Trash2,
@@ -26,6 +26,12 @@ import {
     Layers,
     ArrowRight,
     Image as ImageIcon,
+    Video,
+    Play,
+    ChevronDown,
+    ChevronRight,
+    ChevronLeft,
+    Ship,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,10 +39,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
     {
         title: 'Manajemen File & Dokumen',
         href: '/admin/documents',
@@ -95,6 +97,9 @@ export default function DocumentIndex({
         initialAction === 'upload',
     );
     const [showNamingGuide, setShowNamingGuide] = useState(false);
+    const [isMfyExpanded, setIsMfyExpanded] = useState<boolean>(() => {
+        return ['mfy', 'infografis', 'pelabuhan', 'provinsi'].includes(currentCategory);
+    });
 
     const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
     const tomorrowStr = useMemo(() => {
@@ -118,8 +123,9 @@ export default function DocumentIndex({
         category: 'auto' | 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
         region_number: string | number;
         forecast_date: string;
-        period_type: 'daily' | 'weekly';
+        period_type: 'daily' | 'weekly' | '1-hari' | '3-hari' | string;
         description: string;
+        purge_old: boolean;
         files: File[];
         file: File | null;
     }>({
@@ -129,13 +135,49 @@ export default function DocumentIndex({
         forecast_date: new Date().toISOString().split('T')[0],
         period_type: 'daily',
         description: '',
+        purge_old: false,
         files: [],
         file: null,
     });
 
+    // Otomatis ubah konfigurasi form upload saat kotak produk (selectedTab) yang ditekan berubah
+    useEffect(() => {
+        if (['mfy', 'all'].includes(selectedTab)) {
+            setData((prev) => ({
+                ...prev,
+                category: 'auto',
+                period_type: 'daily',
+            }));
+        } else if (['infografis', 'pelabuhan', 'provinsi'].includes(selectedTab)) {
+            setData((prev) => ({
+                ...prev,
+                category: selectedTab as any,
+                period_type: 'daily',
+            }));
+        } else if (selectedTab === 'peringatan-dini') {
+            setData((prev) => ({
+                ...prev,
+                category: 'peringatan-dini',
+                period_type: 'auto',
+            }));
+        } else if (selectedTab === 'buletin') {
+            setData((prev) => ({
+                ...prev,
+                category: 'buletin',
+                period_type: 'monthly',
+            }));
+        } else if (selectedTab === 'bahari') {
+            setData((prev) => ({
+                ...prev,
+                category: 'bahari',
+                period_type: 'daily',
+            }));
+        }
+    }, [selectedTab]);
+
     const categoryConfig = {
         infografis: {
-            label: 'Infografis & Peta',
+            label: 'Infografis',
             icon: ImageIcon,
             color: 'text-indigo-500',
             bgColor: 'bg-indigo-500/10',
@@ -202,7 +244,10 @@ export default function DocumentIndex({
     const filteredDocuments = useMemo(() => {
         return documents.filter((doc) => {
             const matchesCategory =
-                selectedTab === 'all' || doc.category === selectedTab || (selectedTab === 'pelabuhan' && doc.category === 'mfy');
+                selectedTab === 'all' ||
+                doc.category === selectedTab ||
+                (selectedTab === 'pelabuhan' && doc.category === 'mfy') ||
+                (selectedTab === 'mfy' && ['infografis', 'pelabuhan', 'mfy', 'provinsi'].includes(doc.category));
             const matchesSearch =
                 doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (doc.description &&
@@ -212,6 +257,21 @@ export default function DocumentIndex({
             return matchesCategory && matchesSearch;
         });
     }, [documents, selectedTab, searchTerm]);
+
+    // Paginasi: 15 berkas per halaman
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const pageSize = 15;
+
+    // Reset ke halaman 1 setiap kali filter kategori atau kata kunci pencarian berubah
+    useMemo(() => {
+        setCurrentPage(1);
+    }, [selectedTab, searchTerm]);
+
+    const totalPages = Math.ceil(filteredDocuments.length / pageSize) || 1;
+    const paginatedDocuments = useMemo(() => {
+        const startIndex = (currentPage - 1) * pageSize;
+        return filteredDocuments.slice(startIndex, startIndex + pageSize);
+    }, [filteredDocuments, currentPage, pageSize]);
 
     const isAllSelected = useMemo(() => {
         if (filteredDocuments.length === 0) return false;
@@ -298,42 +358,53 @@ export default function DocumentIndex({
     };
 
     const processFilesSelection = (filesArr: File[]): boolean => {
-        const allowedExts = ['pdf', 'png', 'jpg', 'jpeg'];
+        const allowedExts = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'ogg'];
         const invalidFile = filesArr.find((f) => {
             const ext = f.name.split('.').pop()?.toLowerCase() || '';
             return !allowedExts.includes(ext);
         });
         if (invalidFile) {
-            alert(`File "${invalidFile.name}" tidak didukung. Format didukung: PDF, PNG, JPG, dan JPEG.`);
+            alert(`File "${invalidFile.name}" tidak didukung. Format didukung: PDF, PNG, JPG, JPEG, MP4, WEBM.`);
             return false;
         }
 
-        // Khusus peringatan-dini dan infografis, format berkas wajib .png
-        if (data.category === 'peringatan-dini' || data.category === 'infografis') {
-            const nonPngFile = filesArr.find((f) => !f.name.toLowerCase().endsWith('.png'));
-            if (nonPngFile) {
-                const label = data.category === 'peringatan-dini' ? 'Peringatan Dini Gelombang' : 'Infografis Cuaca';
-                alert(`File "${nonPngFile.name}" ditolak. Kategori ${label} saat ini wajib berformat gambar .PNG.`);
+        // Khusus peringatan-dini: izinkan Gambar (.png, .jpg, .jpeg, .webp), Video (.mp4, .webm, .mov, .ogg), dan Dokumen (.pdf)
+        if (data.category === 'peringatan-dini') {
+            const invalidWarning = filesArr.find((f) => {
+                const lower = f.name.toLowerCase();
+                return !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
+            });
+            if (invalidWarning) {
+                alert(`File "${invalidWarning.name}" ditolak. Kategori Peringatan Dini wajib berformat Gambar (.PNG/.JPG) atau Video (.MP4/.WEBM).`);
+                return false;
+            }
+        } else if (data.category === 'infografis') {
+            const nonImg = filesArr.find((f) => {
+                const lower = f.name.toLowerCase();
+                return !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
+            });
+            if (nonImg) {
+                alert(`File "${nonImg.name}" ditolak. Kategori Infografis Cuaca saat ini wajib berformat gambar (.PNG / .JPG).`);
                 return false;
             }
         } else if (data.category === 'auto') {
             const invalidWarning = filesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
-                return isWarning && !lower.endsWith('.png');
+                return isWarning && !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
             });
             if (invalidWarning) {
-                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk fitur Peringatan Dini saat ini wajib .PNG.`);
+                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk Peringatan Dini wajib Gambar (.PNG/.JPG) atau Video (.MP4/.WEBM).`);
                 return false;
             }
 
             const invalidInfografis = filesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
-                return isInfografis && !lower.endsWith('.png');
+                return isInfografis && !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
             });
             if (invalidInfografis) {
-                alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis saat ini wajib .PNG.`);
+                alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis saat ini wajib .PNG / .JPG.`);
                 return false;
             }
         }
@@ -350,39 +421,50 @@ export default function DocumentIndex({
         }
 
         setData('files', filesArr);
-        setData('file', filesArr[0] || null);
+        setData('file', null);
         return true;
     };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validasi khusus: jika kategori peringatan-dini atau infografis, pastikan format file wajib .png
-        if (data.category === 'peringatan-dini' || data.category === 'infografis') {
-            const nonPng = data.files.find((f) => !f.name.toLowerCase().endsWith('.png'));
-            if (nonPng) {
-                const label = data.category === 'peringatan-dini' ? 'Peringatan Dini Gelombang' : 'Infografis Cuaca';
-                alert(`File "${nonPng.name}" ditolak. Kategori ${label} saat ini wajib berformat gambar .PNG.`);
+        // Validasi khusus: jika kategori peringatan-dini, dukung format gambar (1 hari) & video (3 hari)
+        if (data.category === 'peringatan-dini') {
+            const invalidWarning = data.files.find((f) => {
+                const lower = f.name.toLowerCase();
+                return !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
+            });
+            if (invalidWarning) {
+                alert(`File "${invalidWarning.name}" ditolak. Kategori Peringatan Dini wajib berformat Gambar (.PNG/.JPG) untuk 1 Hari atau Video (.MP4/.WEBM) untuk 3 Hari.`);
+                return;
+            }
+        } else if (data.category === 'infografis') {
+            const nonImg = data.files.find((f) => {
+                const lower = f.name.toLowerCase();
+                return !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
+            });
+            if (nonImg) {
+                alert(`File "${nonImg.name}" ditolak. Kategori Infografis Cuaca saat ini wajib berformat gambar (.PNG / .JPG).`);
                 return;
             }
         } else if (data.category === 'auto') {
             const invalidWarning = data.files.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
-                return isWarning && !lower.endsWith('.png');
+                return isWarning && !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
             });
             if (invalidWarning) {
-                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk fitur Peringatan Dini saat ini wajib .PNG.`);
+                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk Peringatan Dini wajib Gambar (.PNG/.JPG) atau Video (.MP4/.WEBM).`);
                 return;
             }
 
             const invalidInfografis = data.files.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
-                return isInfografis && !lower.endsWith('.png');
+                return isInfografis && !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
             });
             if (invalidInfografis) {
-                alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis saat ini wajib .PNG.`);
+                alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis wajib gambar (.PNG / .JPG).`);
                 return;
             }
         }
@@ -438,8 +520,37 @@ export default function DocumentIndex({
                     <Button
                         onClick={() => {
                             if (!showUploadModal) {
-                                if (selectedTab !== 'all') {
-                                    setData('category', selectedTab as any);
+                                // Selaraskan otomatis dengan kotak kategori yang sedang aktif
+                                if (['mfy', 'all'].includes(selectedTab)) {
+                                    setData((prev) => ({
+                                        ...prev,
+                                        category: 'auto',
+                                        period_type: 'daily',
+                                    }));
+                                } else if (['infografis', 'pelabuhan', 'provinsi'].includes(selectedTab)) {
+                                    setData((prev) => ({
+                                        ...prev,
+                                        category: selectedTab as any,
+                                        period_type: 'daily',
+                                    }));
+                                } else if (selectedTab === 'peringatan-dini') {
+                                    setData((prev) => ({
+                                        ...prev,
+                                        category: 'peringatan-dini',
+                                        period_type: 'auto',
+                                    }));
+                                } else if (selectedTab === 'buletin') {
+                                    setData((prev) => ({
+                                        ...prev,
+                                        category: 'buletin',
+                                        period_type: 'monthly',
+                                    }));
+                                } else if (selectedTab === 'bahari') {
+                                    setData((prev) => ({
+                                        ...prev,
+                                        category: 'bahari',
+                                        period_type: 'daily',
+                                    }));
                                 }
                             }
                             setShowUploadModal(!showUploadModal);
@@ -470,11 +581,25 @@ export default function DocumentIndex({
                                 </p>
                             </div>
                             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                Maks. 112 File • Total 112MB • PDF / PNG / JPG
+                                Maks. 112 File • Total 112MB • PDF / PNG / JPG / MP4 / WEBM
                             </span>
                         </div>
 
                         <form onSubmit={submit} className="space-y-5">
+                            {Object.keys(errors).length > 0 && (
+                                <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-xs text-red-600 dark:text-red-400">
+                                    <div className="flex items-center gap-2 font-bold mb-1">
+                                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                                        <span>Gagal Mengunggah Berkas:</span>
+                                    </div>
+                                    <ul className="list-disc list-inside space-y-1 pl-1">
+                                        {Object.entries(errors).map(([k, v]) => (
+                                            <li key={k}>{v}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
                             {/* Kotak Petunjuk Format Penamaan Berkas (Ringkas & Collapsible) */}
                             <div className="rounded-2xl border border-border bg-muted/20 p-3 text-xs">
                                 <div className="flex items-center justify-between">
@@ -501,9 +626,9 @@ export default function DocumentIndex({
                                         </div>
                                         <div className="rounded-xl border border-rose-200/50 bg-rose-50/50 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/30">
                                             <span className="font-bold text-rose-800 dark:text-rose-300 block mb-0.5">
-                                                ⚠️ Peringatan Dini (.PNG)
+                                                ⚠️ Peringatan Dini
                                             </span>
-                                            Format: <code className="font-bold text-rose-700 dark:text-rose-300 font-mono">peringatan / warning / dini</code>
+                                            Format: <code className="font-bold text-rose-700 dark:text-rose-300 font-mono">1 Hari (.PNG) • 3 Hari (.MP4)</code>
                                         </div>
                                         <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
                                             <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
@@ -551,7 +676,7 @@ export default function DocumentIndex({
                                         id="smart-file-upload"
                                         type="file"
                                         multiple
-                                        accept=".pdf,.png,.jpg,.jpeg"
+                                        accept=".pdf,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov"
                                         onChange={(e) => {
                                             const fileList = e.target.files;
                                             if (fileList && fileList.length > 0) {
@@ -597,13 +722,22 @@ export default function DocumentIndex({
 
                                     data.files.forEach((f) => {
                                         const name = f.name.toLowerCase();
-                                        const isPng = name.endsWith('.png');
+                                        const isPng = name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp');
+                                        const isVideo = name.endsWith('.mp4') || name.endsWith('.webm') || name.endsWith('.mov') || name.endsWith('.ogg');
 
-                                        if (name.includes('peringatan') || name.includes('warning') || name.includes('dini') || name.includes('gelombang')) {
+                                        if (
+                                            name.includes('peringatan') ||
+                                            name.includes('warning') ||
+                                            name.includes('dini') ||
+                                            name.includes('gelombang') ||
+                                            isVideo ||
+                                            name.includes('instagram')
+                                        ) {
                                             detectedCounts['peringatan-dini']++;
                                         } else if (
-                                            ['infografis', 'grafis', 'peta', 'infographic', 'map'].some((kw) => name.includes(kw)) ||
-                                            (isPng && (/^(?:p[._\-\s]?ah)[._\-\s]?0*[1-9]/i.test(name) || /^ah[._\-\s]?0*[1-9]/i.test(name)))
+                                            ['infografis', 'grafis', 'infographic'].some((kw) => name.includes(kw)) ||
+                                            (isPng && (/^(?:p[._\-\s]?ah)[._\-\s]?0*[1-9]/i.test(name) || /^ah[._\-\s]?0*[1-9]/i.test(name))) ||
+                                            (isPng && (name.includes('cover') || name.includes('sampul') || name.includes('header')) && !name.includes('bahari') && !name.includes('pantai'))
                                         ) {
                                             detectedCounts.infografis++;
                                         } else if (/^(?:p[._\-\s]?ah)[._\-\s]?0*[1-9]/i.test(name)) {
@@ -611,7 +745,7 @@ export default function DocumentIndex({
                                         } else if (/^ah[._\-\s]?0*[1-9]/i.test(name)) {
                                             detectedCounts.pelabuhan++;
                                         } else if (
-                                            ['bahari', 'wisata', 'slide', 'pantai', 'liang', 'ora', 'morela', 'hukurila', 'natsepa', 'jikumerasa', 'cover', 'sampul'].some((kw) => name.includes(kw))
+                                            ['bahari', 'wisata', 'pantai', 'liang', 'ora', 'morela', 'hukurila', 'natsepa', 'jikumerasa'].some((kw) => name.includes(kw))
                                         ) {
                                             detectedCounts.bahari++;
                                         } else if (name.includes('buletin') || name.includes('bulletin')) {
@@ -643,7 +777,7 @@ export default function DocumentIndex({
                                             <div className="mt-2.5 flex flex-wrap gap-2">
                                                 {detectedCounts.infografis > 0 && (
                                                     <span className="rounded-lg bg-indigo-500/20 px-2.5 py-1 font-semibold text-indigo-800 dark:text-indigo-200">
-                                                        🖼️ {detectedCounts.infografis} Infografis & Peta
+                                                        🖼️ {detectedCounts.infografis} Infografis
                                                     </span>
                                                 )}
                                                 {detectedCounts.pelabuhan > 0 && (
@@ -700,104 +834,161 @@ export default function DocumentIndex({
                             </div>
 
                             {/* Pengaturan Target Periode & Tanggal Prakiraan (Jelas & Terbuka) */}
-                            <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
-                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-                                    <div>
-                                        <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
-                                            <span>📅 Target Tab & Tanggal Prakiraan:</span>
-                                        </h4>
-                                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                                            Pilih tab tujuan file ini akan ditampilkan di halaman publik (Pelabuhan, Provinsi, Infografis)
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setData((prev) => ({
-                                                    ...prev,
-                                                    forecast_date: todayStr,
-                                                    period_type: 'daily',
-                                                }));
-                                            }}
-                                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all ${
-                                                data.period_type === 'daily'
-                                                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-500/20'
-                                                    : 'bg-background hover:bg-muted text-foreground border-border'
-                                            }`}
-                                        >
-                                            📅 Tab 1: Harian (24 Jam)
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setData((prev) => ({
-                                                    ...prev,
-                                                    forecast_date: tomorrowStr,
-                                                    period_type: 'weekly',
-                                                }));
-                                            }}
-                                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all ${
-                                                data.period_type === 'weekly'
-                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-500/20'
-                                                    : 'bg-background hover:bg-muted text-foreground border-border'
-                                            }`}
-                                        >
-                                            🌊 Tab 2: Mingguan (3 Hari)
-                                        </button>
-                                    </div>
-                                </div>
+                            {(() => {
+                                const isMfyCategory = ['auto', 'pelabuhan', 'mfy', 'provinsi', 'infografis'].includes(data.category);
+                                const isPeringatanDini = data.category === 'peringatan-dini';
+                                const isBuletin = data.category === 'buletin';
+                                const isBahari = data.category === 'bahari';
 
-                                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="category" className="text-xs font-semibold text-muted-foreground uppercase">
-                                            Kategori Target
-                                        </Label>
-                                        <select
-                                            id="category"
-                                            value={data.category}
-                                            onChange={(e) => setData('category', e.target.value as any)}
-                                            className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
-                                        >
-                                            <option value="auto">⚡ Otomatis Cerdas (Rekomendasi)</option>
-                                            <option value="infografis">🖼️ Infografis Cuaca Visual (PNG)</option>
-                                            <option value="pelabuhan">⚓ Cuaca Pelabuhan (PDF)</option>
-                                            <option value="provinsi">📍 Cuaca Provinsi (PDF)</option>
-                                            <option value="bahari">🌊 Wisata Bahari</option>
-                                            <option value="buletin">📖 Buletin Maritim</option>
-                                            <option value="peringatan-dini">⚠️ Peringatan Dini Gelombang (.PNG)</option>
-                                        </select>
-                                    </div>
+                                return (
+                                    <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
+                                        {/* Bagian Pemilihan Tab 1 / Tab 2: HANYA TAMPIL UNTUK PRODUK MFY (Pelabuhan, Provinsi, Infografis) */}
+                                        {isMfyCategory && (
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3 mb-3">
+                                                <div>
+                                                    <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                                                        <span>📅 Target Tab MFY (Pelabuhan, Provinsi, Infografis):</span>
+                                                    </h4>
+                                                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                        Pilih tab tujuan berkas MFY akan ditampilkan di halaman publik
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setData((prev) => ({
+                                                                ...prev,
+                                                                forecast_date: todayStr,
+                                                                period_type: 'daily',
+                                                            }));
+                                                        }}
+                                                        className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all ${
+                                                            data.period_type === 'daily'
+                                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-500/20'
+                                                                : 'bg-background hover:bg-muted text-foreground border-border'
+                                                        }`}
+                                                    >
+                                                        📅 Tab 1: Harian (24 Jam)
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setData((prev) => ({
+                                                                ...prev,
+                                                                forecast_date: tomorrowStr,
+                                                                period_type: 'weekly',
+                                                            }));
+                                                        }}
+                                                        className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all ${
+                                                            data.period_type === 'weekly'
+                                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-500/20'
+                                                                : 'bg-background hover:bg-muted text-foreground border-border'
+                                                        }`}
+                                                    >
+                                                        🌊 Tab 2: Mingguan (3 Hari)
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="forecast_date" className="text-xs font-semibold text-muted-foreground uppercase">
-                                            Tanggal Berlaku
-                                        </Label>
-                                        <Input
-                                            id="forecast_date"
-                                            type="date"
-                                            value={data.forecast_date}
-                                            onChange={(e) => setData('forecast_date', e.target.value)}
-                                            className="h-10 rounded-xl text-xs"
-                                        />
-                                    </div>
+                                        <div className={`grid grid-cols-1 gap-4 ${isBuletin || isBahari ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="category" className="text-xs font-semibold text-muted-foreground uppercase">
+                                                    Kategori Target
+                                                </Label>
+                                                <select
+                                                    id="category"
+                                                    value={data.category}
+                                                    onChange={(e) => {
+                                                        const cat = e.target.value as any;
+                                                        setData((prev) => ({
+                                                            ...prev,
+                                                            category: cat,
+                                                            period_type: cat === 'peringatan-dini' ? 'auto' : prev.period_type,
+                                                        }));
+                                                    }}
+                                                    className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                                >
+                                                    <option value="auto">⚡ Otomatis Cerdas MFY (Rekomendasi)</option>
+                                                    <option value="infografis">🖼️ Infografis (PNG/JPG)</option>
+                                                    <option value="pelabuhan">⚓ Cuaca Pelabuhan (PDF)</option>
+                                                    <option value="provinsi">📍 Cuaca Provinsi (PDF)</option>
+                                                    <option value="peringatan-dini">⚠️ Peringatan Dini Gelombang</option>
+                                                    <option value="bahari">🌊 Wisata Bahari</option>
+                                                    <option value="buletin">📖 Buletin Maritim (PDF)</option>
+                                                </select>
+                                            </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="period_type" className="text-xs font-semibold text-muted-foreground uppercase">
-                                            Periode
-                                        </Label>
-                                        <select
-                                            id="period_type"
-                                            value={data.period_type}
-                                            onChange={(e) => setData('period_type', e.target.value as any)}
-                                            className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="forecast_date" className="text-xs font-semibold text-muted-foreground uppercase">
+                                                    {isBuletin ? 'Bulan / Tanggal Edisi' : 'Tanggal Berlaku'}
+                                                </Label>
+                                                <Input
+                                                    id="forecast_date"
+                                                    type="date"
+                                                    value={data.forecast_date}
+                                                    onChange={(e) => setData('forecast_date', e.target.value)}
+                                                    className="h-10 rounded-xl text-xs"
+                                                />
+                                            </div>
+
+                                            {/* Sembunyikan Periode / Format untuk Buletin dan Bahari karena tidak relevan */}
+                                            {!isBuletin && !isBahari && (
+                                                <div className="space-y-1.5">
+                                                    <Label htmlFor="period_type" className="text-xs font-semibold text-muted-foreground uppercase">
+                                                        {isPeringatanDini ? 'Format Peringatan' : 'Periode / Tab'}
+                                                    </Label>
+                                                    <select
+                                                        id="period_type"
+                                                        value={data.period_type}
+                                                        onChange={(e) => setData('period_type', e.target.value as any)}
+                                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
+                                                    >
+                                                        {isPeringatanDini ? (
+                                                            <>
+                                                                <option value="auto">⚡ Otomatis (1 Hari Gambar / 3 Hari Video)</option>
+                                                                <option value="1-hari">1 Hari Kedepan (Gambar)</option>
+                                                                <option value="3-hari">3 Hari Kedepan (Video / Gambar)</option>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <option value="daily">Tab 1: Harian (24 Jam)</option>
+                                                                <option value="weekly">Tab 2: Mingguan (3 Hari)</option>
+                                                            </>
+                                                        )}
+                                                    </select>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                {/* Opsi Pembersihan Berkas Tanggal Lama (Hanya untuk MFY & Peringatan Dini) */}
+                                {(isMfyCategory || isPeringatanDini) && (
+                                    <div className="mt-4 pt-3 border-t border-border/60">
+                                        <label
+                                            htmlFor="purge_old_checkbox"
+                                            className="flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/40 p-3 text-left transition-colors hover:bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:bg-amber-950/30 cursor-pointer"
                                         >
-                                            <option value="daily">Harian (Tab 1 - 24 Jam)</option>
-                                            <option value="weekly">Mingguan (Tab 2 - 3 Hari)</option>
-                                        </select>
+                                            <Checkbox
+                                                id="purge_old_checkbox"
+                                                checked={data.purge_old}
+                                                onCheckedChange={(checked) => setData('purge_old', !!checked)}
+                                                className="mt-0.5 border-amber-400 text-amber-600 focus:ring-amber-500"
+                                            />
+                                            <div className="space-y-0.5">
+                                                <span className="text-xs font-bold text-amber-900 dark:text-amber-200 block">
+                                                    Bersihkan otomatis berkas di tanggal sebelumnya (Hapus Berkas Lama)?
+                                                </span>
+                                                <p className="text-[11px] leading-relaxed text-amber-800/80 dark:text-amber-300/80">
+                                                    Jika dicentang, berkas produk di tanggal yang lebih lama dari 2 tanggal aktif terbaru akan otomatis dihapus bersih dari sistem dan penyimpanan agar folder tetap rapi dan tidak menumpuk.
+                                                </p>
+                                            </div>
+                                        </label>
                                     </div>
-                                </div>
+                                )}
                             </div>
+                        );
+                    })()}
 
                             {/* Tombol Simpan & Submit */}
                             <div className="flex items-center justify-end gap-3 pt-2">
@@ -856,11 +1047,108 @@ export default function DocumentIndex({
                                 </span>
                             </button>
 
+                            {/* Kotak MFY Utama yang Bisa Pecah Menjadi 3 Bagian (Infografis, Cuaca Pelabuhan, Cuaca Provinsi) */}
+                            {(() => {
+                                const mfyCount = (categoryCounts?.infografis || 0) +
+                                    (categoryCounts?.pelabuhan ?? categoryCounts?.mfy ?? 0) +
+                                    (categoryCounts?.provinsi || 0);
+
+                                const isMfyActive = ['mfy', 'infografis', 'pelabuhan', 'provinsi'].includes(selectedTab);
+
+                                return (
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
+                                        {/* Tombol Induk MFY */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!isMfyExpanded) {
+                                                    setIsMfyExpanded(true);
+                                                    setSelectedTab('mfy');
+                                                } else {
+                                                    // Jika sudah terbuka dan diklik lagi, toggle tutup atau set ke mfy
+                                                    if (selectedTab === 'mfy') {
+                                                        setIsMfyExpanded(false);
+                                                        setSelectedTab('all');
+                                                    } else {
+                                                        setSelectedTab('mfy');
+                                                    }
+                                                }
+                                            }}
+                                            className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-300 ${
+                                                isMfyActive
+                                                    ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-500/20'
+                                                    : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                            }`}
+                                        >
+                                            <Ship className="h-3.5 w-3.5" />
+                                            <span>Produk MFY</span>
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                    isMfyActive
+                                                        ? 'bg-white/20 text-white'
+                                                        : 'bg-background text-muted-foreground border border-border'
+                                                }`}
+                                            >
+                                                {mfyCount}
+                                            </span>
+                                            <ChevronDown
+                                                className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                                                    isMfyExpanded ? 'rotate-180' : 'rotate-0'
+                                                }`}
+                                            />
+                                        </button>
+
+                                        {/* 3 Kotak Pecahan MFY dengan Animasi Transisi Halus */}
+                                        <div
+                                            className={`flex items-center gap-1.5 sm:gap-2 overflow-hidden transition-all duration-500 ease-in-out ${
+                                                isMfyExpanded
+                                                    ? 'max-w-[700px] opacity-100 scale-100 translate-x-0'
+                                                    : 'max-w-0 opacity-0 scale-95 -translate-x-2 pointer-events-none'
+                                            }`}
+                                        >
+                                            {(['infografis', 'pelabuhan', 'provinsi'] as const).map((catKey) => {
+                                                const conf = categoryConfig[catKey];
+                                                const Icon = conf.icon;
+                                                const count = categoryCounts
+                                                    ? (catKey === 'pelabuhan'
+                                                          ? (categoryCounts['pelabuhan'] ?? categoryCounts['mfy'] ?? 0)
+                                                          : categoryCounts[catKey])
+                                                    : 0;
+                                                const isSelected = selectedTab === catKey;
+
+                                                return (
+                                                    <button
+                                                        key={catKey}
+                                                        type="button"
+                                                        onClick={() => setSelectedTab(catKey)}
+                                                        className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border ${
+                                                            isSelected
+                                                                ? 'bg-primary text-primary-foreground shadow-sm font-bold border-primary'
+                                                                : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground border-border/80'
+                                                        }`}
+                                                    >
+                                                        <Icon className="h-3.5 w-3.5" />
+                                                        <span>{conf.label}</span>
+                                                        <span
+                                                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                                                                isSelected
+                                                                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                                                                    : 'bg-muted text-muted-foreground'
+                                                            }`}
+                                                        >
+                                                            {count}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Kategori Lainnya (Non-MFY): Wisata Bahari, Buletin, Peringatan Dini */}
                             {(
                                 [
-                                    'infografis',
-                                    'pelabuhan',
-                                    'provinsi',
                                     'bahari',
                                     'buletin',
                                     'peringatan-dini',
@@ -869,15 +1157,14 @@ export default function DocumentIndex({
                                 const conf = categoryConfig[catKey];
                                 const Icon = conf.icon;
                                 const count = categoryCounts
-                                    ? (catKey === 'pelabuhan'
-                                          ? (categoryCounts['pelabuhan'] ?? categoryCounts['mfy'] ?? 0)
-                                          : categoryCounts[catKey])
+                                    ? categoryCounts[catKey] ?? 0
                                     : 0;
                                 const isSelected = selectedTab === catKey;
 
                                 return (
                                     <button
                                         key={catKey}
+                                        type="button"
                                         onClick={() => setSelectedTab(catKey)}
                                         className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
                                             isSelected
@@ -1048,7 +1335,7 @@ export default function DocumentIndex({
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredDocuments.map((doc, idx) => {
+                                    paginatedDocuments.map((doc, idx) => {
                                         const cat = (doc.category === 'mfy' ? 'pelabuhan' : doc.category) || 'pelabuhan';
                                         const conf =
                                             categoryConfig[cat as keyof typeof categoryConfig] ||
@@ -1056,6 +1343,7 @@ export default function DocumentIndex({
                                         const Icon = conf.icon;
                                         const isCopied = copiedId === doc.id;
                                         const isSelected = selectedIds.includes(doc.id);
+                                        const rowNumber = (currentPage - 1) * pageSize + idx + 1;
 
                                         return (
                                             <tr
@@ -1073,7 +1361,7 @@ export default function DocumentIndex({
                                                     />
                                                 </td>
                                                 <td className="px-2 py-4 text-center font-mono text-xs text-muted-foreground">
-                                                    {idx + 1}
+                                                    {rowNumber}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
@@ -1236,6 +1524,104 @@ export default function DocumentIndex({
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Footer Controls */}
+                    {filteredDocuments.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-3 sm:px-6">
+                            <div className="text-xs text-muted-foreground">
+                                Menampilkan{' '}
+                                <span className="font-bold text-foreground">
+                                    {(currentPage - 1) * pageSize + 1}
+                                </span>{' '}
+                                -{' '}
+                                <span className="font-bold text-foreground">
+                                    {Math.min(currentPage * pageSize, filteredDocuments.length)}
+                                </span>{' '}
+                                dari{' '}
+                                <span className="font-bold text-foreground">
+                                    {filteredDocuments.length}
+                                </span>{' '}
+                                berkas
+                                {filteredDocuments.length !== documents.length && (
+                                    <span className="ml-1 text-[11px] text-muted-foreground/75">
+                                        (difilter dari {documents.length} total)
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Tombol Halaman */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="h-8 w-8 p-0 rounded-lg text-xs"
+                                        title="Halaman Sebelumnya"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+
+                                    {/* Generate Page Numbers */}
+                                    {(() => {
+                                        const pages: (number | string)[] = [];
+                                        if (totalPages <= 7) {
+                                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                        } else {
+                                            pages.push(1);
+                                            if (currentPage > 3) pages.push('...');
+                                            const start = Math.max(2, currentPage - 1);
+                                            const end = Math.min(totalPages - 1, currentPage + 1);
+                                            for (let i = start; i <= end; i++) pages.push(i);
+                                            if (currentPage < totalPages - 2) pages.push('...');
+                                            pages.push(totalPages);
+                                        }
+
+                                        return pages.map((page, idx) => {
+                                            if (page === '...') {
+                                                return (
+                                                    <span
+                                                        key={`dots-${idx}`}
+                                                        className="px-2 text-xs text-muted-foreground"
+                                                    >
+                                                        ...
+                                                    </span>
+                                                );
+                                            }
+
+                                            const isCurrent = page === currentPage;
+                                            return (
+                                                <button
+                                                    key={`page-${page}`}
+                                                    type="button"
+                                                    onClick={() => setCurrentPage(page as number)}
+                                                    className={`h-8 min-w-[32px] rounded-lg px-2 text-xs font-bold transition-all ${
+                                                        isCurrent
+                                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                                            : 'bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        });
+                                    })()}
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="h-8 w-8 p-0 rounded-lg text-xs"
+                                        title="Halaman Selanjutnya"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
     );

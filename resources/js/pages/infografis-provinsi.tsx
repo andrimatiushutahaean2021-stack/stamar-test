@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import ForecastCoverBanner, { CoverDocumentItem } from '@/components/forecast-cover-banner';
+
 interface DocumentItem {
     id: number;
     title: string;
@@ -33,9 +35,15 @@ interface DocumentItem {
 
 interface Props {
     documents?: DocumentItem[];
+    coverDocuments?: CoverDocumentItem[];
+    coverDocument?: CoverDocumentItem | null;
 }
 
-export default function InfografisProvinsi({ documents = [] }: Props) {
+export default function InfografisProvinsi({
+    documents = [],
+    coverDocuments = [],
+    coverDocument = null,
+}: Props) {
     const wilayahList = [
         'Perairan Utara P. Buru',
         'Perairan Selatan P. Buru',
@@ -165,11 +173,11 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
                     <div className="pointer-events-none absolute right-1/4 bottom-0 h-96 w-96 rounded-full bg-orange-400 opacity-30 mix-blend-screen blur-[128px]"></div>
 
                     <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white uppercase ">
                             <ImageIcon className="h-4 w-4 text-amber-300" />
                             <span>Infografis Visual Perairan Maluku</span>
                         </div>
-                        <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                        <h1 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-4xl">
                             Infografis Cuaca Perairan Provinsi
                         </h1>
                         <h2 className="mb-6 text-xl font-bold text-amber-300 sm:text-2xl">
@@ -182,8 +190,8 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
                         {/* Quick Switch to Pelabuhan */}
                         <div className="mt-8 flex justify-center">
                             <Link href="/infografis-pelabuhan">
-                                <Button variant="outline" className="h-10 gap-2 rounded-2xl border-white/30 bg-white/10 text-xs font-bold text-white hover:bg-white/20 backdrop-blur-md">
-                                    <Ship className="h-4 w-4 text-cyan-300" />
+                                <Button variant="outline" className="h-10 gap-2 rounded-lg border-white/30 bg-white/10 text-xs font-bold text-white hover:bg-white/20 ">
+                                    <Ship className="h-4 w-4 text-blue-300" />
                                     <span>Beralih ke Infografis Pelabuhan</span>
                                     <ArrowUpRight className="h-3.5 w-3.5" />
                                 </Button>
@@ -194,14 +202,24 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
 
                 {/* Content Section */}
                 <div className="relative z-20 container mx-auto -mt-8 max-w-5xl px-4 sm:px-6 lg:px-8">
+                    {/* Official BMKG Cover Image (Diatas Kolom Tanggal) */}
+                    <ForecastCoverBanner
+                        type="provinsi"
+                        activeTab={activeTab}
+                        tab1Date={tab1Info.dateKey}
+                        tab2Date={tab2Info.dateKey}
+                        coverDocuments={coverDocuments}
+                        coverDocument={coverDocument}
+                    />
+
                     {/* Modern 2-Tab Switcher */}
                     <div className="mb-8 flex justify-center">
-                        <div className="inline-flex rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-xl backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-800">
+                        <div className="inline-flex rounded-lg border border-slate-200/80 bg-white p-1.5 shadow-sm dark:border-slate-700/80 dark:bg-slate-800">
                             <button
                                 onClick={() => setActiveTab('tab1')}
-                                className={`relative flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 ${
+                                className={`relative flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 ${
                                     activeTab === 'tab1'
-                                        ? 'bg-amber-600 text-white shadow-md'
+                                        ? 'bg-amber-600 text-white shadow-sm'
                                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white'
                                 }`}
                             >
@@ -210,9 +228,9 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
                             </button>
                             <button
                                 onClick={() => setActiveTab('tab2')}
-                                className={`relative flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 ${
+                                className={`relative flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 ${
                                     activeTab === 'tab2'
-                                        ? 'bg-amber-600 text-white shadow-md'
+                                        ? 'bg-amber-600 text-white shadow-sm'
                                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white'
                                 }`}
                             >
@@ -223,9 +241,9 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
                     </div>
 
                     {/* Table Card */}
-                    <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                    <div className="overflow-hidden rounded-lg border border-amber-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                         {/* Table Header Decoration */}
-                        <div className="flex items-center justify-between border-b border-amber-100 bg-gradient-to-r from-amber-50/70 to-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-800/80">
+                        <div className="flex items-center justify-between border-b border-amber-100 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-800/80">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-600 text-white shadow-sm">
                                     <ImageIcon className="h-4 w-4" />
@@ -346,11 +364,11 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
             {/* LIGHTBOX MODAL UNTUK PREVIEW GAMBAR INFOGRAFIS RESOLUSI TINGGI */}
             {activeLightbox && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 animate-in fade-in duration-200"
                     onClick={() => setActiveLightbox(null)}
                 >
                     <div
-                        className="relative max-h-[92vh] max-w-4xl w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 p-5 shadow-2xl text-white"
+                        className="relative max-h-[92vh] max-w-4xl w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950 p-5 shadow-sm text-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header Modal */}
@@ -376,7 +394,7 @@ export default function InfografisProvinsi({ documents = [] }: Props) {
                         </div>
 
                         {/* Image Viewer */}
-                        <div className="flex max-h-[72vh] items-center justify-center overflow-auto rounded-xl bg-black/60 p-2">
+                        <div className="flex max-h-[72vh] items-center justify-center overflow-auto rounded-lg bg-black/60 p-2">
                             <img
                                 src={activeLightbox.url}
                                 alt={activeLightbox.title}

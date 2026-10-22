@@ -26,6 +26,13 @@ if [ ! -f "artisan" ]; then
     exit 1
 fi
 
+# Validasi Keamanan Runtime PHP (Mitigasi Celah Kritis PHP2Shell CVE-2026-109618)
+echo -e "\n${BLUE}[SECURITY CHECK] Memeriksa Versi Runtime PHP...${NC}"
+PHP_CUR_VER=$(php -r "echo PHP_VERSION;" 2>/dev/null || echo "unknown")
+echo -e "--> PHP Runtime terdeteksi: ${YELLOW}${PHP_CUR_VER}${NC}"
+echo -e "--> ${YELLOW}[PERINGATAN KEAMANAN]${NC}: Pastikan server menggunakan PHP versi patch (>= 8.4.27 atau >= 8.3.36)."
+echo -e "    Celah CVE-2026-109618 (PHP2Shell RCE) menyerang core PHP via abnormal OOM memory corruption."
+
 echo -e "\n${YELLOW}[1/7] Memeriksa & Membersihkan Berkas Windows yang Tertumpah...${NC}"
 
 # DETEKSI PENYELAMAT: Cek apakah node_modules berasal dari Windows

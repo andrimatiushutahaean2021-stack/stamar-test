@@ -64,7 +64,7 @@ export default function Struktur() {
             title: 'Analisis & Prakiraan Cuaca',
             icon: Waves,
             badge: 'Analisis & Diseminasi',
-            badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
             desc: 'Melakukan analisis dinamika atmosfer dan oseanografi, penyusunan produk prakiraan cuaca untuk 18 zona perairan Maluku, cuaca pelabuhan, rute feri, dan pembuatan peringatan dini gelombang tinggi.',
             tasks: [
                 'Penyusunan prakiraan cuaca harian dan mingguan perairan Maluku',
@@ -77,7 +77,7 @@ export default function Struktur() {
             title: 'Pemeliharaan Alat & Jaringan',
             icon: Wrench,
             badge: 'Pemeliharaan Fasilitas',
-            badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
             desc: 'Melaksanakan pemeliharaan preventif dan kuratif peralatan operasional stasiun, Automated Weather Station (AWS), radar cuaca maritim, sensor gelombang, dan jaringan transmisi data.',
             tasks: [
                 'Kalibrasi dan perawatan rutin instrumen sensor meteorologi kelautan',
@@ -90,7 +90,7 @@ export default function Struktur() {
             title: 'Layanan Publik & Edukasi',
             icon: Radio,
             badge: 'Pelayanan Publik',
-            badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
             desc: 'Penyelenggaraan layanan data dan informasi untuk masyarakat, instansi maritim, pelabuhan, serta pelaksanaan Sekolah Lapang Cuaca Nelayan (SLCN) sebagai bentuk edukasi keselamatan berlayar.',
             tasks: [
                 'Pelayanan permohonan data cuaca maritim untuk riset dan komersial',
@@ -120,14 +120,14 @@ export default function Struktur() {
             </div>
 
             {/* Hero Section */}
-            <section className="border-b border-slate-800 bg-slate-950 py-16 text-white lg:py-20">
+            <section className="border-b border-slate-800 bg-slate-950 py-12 text-white lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-3xl text-center">
                         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-blue-500/20 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-300">
                             <Network className="h-3.5 w-3.5" />
                             <span>BAGAN & TATA KERJA ORGANISASI</span>
                         </div>
-                        <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                        <h1 className="mb-6 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-4xl">
                             Struktur Organisasi Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
                         </h1>
                         <p className="text-base leading-relaxed text-slate-300 sm:text-lg">
@@ -137,15 +137,19 @@ export default function Struktur() {
                     </div>
 
                     {/* Hierarchy Top Card */}
-                    <div className="mx-auto mt-12 max-w-2xl rounded-2xl border border-slate-700/80 bg-slate-900/90 p-6 shadow-xl sm:p-8">
+                    <div className="mx-auto mt-12 max-w-2xl rounded-lg border border-slate-700/80 bg-slate-900/90 p-6 shadow-sm sm:p-8">
                         <div className="flex flex-col items-center text-center">
-                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
-                                <Building2 className="h-8 w-8" />
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-white p-2 shadow-sm border border-slate-700/80">
+                                <img
+                                    src="/images/logo-bmkg.png"
+                                    alt="Logo BMKG"
+                                    className="h-full w-full object-contain"
+                                />
                             </div>
                             <span className="rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-300 uppercase">
                                 Pimpinan Tertinggi UPT
                             </span>
-                            <h2 className="mt-2 text-2xl font-extrabold text-white">
+                            <h2 className="mt-2 text-2xl font-bold text-white">
                                 Kepala Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
                             </h2>
                             <p className="mt-2 max-w-lg text-sm text-slate-300">
@@ -159,14 +163,14 @@ export default function Struktur() {
             </section>
 
             {/* Official Diagram Section */}
-            <section className="border-b bg-background py-16">
+            <section className="border-b bg-background py-12">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto mb-10 max-w-2xl text-center">
                         <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase">
                             <Sparkles className="h-4 w-4" />
                             <span>DIAGRAM RESMI</span>
                         </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             Bagan Struktur Organisasi
                         </h2>
                         <p className="mt-3 text-muted-foreground">
@@ -174,8 +178,8 @@ export default function Struktur() {
                         </p>
                     </div>
 
-                    <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border bg-card p-4 shadow-lg sm:p-8">
-                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border bg-slate-100 dark:bg-slate-900">
+                    <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border bg-card p-4 shadow-sm sm:p-8">
+                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-slate-100 dark:bg-slate-900">
                             <img
                                 src="https://stamar-ambon.bmkg.go.id/content/Struktur-Organisasi.png"
                                 alt="Bagan Struktur Organisasi Stasiun Meteorologi Maritim Ambon"
@@ -203,14 +207,14 @@ export default function Struktur() {
             </section>
 
             {/* Detailed Unit Breakdown Grid */}
-            <section className="py-16 lg:py-20">
+            <section className="py-12 lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto mb-12 max-w-2xl text-center">
                         <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase">
                             <Users className="h-4 w-4" />
                             <span>PEMBAGIAN PERAN & TANGGUNG JAWAB</span>
                         </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             Uraian Unit Kerja & Fungsi
                         </h2>
                         <p className="mt-3 text-muted-foreground">
@@ -224,11 +228,11 @@ export default function Struktur() {
                             return (
                                 <div
                                     key={idx}
-                                    className="flex flex-col justify-between rounded-2xl border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-md"
+                                    className="flex flex-col justify-between rounded-lg border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-sm"
                                 >
                                     <div>
                                         <div className="mb-4 flex items-center justify-between">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                                                 <IconComponent className="h-6 w-6" />
                                             </div>
                                             <span
@@ -295,7 +299,7 @@ export default function Struktur() {
                         </Link>
                         <Link
                             href="/tupoksi"
-                            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90"
+                            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                         >
                             <span>Tugas dan Fungsi</span>
                             <ArrowRight className="h-4 w-4" />

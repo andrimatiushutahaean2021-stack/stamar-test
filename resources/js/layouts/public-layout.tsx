@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { CloudRain, Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface PublicLayoutProps {
@@ -55,8 +55,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             ],
         },
         { name: 'Buletin', href: '/buletin' },
-        { name: 'Galeri', href: '/galeri' },
-        { name: 'Berita', href: '/berita' },
         {
             name: 'Informasi',
             href: '/informasi',
@@ -88,17 +86,15 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
     return (
         <div className="flex min-h-screen flex-col bg-background font-sans">
-            {/* Running Text / Warning Banner */}
-            <div className="relative z-[60] flex items-center bg-red-600 px-4 py-1.5 text-xs font-semibold text-white">
-                <span className="mr-4 font-bold tracking-wider whitespace-nowrap uppercase">
-                    Peringatan Dini:
-                </span>
+            {/* Running Text / Welcome Banner */}
+            <div className="relative z-[60] flex items-center bg-blue-900 border-b border-blue-800/40 px-4 py-1.5 text-xs font-medium text-slate-200 shadow-xs">
+                <div className="flex items-center gap-1.5 mr-4 font-bold tracking-wider whitespace-nowrap uppercase text-blue-300">
+                    <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+                    <span>Selamat Datang</span>
+                </div>
                 <div className="relative h-4 flex-grow overflow-hidden">
-                    <div className="absolute w-full animate-[marquee_20s_linear_infinite] whitespace-nowrap hover:animate-[marquee_20s_linear_infinite_paused]">
-                        WASPADA: Tinggi gelombang mencapai 2.5 - 4.0 meter
-                        (Berbahaya) di Perairan Kepulauan Tanimbar, Laut Banda,
-                        dan Laut Arafura bagian barat. Nelayan dan kapal
-                        tongkang diharap waspada!
+                    <div className="absolute w-full animate-[marquee_25s_linear_infinite] whitespace-nowrap hover:animate-[marquee_25s_linear_infinite_paused] text-slate-300">
+                        Selamat Datang di Website Resmi Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon - Badan Meteorologi, Klimatologi, dan Geofisika (BMKG). Menyajikan informasi cuaca maritim, prakiraan perairan kepulauan Maluku, dan pelayanan data meteorologi terpercaya.
                     </div>
                 </div>
             </div>
@@ -106,26 +102,28 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             <header
                 className={`sticky top-0 z-50 w-full transition-all duration-300 ${
                     isScrolled
-                        ? 'border-b bg-background/80 shadow-sm backdrop-blur-md'
-                        : 'bg-transparent'
+                        ? 'border-b border-zinc-200 bg-background dark:border-zinc-800'
+                        : 'border-b border-transparent bg-background'
                 }`}
             >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-20 items-center justify-between">
-                        {/* Logo */}
-                        <div className="flex flex-shrink-0 items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-                                <CloudRain className="h-6 w-6" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-lg leading-none font-bold tracking-tight">
-                                    STAMAR AMBON
+                        {/* Logo & Identitas Resmi BMKG */}
+                        <Link href="/" className="flex flex-shrink-0 items-center gap-3 sm:gap-3.5 group">
+                            <img
+                                src="/images/logo-bmkg.png"
+                                alt="Logo BMKG"
+                                className="h-11 sm:h-12 w-auto object-contain transition-transform shrink-0"
+                            />
+                            <div className="flex flex-col text-left">
+                                <span className="text-xs sm:text-sm lg:text-[15px] font-bold tracking-tight text-foreground leading-tight">
+                                    Badan Meteorologi Klimatologi Dan Geofisika
                                 </span>
-                                <span className="text-xs font-medium text-muted-foreground">
-                                    BMKG Maluku
+                                <span className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                                    Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
                                 </span>
                             </div>
-                        </div>
+                        </Link>
 
                         {/* Desktop Nav */}
                         <nav className="hidden items-center space-x-1 md:flex">
@@ -147,7 +145,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
                                     {/* Simple CSS Dropdown */}
                                     {link.dropdown && (
-                                        <div className="ring-opacity-5 invisible absolute top-full left-0 mt-2 w-48 origin-top-left transform rounded-md bg-popover opacity-0 shadow-lg ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                        <div className="ring-opacity-5 invisible absolute top-full left-0 mt-2 w-48 origin-top-left transform rounded-md bg-popover opacity-0 shadow-sm ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:opacity-100">
                                             <div className="py-1">
                                                 {link.dropdown.map((item, j) =>
                                                     item.href.startsWith(
@@ -200,7 +198,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div className="animate-in border-b bg-background shadow-lg slide-in-from-top-2 md:hidden">
+                    <div className="animate-in border-b bg-background shadow-sm slide-in-from-top-2 md:hidden">
                         <div className="space-y-1 px-2 pt-2 pb-4 sm:px-3">
                             {navLinks.map((link, i) => (
                                 <div key={i}>
@@ -251,19 +249,21 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                     <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
                         {/* Kolom 1: Profil & Identitas Stasiun */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-                                    <CloudRain className="h-6 w-6" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-lg leading-none font-black tracking-tight text-white">
-                                        STAMAR AMBON
+                            <Link href="/" className="flex items-center gap-3.5 group">
+                                <img
+                                    src="/images/logo-bmkg.png"
+                                    alt="Logo BMKG"
+                                    className="h-12 sm:h-13 w-auto object-contain transition-transform shrink-0"
+                                />
+                                <div className="flex flex-col text-left">
+                                    <span className="text-sm sm:text-base font-bold tracking-tight text-white leading-tight">
+                                        Badan Meteorologi Klimatologi Dan Geofisika
                                     </span>
-                                    <span className="text-xs font-semibold text-slate-400 mt-0.5">
-                                        Stasiun Meteorologi Maritim Yos Soedarso
+                                    <span className="text-xs font-medium text-slate-400 leading-tight mt-0.5">
+                                        Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
                                     </span>
                                 </div>
-                            </div>
+                            </Link>
                             <p className="text-xs leading-relaxed text-slate-400">
                                 Pusat penyedia informasi meteorologi maritim, keselamatan pelayaran perairan kepulauan Maluku, dan mitigasi bahaya gelombang tinggi laut.
                             </p>
@@ -310,12 +310,12 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/infografis" className="transition-colors text-indigo-400 hover:text-indigo-300 font-semibold">
-                                        Infografis & Peta Cuaca
+                                    <Link href="/infografis" className="transition-colors text-blue-400 hover:text-blue-300 font-semibold">
+                                        Infografis Cuaca
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/cuaca-maluku" className="transition-colors text-sky-400 hover:text-sky-300 font-semibold">
+                                    <Link href="/cuaca-maluku" className="transition-colors text-blue-400 hover:text-blue-300 font-semibold">
                                         Cuaca 10 Kota / Kab. Maluku
                                     </Link>
                                 </li>
@@ -348,7 +348,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://www.bmkg.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>Portal BMKG Pusat</span>
                                         <span className="text-[10px] text-slate-500">bmkg.go.id ↗</span>
@@ -359,7 +359,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://maritim.bmkg.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>Dit. Meteorologi Maritim</span>
                                         <span className="text-[10px] text-slate-500">maritim ↗</span>
@@ -370,7 +370,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://inatews.bmkg.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>InaTEWS (Peringatan Dini Tsunami)</span>
                                         <span className="text-[10px] text-slate-500">inatews ↗</span>
@@ -381,7 +381,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://cews.bmkg.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>CEWS (Pusat Informasi Iklim)</span>
                                         <span className="text-[10px] text-slate-500">cews ↗</span>
@@ -392,7 +392,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://balai4.bmkg.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>BBMKG Wilayah IV Makassar</span>
                                         <span className="text-[10px] text-slate-500">balai4 ↗</span>
@@ -403,7 +403,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://stmkg.ac.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>STMKG Kemayoran</span>
                                         <span className="text-[10px] text-slate-500">stmkg.ac.id ↗</span>
@@ -414,7 +414,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://satelit.bmkg.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-colors hover:text-cyan-400 flex items-center justify-between"
+                                        className="transition-colors hover:text-blue-400 flex items-center justify-between"
                                     >
                                         <span>Citra Satelit Himawari</span>
                                         <span className="text-[10px] text-slate-500">satelit ↗</span>
@@ -437,7 +437,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://play.google.com/store/apps/details?id=com.Info_BMKG"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="group flex items-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 transition-all hover:border-slate-500 hover:bg-slate-800"
+                                        className="group flex items-center gap-2.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 transition-all hover:border-slate-500 hover:bg-slate-800"
                                     >
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
                                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -454,7 +454,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         href="https://apps.apple.com/id/app/info-bmkg/id1114372539"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="group flex items-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 transition-all hover:border-slate-500 hover:bg-slate-800"
+                                        className="group flex items-center gap-2.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 transition-all hover:border-slate-500 hover:bg-slate-800"
                                     >
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
                                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -491,7 +491,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         aria-label="Instagram STAMAR Ambon"
-                                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-pink-500/20"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-blue-500/20"
                                     >
                                         <img src="/images/instagram.svg" alt="Instagram" className="h-4 w-4" />
                                     </a>

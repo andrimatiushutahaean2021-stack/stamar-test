@@ -26,9 +26,12 @@ import {
     Users,
     Smartphone,
     Share2,
+    Video,
+    Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect, useMemo } from 'react';
+import BuletinShowcaseCarousel from '@/components/buletin-showcase-carousel';
 
 interface DocumentItem {
     id: number;
@@ -46,6 +49,8 @@ interface DocumentItem {
 }
 
 interface Props {
+    warning1Hari?: DocumentItem | null;
+    warning3Hari?: DocumentItem | null;
     warningDocs?: DocumentItem[];
     latestProvinsiDocs?: DocumentItem[];
     latestPelabuhanDocs?: DocumentItem[];
@@ -55,92 +60,78 @@ interface Props {
 }
 
 export default function Welcome({
+    warning1Hari,
+    warning3Hari,
     warningDocs = [],
     latestProvinsiDocs = [],
     latestPelabuhanDocs = [],
     latestBuletinDocs = [],
     latestInfografisDocs = [],
 }: Props) {
+    // State slideshow peringatan dini (mengikuti konsep 'Galeri Kami', auto-advance 4 detik)
+    const [currentWarningSlide, setCurrentWarningSlide] = useState(0);
+
+    // Auto-advance slideshow peringatan dini setiap 4 detik (seperti 'Galeri Kami')
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentWarningSlide((prev) => (prev === 0 ? 1 : 0));
+        }, 4000);
+        return () => clearInterval(timer);
+    }, []);
+
     // State slider peringatan dini di widget hero
     const [activeWarningSlide, setActiveWarningSlide] = useState(0);
 
     // State slider "Galeri Kami" di sidebar (mengikuti style website lama .slideshow-container23)
     const [activeGallerySlide, setActiveGallerySlide] = useState(0);
 
-    // Lightbox modal state untuk zoom gambar infografis / galeri
+    // Real-time WIT (Waktu Indonesia Timur - UTC+9) clock state
+    const [currentTime, setCurrentTime] = useState<{
+        timeStr: string;
+        dateStr: string;
+    }>({
+        timeStr: '',
+        dateStr: '',
+    });
+
+    useEffect(() => {
+        const updateClock = () => {
+            const now = new Date();
+            const timeStr = now
+                .toLocaleTimeString('id-ID', {
+                    timeZone: 'Asia/Jayapura',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                })
+                .replace(/\./g, ':');
+
+            const dateStr = now.toLocaleDateString('id-ID', {
+                timeZone: 'Asia/Jayapura',
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            });
+
+            setCurrentTime({ timeStr, dateStr });
+        };
+
+        updateClock();
+        const timer = setInterval(updateClock, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Lightbox modal state untuk zoom gambar infografis / video player
     const [activeLightbox, setActiveLightbox] = useState<{
         url: string;
         title: string;
         date?: string;
         desc?: string;
         badge?: string;
+        isVideo?: boolean;
     } | null>(null);
-
-    // Filter daftar wilayah maritim Maluku untuk seleksi di Widget Hero
-    const availableRegions = useMemo(() => {
-        return [
-            {
-                id: 4,
-                name: 'Perairan P. Ambon - P. Lease',
-                defaultWave: '1.25 - 2.5 m',
-                waveStatus: 'Sedang',
-                waveColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-                wind: '10 - 20 knot',
-                windDir: 'Tenggara - Selatan',
-            },
-            {
-                id: 10,
-                name: 'Perairan Kep. Banda Neira',
-                defaultWave: '2.5 - 4.0 m',
-                waveStatus: 'Tinggi',
-                waveColor: 'text-red-400 bg-red-400/10 border-red-400/20',
-                wind: '15 - 25 knot',
-                windDir: 'Timur - Tenggara',
-            },
-            {
-                id: 1,
-                name: 'Perairan Utara P. Buru',
-                defaultWave: '0.5 - 1.25 m',
-                waveStatus: 'Rendah',
-                waveColor: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
-                wind: '05 - 15 knot',
-                windDir: 'Timur - Tenggara',
-            },
-            {
-                id: 11,
-                name: 'Perairan Kep. Kai',
-                defaultWave: '1.25 - 2.5 m',
-                waveStatus: 'Sedang',
-                waveColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-                wind: '10 - 20 knot',
-                windDir: 'Tenggara - Selatan',
-            },
-            {
-                id: 14,
-                name: 'Perairan Barat Kep. Tanimbar',
-                defaultWave: '2.5 - 4.0 m',
-                waveStatus: 'Tinggi',
-                waveColor: 'text-red-400 bg-red-400/10 border-red-400/20',
-                wind: '15 - 25 knot',
-                windDir: 'Tenggara - Barat Daya',
-            },
-            {
-                id: 12,
-                name: 'Perairan Utara Kep. Aru',
-                defaultWave: '1.25 - 2.5 m',
-                waveStatus: 'Sedang',
-                waveColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-                wind: '10 - 20 knot',
-                windDir: 'Timur - Tenggara',
-            },
-        ];
-    }, []);
-
-    const [selectedRegionId, setSelectedRegionId] = useState<number>(4);
-
-    const activeRegion = useMemo(() => {
-        return availableRegions.find((r) => r.id === selectedRegionId) || availableRegions[0];
-    }, [availableRegions, selectedRegionId]);
 
     // Format tanggal rilis terakhir
     const latestReleaseDate = useMemo(() => {
@@ -202,31 +193,45 @@ export default function Welcome({
     const galleryItems = [
         {
             id: 1,
-            title: 'Kunjungan Kerja & Pengamatan Maritim Stamar Ambon',
-            location: 'Stasiun Meteorologi Maritim Latuhalat',
-            image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
-            caption: 'Kunjungan Stamar Ambon',
+            title: 'Kunjungan Lapangan & Pengamatan Maritim di Atas Kapal',
+            location: 'Pelabuhan Slamet Riyadi',
+            image: '/images/galeri/galeri-1.jpg',
+            caption: 'Port Meteorological Officer',
         },
         {
             id: 2,
-            title: 'Sekolah Lapang Cuaca Nelayan (SLCN) BMKG Maluku',
-            location: 'Teluk Ambon & Dermaga Tradisional',
-            image: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?auto=format&fit=crop&w=800&q=80',
-            caption: 'Kegiatan SLCN Nelayan 2026',
+            title: 'Upacara Peringatan HUT Kemerdekaan RI Ke-81',
+            location: 'Halaman Kantor Stamet Penerbangan Pattimura Ambon',
+            image: '/images/galeri/galeri-2.jpg',
+            caption: 'Peringatan HUT RI Ke-81',
         },
         {
             id: 3,
-            title: 'Pemeliharaan & Kalibrasi Sensor Maritim Otomatis',
-            location: 'Perairan Pulau Banda & Latuhalat',
-            image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-            caption: 'Operasional Alat & Sensor Maritim',
+            title: 'Edukasi Literasi Cuaca Maritim - BMKG Goes To School',
+            location: 'Aula SMA Negeri 1 Ambon',
+            image: '/images/galeri/galeri-3.jpg',
+            caption: 'BMKG Goes To School',
         },
         {
             id: 4,
-            title: 'Koordinasi Keselamatan Pelayaran bersama KSOP & Pelindo',
-            location: 'Pelabuhan Yos Sudarso Ambon',
-            image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80',
-            caption: 'Kemitraan Stakeholder Maritim',
+            title: 'Apel Bersama Peringatan Hari Meteorologi Klimatologi dan Geofisika',
+            location: 'Stasiun Meteorologi Maritim Yos Soedarso Ambon',
+            image: '/images/galeri/galeri-4.jpg',
+            caption: 'Peringatan HMKG 2026',
+        },
+        {
+            id: 5,
+            title: 'Aksi Bersih Pantai & Pelabuhan oleh Tim Maritimers Ambon',
+            location: 'Dermaga Kontainer Pelabuhan Yos Sudarso',
+            image: '/images/galeri/galeri-5.jpg',
+            caption: 'Aksi Bersih Pelabuhan Maritim',
+        },
+        {
+            id: 6,
+            title: 'Sekolah Lapang Cuaca Nelayan (SLCN) Kota Ambon 2026',
+            location: 'Balai Kota Ambon',
+            image: '/images/galeri/galeri-6.jpg',
+            caption: 'SLCN Kota Ambon 2026',
         },
     ];
 
@@ -264,205 +269,158 @@ export default function Welcome({
         <PublicLayout>
             <Head title="Stasiun Meteorologi Maritim Ambon - Informasi Cuaca Maritim BMKG Maluku" />
 
-            {/* HERO SECTION DENGAN WIDGET DAN RINGKASAN CUACA */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-sky-950 to-slate-900 pt-8 pb-12 text-white">
+            {/* HERO SECTION */}
+            <section className="relative overflow-hidden bg-slate-900 py-12 text-white">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
-                        {/* Judul & Pengantar */}
-                        <div className="lg:col-span-7 text-center lg:text-left">
-                            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3.5 py-1 text-xs font-semibold text-cyan-300 border border-blue-400/30">
-                                <span className="flex h-2 w-2 animate-pulse rounded-full bg-cyan-400"></span>
-                                BMKG Kelas II Maritim Yos Soedarso Ambon
-                            </div>
-                            <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
-                                Informasi Cuaca Maritim & Peringatan Dini Maluku
-                            </h1>
-                            <p className="mt-3 text-sm leading-relaxed text-slate-300 max-w-2xl mx-auto lg:mx-0">
-                                Menyajikan prakiraan cuaca perairan provinsi Maluku, pelabuhan rakyat dan penyeberangan feri, buletin maritim resmi, serta infografis rilis harian.
-                            </p>
+                    <div className="mx-auto max-w-3xl text-center">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                            Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
                         </div>
+                        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl leading-tight">
+                            Informasi Cuaca Maritim & Peringatan Dini Maluku
+                        </h1>
+                        <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-300">
+                            Menyajikan prakiraan cuaca perairan provinsi Maluku, pelabuhan rakyat dan penyeberangan feri, buletin maritim resmi, serta infografis rilis harian.
+                        </p>
 
-                        {/* Interactive Marine Weather Box */}
-                        <div className="lg:col-span-5">
-                            <div className="overflow-hidden rounded-2xl border border-white/20 bg-slate-900/80 p-5 shadow-2xl backdrop-blur-md">
-                                <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-4 w-4 text-cyan-400" />
-                                        <select
-                                            value={selectedRegionId}
-                                            onChange={(e) => setSelectedRegionId(Number(e.target.value))}
-                                            className="rounded-lg border border-white/20 bg-slate-950 px-2.5 py-1 text-xs font-bold text-white focus:border-cyan-400 focus:outline-none"
-                                        >
-                                            {availableRegions.map((region) => (
-                                                <option key={region.id} value={region.id} className="bg-slate-900 text-white">
-                                                    {region.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <span className="text-[11px] text-cyan-300 font-mono">
-                                        {latestReleaseDate}
-                                    </span>
+                        {/* Jam Real-Time WIT (Waktu Indonesia Timur - UTC+9) */}
+                        <div className="mt-8 inline-flex flex-col items-center gap-3 rounded-lg border border-slate-700 bg-slate-800 px-5 py-3 sm:flex-row sm:gap-6">
+                            <div className="text-center sm:text-left">
+                                <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-400 sm:justify-start">
+                                    <Clock className="h-3 w-3" />
+                                    <span>Waktu Operasional Stasiun</span>
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-xl border border-slate-700/60 bg-slate-950/60 p-3">
-                                        <div className="flex items-center gap-1.5 text-slate-400 text-xs mb-1">
-                                            <Waves className="h-3.5 w-3.5 text-cyan-400" />
-                                            <span>Gelombang</span>
-                                        </div>
-                                        <div className="text-xl font-black text-white">
-                                            {activeRegion.defaultWave}
-                                        </div>
-                                        <span className={`mt-1 inline-block rounded px-2 py-0.5 text-[10px] font-bold border ${activeRegion.waveColor}`}>
-                                            Kategori {activeRegion.waveStatus}
-                                        </span>
-                                    </div>
-
-                                    <div className="rounded-xl border border-slate-700/60 bg-slate-950/60 p-3">
-                                        <div className="flex items-center gap-1.5 text-slate-400 text-xs mb-1">
-                                            <Wind className="h-3.5 w-3.5 text-blue-400" />
-                                            <span>Kecepatan Angin</span>
-                                        </div>
-                                        <div className="text-xl font-black text-white">
-                                            {activeRegion.wind}
-                                        </div>
-                                        <div className="mt-1 text-[10px] text-slate-300">
-                                            Arah: <span className="font-semibold text-cyan-300">{activeRegion.windDir}</span>
-                                        </div>
-                                    </div>
+                                <div className="mt-0.5 text-xs font-medium capitalize text-slate-200">
+                                    {currentTime.dateStr || 'Memuat tanggal...'}
                                 </div>
+                            </div>
 
-                                <div className="mt-3 flex items-center justify-between pt-2 text-xs">
-                                    <Link href="/provinsi" className="text-cyan-300 hover:underline font-bold flex items-center gap-1">
-                                        <span>Buka Prakiraan 18 Wilayah Maluku</span>
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                    </Link>
-                                </div>
+                            <div className="hidden h-8 w-px bg-slate-700 sm:block" />
+
+                            <div className="flex items-baseline gap-2">
+                                <span className="font-mono text-2xl font-bold tabular-nums text-white sm:text-3xl">
+                                    {currentTime.timeStr || '--:--:--'}
+                                </span>
+                                <span className="rounded border border-slate-600 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-200">
+                                    WIT
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* UNDUH DOKUMEN & LAYANAN CEPAT GRID (MENGIKUTI STYLE ASLI WEBSITE LAMA BMKG) */}
-            <section className="border-b border-border bg-card py-6 shadow-sm">
+            {/* UNDUH DOKUMEN & LAYANAN CEPAT GRID */}
+            <section className="border-b border-border bg-slate-50 py-10 dark:bg-card">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="mb-4 text-center text-lg font-bold text-foreground tracking-tight sm:text-xl">
-                        Unduh Dokumen & Layanan Prakiraan Cuaca
-                    </h2>
+                    <div className="text-center max-w-2xl mx-auto mb-6">
+                        <h2 className="text-xl font-bold text-foreground tracking-tight sm:text-2xl">
+                            Unduh Dokumen & Layanan Prakiraan Cuaca
+                        </h2>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Akses cepat produk informasi cuaca maritim resmi perairan Maluku
+                        </p>
+                    </div>
 
-                    {/* Master Unified Grid Layout seperti .download-grid pada website lama */}
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-12 max-w-5xl mx-auto">
-                        {/* 1. Peringatan Dini 1 Hari (Full Width di Desktop) */}
-                        <div className="lg:col-span-12">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (warningDocs.length > 0) {
-                                        const doc = warningDocs[0];
-                                        if (doc.file_type && ['png', 'jpg', 'jpeg', 'webp'].includes(doc.file_type.toLowerCase())) {
-                                            setActiveLightbox({
-                                                url: `/storage/${doc.file_path}`,
-                                                title: doc.title,
-                                                desc: doc.description,
-                                                badge: 'Peringatan Dini Gelombang 1 Hari',
-                                            });
-                                            return;
-                                        }
-                                        window.open(`/storage/${doc.file_path}`, '_blank');
-                                    }
-                                }}
-                                className="group flex w-full items-center justify-between rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/20 px-5 py-3 text-left text-sm font-bold text-red-700 dark:text-red-400 shadow-xs transition-all hover:bg-red-600 hover:text-white hover:shadow-md cursor-pointer"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <AlertTriangle className="h-4 w-4 text-red-600 group-hover:text-white" />
-                                    Peringatan Dini Gelombang Tinggi 1 Hari Kedepan
-                                </span>
-                                <span className="text-xs font-semibold opacity-80 group-hover:opacity-100 flex items-center gap-1">
-                                    Lihat Dokumen ↗
-                                </span>
-                            </button>
-                        </div>
+                    {/* Symmetrical 4-Card Grid Layout */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                        {/* 1. Prakiraan Wilayah Provinsi */}
+                        <Link
+                            href="/provinsi"
+                            className="group relative flex flex-col justify-between overflow-hidden rounded-lg border border-blue-200/80 dark:border-blue-900/50 bg-background p-5 shadow-xs transition-all duration-300 hover:border-blue-500 hover:shadow-sm dark:hover:border-blue-400"
+                        >
+                            <div className="flex items-center gap-3.5">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 transition-transform">
+                                    <Waves className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        Prakiraan Provinsi
+                                    </h3>
+                                    <span className="text-[11px] font-medium text-muted-foreground">
+                                        18 Wilayah Perairan
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                                <span>Unduh PDF & Peta</span>
+                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                        </Link>
 
-                        {/* 2. Peringatan Dini 3 Hari (Full Width di Desktop) */}
-                        <div className="lg:col-span-12">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (warningDocs.length > 1) {
-                                        const doc = warningDocs[1];
-                                        if (doc.file_type && ['png', 'jpg', 'jpeg', 'webp'].includes(doc.file_type.toLowerCase())) {
-                                            setActiveLightbox({
-                                                url: `/storage/${doc.file_path}`,
-                                                title: doc.title,
-                                                desc: doc.description,
-                                                badge: 'Peringatan Dini Gelombang 3 Hari',
-                                            });
-                                            return;
-                                        }
-                                        window.open(`/storage/${doc.file_path}`, '_blank');
-                                    }
-                                }}
-                                className="group flex w-full items-center justify-between rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 px-5 py-3 text-left text-sm font-bold text-amber-700 dark:text-amber-400 shadow-xs transition-all hover:bg-amber-600 hover:text-white hover:shadow-md cursor-pointer"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <AlertTriangle className="h-4 w-4 text-amber-600 group-hover:text-white" />
-                                    Peringatan Dini Gelombang Tinggi 3 Hari Kedepan
-                                </span>
-                                <span className="text-xs font-semibold opacity-80 group-hover:opacity-100 flex items-center gap-1">
-                                    Lihat Dokumen ↗
-                                </span>
-                            </button>
-                        </div>
+                        {/* 2. Prakiraan Penyeberangan */}
+                        <a
+                            href="https://maritim.bmkg.go.id/cuaca/rute"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative flex flex-col justify-between overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background p-5 shadow-xs transition-colors hover:border-blue-500 hover:shadow-sm dark:hover:border-blue-400"
+                        >
+                            <div className="flex items-center gap-3.5">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 transition-transform">
+                                    <Ship className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        Prakiraan Penyeberangan
+                                    </h3>
+                                    <span className="text-[11px] font-medium text-muted-foreground">
+                                        Jalur Kapal Feri
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                                <span>Peta Rute BMKG Pusat</span>
+                                <span className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">↗</span>
+                            </div>
+                        </a>
 
-                        {/* 3. Prakiraan Wilayah Provinsi (1/3 Width) */}
-                        <div className="lg:col-span-4">
-                            <Link
-                                href="/provinsi"
-                                className="group flex h-full items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/60 bg-background px-4 py-3.5 text-center text-sm font-bold text-foreground shadow-xs transition-all hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-md"
-                            >
-                                <span>Prakiraan Wilayah Provinsi</span>
-                            </Link>
-                        </div>
+                        {/* 3. Prakiraan Pelabuhan */}
+                        <Link
+                            href="/pelabuhan"
+                            className="group relative flex flex-col justify-between overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background p-5 shadow-xs transition-colors hover:border-blue-500 hover:shadow-sm dark:hover:border-blue-400"
+                        >
+                            <div className="flex items-center gap-3.5">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 transition-transform">
+                                    <Building2 className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        Prakiraan Pelabuhan
+                                    </h3>
+                                    <span className="text-[11px] font-medium text-muted-foreground">
+                                        Dermaga & Pelabuhan Rakyat
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                                <span>Kondisi & Pasang Surut</span>
+                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                        </Link>
 
-                        {/* 4. Prakiraan Penyeberangan (1/3 Width) */}
-                        <div className="lg:col-span-4">
-                            <a
-                                href="https://maritim.bmkg.go.id/cuaca/rute"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex h-full items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/60 bg-background px-4 py-3.5 text-center text-sm font-bold text-foreground shadow-xs transition-all hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-md"
-                            >
-                                <span>Prakiraan Penyeberangan</span>
-                            </a>
-                        </div>
-
-                        {/* 5. Prakiraan Pelabuhan (1/3 Width) */}
-                        <div className="lg:col-span-4">
-                            <Link
-                                href="/pelabuhan"
-                                className="group flex h-full items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/60 bg-background px-4 py-3.5 text-center text-sm font-bold text-foreground shadow-xs transition-all hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-md"
-                            >
-                                <span>Prakiraan Pelabuhan</span>
-                            </Link>
-                        </div>
-
-                        {/* 6. Produk Prakiraan Wisata Bahari (Full Width) */}
-                        <div className="lg:col-span-12">
-                            <Link
-                                href="/wisata-bahari"
-                                className="group flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-background px-5 py-3 text-sm font-bold text-foreground shadow-xs transition-all hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:shadow-md"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <Anchor className="h-4 w-4 text-emerald-600 group-hover:text-white" />
-                                    Produk Prakiraan Wisata Bahari Maluku
-                                </span>
-                                <span className="text-xs font-semibold text-muted-foreground group-hover:text-white">
-                                    Pantai & Destinasi Bahari ↗
-                                </span>
-                            </Link>
-                        </div>
+                        {/* 4. Produk Prakiraan Wisata Bahari */}
+                        <Link
+                            href="/wisata-bahari"
+                            className="group relative flex flex-col justify-between overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background p-5 shadow-xs transition-colors hover:border-blue-500 hover:shadow-sm dark:hover:border-blue-400"
+                        >
+                            <div className="flex items-center gap-3.5">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 transition-transform">
+                                    <Anchor className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-sm font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        Prakiraan Wisata Bahari
+                                    </h3>
+                                    <span className="text-[11px] font-medium text-muted-foreground">
+                                        Pantai & Destinasi Bahari
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                                <span>Wisata & Rekreasi Laut</span>
+                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -474,110 +432,250 @@ export default function Welcome({
                     {/* KOLOM UTAMA (CONTENT) */}
                     <div className="lg:col-span-8 space-y-8">
                         
-                        {/* 1. VISUAL PERINGATAN DINI GELOMBANG (1 HARI & 3 HARI) */}
-                        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
-                            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border/80 pb-3">
+                        {/* 1. VISUAL PERINGATAN DINI GELOMBANG (SLIDESHOW OTOMATIS 4 DETIK SEPERTI GALERI KAMI) */}
+                        <div id="peringatan-dini-section" className="rounded-lg border border-border bg-card p-6 shadow-xs">
+                            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 pb-4">
                                 <div>
-                                    <h2 className="text-lg font-bold text-foreground">
-                                        Peta Peringatan Dini Gelombang Maluku
+                                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                                        <span>Peringatan Dini Gelombang Maluku</span>
                                     </h2>
-                                    <p className="text-xs text-muted-foreground">
-                                        Peta sebaran area perairan berpotensi gelombang tinggi hingga ekstrem.
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        Rilis resmi: 1 hari kedepan dan 3 hari kedepan.
                                     </p>
                                 </div>
-                                <span className="rounded-full bg-red-500/10 px-3 py-1 text-[11px] font-bold text-red-600 dark:text-red-400 self-start sm:self-auto">
-                                    Rilis Resmi Stamar
-                                </span>
+
+                                {/* Tab Toggle: 1 Hari Kedepan vs 3 Hari Kedepan */}
+                                <div className="flex items-center rounded-lg bg-muted p-1 border border-border self-start sm:self-auto">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentWarningSlide(0)}
+                                        className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                            currentWarningSlide === 0
+                                                ? 'bg-background text-foreground shadow-xs'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        <span>1 Hari Kedepan</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentWarningSlide(1)}
+                                        className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                            currentWarningSlide === 1
+                                                ? 'bg-background text-foreground shadow-xs'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        <span>3 Hari Kedepan</span>
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Warning Slider Container */}
-                            <div className="relative overflow-hidden rounded-xl bg-slate-900 group">
-                                <div className="relative aspect-[16/9] w-full">
-                                    {warningSlides.map((slide, idx) => (
+                            {/* Slideshow Display Area (Mengikuti Konsep 'Galeri Kami') */}
+                            <div className="space-y-3">
+                                {/* Header Info Slide Aktif */}
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-semibold text-foreground">
+                                        {currentWarningSlide === 0
+                                            ? 'Peringatan Dini Gelombang 1 Hari Kedepan'
+                                            : 'Peringatan Dini Gelombang 3 Hari Kedepan'}
+                                    </span>
+                                    {currentWarningSlide === 0 && warning1Hari?.forecast_date ? (
+                                        <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
+                                            Rilis: {new Date(warning1Hari.forecast_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        </span>
+                                    ) : currentWarningSlide === 1 && warning3Hari?.forecast_date ? (
+                                        <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
+                                            Rilis: {new Date(warning3Hari.forecast_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        </span>
+                                    ) : null}
+                                </div>
+
+                                {/* Slides Container dengan Rasio 16/9 */}
+                                <div className="relative overflow-hidden rounded-lg bg-slate-950 aspect-[16/9] border border-border/80 shadow-inner group">
+                                    {/* SLIDE 0: 1 HARI KEDEPAN (GAMBAR) */}
+                                    <div
+                                        className={`absolute inset-0 transition-opacity duration-700 ${
+                                            currentWarningSlide === 0
+                                                ? 'opacity-100 z-10 pointer-events-auto'
+                                                : 'opacity-0 z-0 pointer-events-none'
+                                        }`}
+                                    >
                                         <div
-                                            key={idx}
                                             onClick={() =>
                                                 setActiveLightbox({
-                                                    url: slide.image,
-                                                    title: slide.title,
-                                                    desc: slide.desc,
-                                                    badge: 'Peta Peringatan Dini Gelombang',
+                                                    url: warning1Hari ? `/storage/${warning1Hari.file_path}` : 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+                                                    title: warning1Hari?.title || 'Peringatan Dini Gelombang 1 Hari Kedepan',
+                                                    desc: warning1Hari?.description || 'Peta peringatan dini tinggi gelombang 1 hari kedepan rilis resmi BMKG Stamar Ambon.',
+                                                    badge: 'Peringatan Dini 1 Hari Kedepan',
+                                                    isVideo: false,
                                                 })
                                             }
-                                            className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${
-                                                idx === activeWarningSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-                                            }`}
+                                            className="relative h-full w-full cursor-pointer"
                                             title="Klik untuk memperbesar tampilan peta"
                                         >
                                             <img
-                                                src={slide.image}
-                                                alt={slide.title}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-102"
+                                                src={warning1Hari ? `/storage/${warning1Hari.file_path}` : 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'}
+                                                alt="Peringatan Dini Gelombang 1 Hari"
+                                                className="h-full w-full object-contain bg-slate-900 transition-transform duration-500 "
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
                                             <div className="absolute bottom-4 left-4 right-16 text-white">
                                                 <h3 className="text-base font-bold text-yellow-400">
-                                                    {slide.title}
+                                                    {warning1Hari?.title || 'Peta Peringatan Dini Gelombang Maluku 1 Hari'}
                                                 </h3>
                                                 <p className="mt-1 text-xs text-slate-200 line-clamp-2">
-                                                    {slide.desc}
+                                                    {warning1Hari?.description || 'Rilis sebaran potensi tinggi gelombang perairan Maluku 24 jam kedepan.'}
                                                 </p>
                                             </div>
                                         </div>
-                                    ))}
+
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveLightbox({
+                                                    url: warning1Hari ? `/storage/${warning1Hari.file_path}` : 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+                                                    title: warning1Hari?.title || 'Peringatan Dini Gelombang 1 Hari Kedepan',
+                                                    desc: warning1Hari?.description || 'Peta peringatan dini tinggi gelombang 1 hari kedepan rilis resmi BMKG Stamar Ambon.',
+                                                    badge: 'Peringatan Dini 1 Hari Kedepan',
+                                                    isVideo: false,
+                                                });
+                                            }}
+                                            className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-black/60 text-white shadow-sm hover:bg-black/85 transition-all cursor-pointer"
+                                            title="Perbesar Peta Peringatan Dini"
+                                        >
+                                            <ZoomIn className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* SLIDE 1: 3 HARI KEDEPAN (VIDEO / GAMBAR) */}
+                                    <div
+                                        className={`absolute inset-0 transition-opacity duration-700 ${
+                                            currentWarningSlide === 1
+                                                ? 'opacity-100 z-10 pointer-events-auto'
+                                                : 'opacity-0 z-0 pointer-events-none'
+                                        }`}
+                                    >
+                                        {warning3Hari && ['mp4', 'webm', 'mov', 'ogg'].includes((warning3Hari.file_type || '').toLowerCase()) ? (
+                                            <video
+                                                controls
+                                                controlsList="nodownload"
+                                                autoPlay
+                                                muted
+                                                loop
+                                                playsInline
+                                                src={`/storage/${warning3Hari.file_path}`}
+                                                className="w-full h-full object-contain bg-black"
+                                            >
+                                                Peramban Anda tidak mendukung pemutar video HTML5.
+                                            </video>
+                                        ) : (
+                                            <div
+                                                onClick={() =>
+                                                    setActiveLightbox({
+                                                        url: warning3Hari ? `/storage/${warning3Hari.file_path}` : 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80',
+                                                        title: warning3Hari?.title || 'Peringatan Dini Gelombang 3 Hari Kedepan',
+                                                        desc: warning3Hari?.description || 'Peta peringatan dini tinggi gelombang 3 hari kedepan rilis resmi BMKG Stamar Ambon.',
+                                                        badge: 'Peringatan Dini 3 Hari Kedepan',
+                                                        isVideo: false,
+                                                    })
+                                                }
+                                                className="relative h-full w-full cursor-pointer"
+                                                title="Klik untuk memperbesar tampilan peta"
+                                            >
+                                                <img
+                                                    src={warning3Hari ? `/storage/${warning3Hari.file_path}` : 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80'}
+                                                    alt="Peringatan Dini Gelombang 3 Hari"
+                                                    className="h-full w-full object-contain bg-slate-900 transition-transform duration-500 "
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+                                                <div className="absolute bottom-4 left-4 right-16 text-white">
+                                                    <h3 className="text-base font-bold text-yellow-400">
+                                                        {warning3Hari?.title || 'Peta Peringatan Dini Gelombang Maluku 3 Hari'}
+                                                    </h3>
+                                                    <p className="mt-1 text-xs text-slate-200 line-clamp-2">
+                                                        {warning3Hari?.description || 'Rilis sebaran potensi tinggi gelombang perairan Maluku 72 jam kedepan.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Tombol Perbesar jika format gambar */}
+                                        {(!warning3Hari || !['mp4', 'webm', 'mov', 'ogg'].includes((warning3Hari.file_type || '').toLowerCase())) && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveLightbox({
+                                                        url: warning3Hari ? `/storage/${warning3Hari.file_path}` : 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80',
+                                                        title: warning3Hari?.title || 'Peringatan Dini Gelombang 3 Hari Kedepan',
+                                                        desc: warning3Hari?.description || 'Peta peringatan dini tinggi gelombang 3 hari kedepan rilis resmi BMKG Stamar Ambon.',
+                                                        badge: 'Peringatan Dini 3 Hari Kedepan',
+                                                        isVideo: false,
+                                                    });
+                                                }}
+                                                className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-black/60 text-white shadow-sm hover:bg-black/85 transition-all cursor-pointer"
+                                                title="Perbesar Peta Peringatan Dini"
+                                            >
+                                                <ZoomIn className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Navigasi Prev & Next (Mengikuti Style Galeri Kami) */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentWarningSlide((prev) => (prev === 0 ? 1 : 0))}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/85 transition-all shadow-sm cursor-pointer"
+                                        aria-label="Slide Sebelumnya"
+                                    >
+                                        ❮
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentWarningSlide((prev) => (prev === 0 ? 1 : 0))}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/85 transition-all shadow-sm cursor-pointer"
+                                        aria-label="Slide Selanjutnya"
+                                    >
+                                        ❯
+                                    </button>
                                 </div>
 
-                                {/* Tombol Perbesar / Zoom Cepat */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        const currentSlide = warningSlides[activeWarningSlide];
-                                        if (currentSlide) {
-                                            setActiveLightbox({
-                                                url: currentSlide.image,
-                                                title: currentSlide.title,
-                                                desc: currentSlide.desc,
-                                                badge: 'Peta Peringatan Dini Gelombang',
-                                            });
-                                        }
-                                    }}
-                                    className="absolute top-3 right-3 z-30 flex h-9 w-9 items-center justify-center rounded-xl bg-black/60 text-white shadow-lg backdrop-blur-md hover:bg-black/85 hover:scale-105 transition-all cursor-pointer"
-                                    title="Perbesar Peta Peringatan Dini"
-                                >
-                                    <ZoomIn className="h-4 w-4" />
-                                </button>
-
-                                {/* Controls */}
-                                <div className="absolute top-1/2 left-2 right-2 z-20 flex -translate-y-1/2 justify-between pointer-events-none">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveWarningSlide((prev) =>
-                                                prev === 0 ? warningSlides.length - 1 : prev - 1,
-                                            );
-                                        }}
-                                        className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
-                                    >
-                                        <ChevronLeft className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveWarningSlide((prev) => (prev + 1) % warningSlides.length);
-                                        }}
-                                        className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
-                                    >
-                                        <ChevronRight className="h-5 w-5" />
-                                    </button>
+                                {/* Dots Pagination (Mengikuti Style Galeri Kami) */}
+                                <div className="mt-3 flex flex-col sm:flex-row items-center justify-between gap-2">
+                                    <div className="text-xs text-muted-foreground text-center sm:text-left">
+                                        {currentWarningSlide === 0 ? (
+                                            <p>{warning1Hari?.description || 'Rilis sebaran potensi tinggi gelombang perairan Maluku 24 jam kedepan.'}</p>
+                                        ) : (
+                                            <p>{warning3Hari?.description || 'Prakiraan potensi dinamika tinggi gelombang 3 hari kedepan perairan Maluku.'}</p>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCurrentWarningSlide(0)}
+                                            className={`h-2 rounded-full transition-all cursor-pointer ${
+                                                currentWarningSlide === 0 ? 'w-6 bg-blue-600' : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                                            }`}
+                                            aria-label="Slide 1 Hari Kedepan"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setCurrentWarningSlide(1)}
+                                            className={`h-2 rounded-full transition-all cursor-pointer ${
+                                                currentWarningSlide === 1 ? 'w-6 bg-blue-600' : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                                            }`}
+                                            aria-label="Slide 3 Hari Kedepan"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* 2. INFOGRAFIS CUACA MARITIM & PELABUHAN MALUKU */}
-                        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
+                        <div className="rounded-lg border border-border bg-card p-6 shadow-xs">
                             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 pb-3">
                                 <div>
                                     <h2 className="text-lg font-bold text-foreground">
@@ -609,16 +707,16 @@ export default function Welcome({
                                         return (
                                             <div
                                                 key={doc.id}
-                                                className="group overflow-hidden rounded-xl border border-border bg-background transition-all hover:shadow-md"
+                                                className="group overflow-hidden rounded-lg border border-border bg-background transition-all hover:shadow-sm"
                                             >
                                                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
                                                     <img
                                                         src={`/storage/${doc.file_path}`}
                                                         alt={doc.title}
-                                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                        className="h-full w-full object-cover transition-transform duration-300 "
                                                     />
                                                     <div className="absolute top-2 left-2">
-                                                        <span className="rounded-full bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
+                                                        <span className="rounded-full bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold text-white ">
                                                             {badgeText}
                                                         </span>
                                                     </div>
@@ -633,7 +731,7 @@ export default function Welcome({
                                                                 badge: badgeText,
                                                             })
                                                         }
-                                                        className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-md hover:bg-black"
+                                                        className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-sm hover:bg-black"
                                                     >
                                                         <ZoomIn className="h-4 w-4" />
                                                     </button>
@@ -643,7 +741,15 @@ export default function Welcome({
                                                         {doc.title}
                                                     </h4>
                                                     <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                                                        <span>{doc.forecast_date || 'Rilis Terkini'}</span>
+                                                        <span>
+                                                            {doc.forecast_date
+                                                                ? new Date(doc.forecast_date).toLocaleDateString('id-ID', {
+                                                                      day: 'numeric',
+                                                                      month: 'short',
+                                                                      year: 'numeric',
+                                                                  })
+                                                                : 'Rilis Terkini'}
+                                                        </span>
                                                         <Link
                                                             href={targetHref}
                                                             className="font-bold text-primary hover:underline flex items-center gap-1"
@@ -658,15 +764,15 @@ export default function Welcome({
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="group overflow-hidden rounded-xl border border-border bg-background transition-all hover:shadow-md">
+                                    <div className="group overflow-hidden rounded-lg border border-border bg-background transition-all hover:shadow-sm">
                                         <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
                                             <img
                                                 src="https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=800&q=80"
                                                 alt="Infografis Perairan Maluku"
-                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                className="h-full w-full object-cover transition-transform duration-300 "
                                             />
                                             <div className="absolute top-2 left-2">
-                                                <span className="rounded-full bg-amber-600/90 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md backdrop-blur-md">
+                                                <span className="rounded-full bg-amber-600/90 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ">
                                                     Perairan Provinsi
                                                 </span>
                                             </div>
@@ -681,7 +787,7 @@ export default function Welcome({
                                                         badge: 'Infografis Perairan Provinsi',
                                                     })
                                                 }
-                                                className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-md hover:bg-black"
+                                                className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-sm hover:bg-black"
                                             >
                                                 <ZoomIn className="h-4 w-4" />
                                             </button>
@@ -699,15 +805,15 @@ export default function Welcome({
                                         </div>
                                     </div>
 
-                                    <div className="group overflow-hidden rounded-xl border border-border bg-background transition-all hover:shadow-md">
+                                    <div className="group overflow-hidden rounded-lg border border-border bg-background transition-all hover:shadow-sm">
                                         <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
                                             <img
                                                 src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
                                                 alt="Infografis Pelabuhan Maluku"
-                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                className="h-full w-full object-cover transition-transform duration-300 "
                                             />
                                             <div className="absolute top-2 left-2">
-                                                <span className="rounded-full bg-blue-600/90 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md backdrop-blur-md">
+                                                <span className="rounded-full bg-blue-600/90 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ">
                                                     Pelabuhan Maluku
                                                 </span>
                                             </div>
@@ -722,7 +828,7 @@ export default function Welcome({
                                                         badge: 'Infografis Pelabuhan',
                                                     })
                                                 }
-                                                className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-md hover:bg-black"
+                                                className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-sm hover:bg-black"
                                             >
                                                 <ZoomIn className="h-4 w-4" />
                                             </button>
@@ -743,76 +849,44 @@ export default function Welcome({
                             )}
                         </div>
 
-                        {/* 3. BULETIN CUACA MARITIM TERKINI */}
-                        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
-                            <div className="mb-4 flex items-center justify-between border-b border-border/80 pb-3">
-                                <div>
-                                    <h2 className="text-lg font-bold text-foreground">
-                                        Buletin Cuaca Maritim Terkini
-                                    </h2>
-                                    <p className="text-xs text-muted-foreground">
-                                        Publikasi analisis atmosfer dan meteorologi kelautan berkala Stamar Ambon.
-                                    </p>
+                        {/* 3. BULETIN CUACA MARITIM BULANAN (SHOWCASE CAROUSEL MATCHING REFERENCE) */}
+                        {latestBuletinDocs.length > 0 ? (
+                            <BuletinShowcaseCarousel
+                                documents={latestBuletinDocs}
+                                stationName="Stasiun Maritim Ambon"
+                            />
+                        ) : (
+                            <div className="rounded-lg border border-border bg-card p-6 shadow-xs">
+                                <div className="mb-4 flex items-center justify-between border-b border-border/80 pb-3">
+                                    <div>
+                                        <h2 className="text-lg font-bold text-foreground">
+                                            Buletin Bulanan Stasiun Maritim Ambon
+                                        </h2>
+                                        <p className="text-xs text-muted-foreground">
+                                            Publikasi resmi evaluasi dan analisis cuaca maritim edisi bulanan
+                                        </p>
+                                    </div>
+                                    <Link href="/buletin">
+                                        <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+                                            <span>Semua Buletin</span>
+                                            <ArrowUpRight className="h-3 w-3" />
+                                        </Button>
+                                    </Link>
                                 </div>
-                                <Link href="/buletin">
-                                    <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
-                                        <span>Semua Buletin</span>
-                                        <ArrowUpRight className="h-3 w-3" />
-                                    </Button>
-                                </Link>
-                            </div>
-
-                            {latestBuletinDocs.length > 0 ? (
-                                <div className="space-y-3">
-                                    {latestBuletinDocs.map((buletin) => (
-                                        <div
-                                            key={buletin.id}
-                                            className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-3.5 hover:bg-muted/40 transition-colors"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                                                    <FileText className="h-4 w-4" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xs font-bold text-foreground line-clamp-1">
-                                                        {buletin.title}
-                                                    </h4>
-                                                    <span className="text-[11px] text-muted-foreground">
-                                                        {new Date(buletin.created_at).toLocaleDateString('id-ID', {
-                                                            day: 'numeric',
-                                                            month: 'long',
-                                                            year: 'numeric',
-                                                        })}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <a
-                                                href={`/storage/${buletin.file_path}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-                                            >
-                                                <span>Unduh PDF</span>
-                                                <Download className="h-3.5 w-3.5" />
-                                            </a>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-xl">
+                                <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-lg">
                                     Belum ada buletin baru yang diterbitkan. Silakan cek halaman Buletin.
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
 
                         {/* 4. MENGENAL STASIUN METEOROLOGI MARITIM AMBON */}
-                        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
+                        <div className="rounded-lg border border-border bg-card p-6 shadow-xs">
                             <div className="flex flex-col sm:flex-row gap-6 items-center">
-                                <div className="w-full sm:w-1/3 aspect-[4/3] rounded-xl overflow-hidden bg-slate-800">
+                                <div className="w-full sm:w-1/3 aspect-[4/3] rounded-lg overflow-hidden bg-slate-800">
                                     <img
-                                        src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80"
-                                        alt="Kantor Stamar Ambon"
-                                        className="h-full w-full object-cover"
+                                        src="/images/profil-stasiun.jpg"
+                                        alt="Kantor & Staf Stasiun Meteorologi Maritim Ambon - Zona Integritas WBK"
+                                        className="h-full w-full object-cover object-center"
                                     />
                                 </div>
                                 <div className="w-full sm:w-2/3">
@@ -844,19 +918,16 @@ export default function Welcome({
                     <div className="lg:col-span-4 space-y-6">
 
                         {/* WIDGET 1: "Galeri Kami" (Slideshow seperti .slideshow-container23 di website lama) */}
-                        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
                             <div className="mb-3 flex items-center justify-between border-b border-border/80 pb-2">
                                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                                    <Camera className="h-4 w-4 text-teal-600" />
+                                    <Camera className="h-4 w-4 text-blue-600" />
                                     Galeri Kami
                                 </h3>
-                                <Link href="/galeri" className="text-[11px] font-bold text-primary hover:underline">
-                                    Lihat Semua ↗
-                                </Link>
                             </div>
 
                             {/* Slideshow Container */}
-                            <div className="relative overflow-hidden rounded-xl bg-slate-900 aspect-[4/3]">
+                            <div className="relative overflow-hidden rounded-lg bg-slate-900 aspect-[4/3]">
                                 {galleryItems.map((item, idx) => (
                                     <div
                                         key={item.id}
@@ -912,7 +983,7 @@ export default function Welcome({
                                         type="button"
                                         onClick={() => setActiveGallerySlide(idx)}
                                         className={`h-2 rounded-full transition-all ${
-                                            idx === activeGallerySlide ? 'w-5 bg-teal-600' : 'w-2 bg-muted-foreground/30'
+                                            idx === activeGallerySlide ? 'w-5 bg-blue-600' : 'w-2 bg-muted-foreground/30'
                                         }`}
                                     />
                                 ))}
@@ -920,7 +991,7 @@ export default function Welcome({
                         </div>
 
                         {/* WIDGET 2: "Berita" (Mengikuti #block-8 di website lama) */}
-                        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
                             <div className="mb-3 flex items-center justify-between border-b border-border/80 pb-2">
                                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                                     <Newspaper className="h-4 w-4 text-blue-600" />
@@ -953,9 +1024,9 @@ export default function Welcome({
                         </div>
 
                         {/* WIDGET 3: "Aplikasi Mobile Info BMKG" */}
-                        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
                             <div className="mb-3 flex items-center gap-2 border-b border-border/80 pb-2">
-                                <Smartphone className="h-4 w-4 text-sky-600" />
+                                <Smartphone className="h-4 w-4 text-blue-600" />
                                 <h3 className="text-sm font-bold text-foreground">
                                     Aplikasi Info BMKG
                                 </h3>
@@ -984,10 +1055,10 @@ export default function Welcome({
                         </div>
 
                         {/* WIDGET 4: "Postingan X @infoBMKGMaluku" */}
-                        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                                    <Share2 className="h-3.5 w-3.5 text-sky-500" />
+                                    <Share2 className="h-3.5 w-3.5 text-blue-500" />
                                     Postingan X / Twitter
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">@infoBMKGMaluku</span>
@@ -999,7 +1070,7 @@ export default function Welcome({
                                 href="https://x.com/infoBMKGMaluku"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 block text-center rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 py-2 text-xs font-bold transition-colors"
+                                className="mt-3 block text-center rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 py-2 text-xs font-bold transition-colors"
                             >
                                 Kunjungi @infoBMKGMaluku ↗
                             </a>
@@ -1013,11 +1084,11 @@ export default function Welcome({
             {/* LIGHTBOX MODAL */}
             {activeLightbox && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 animate-in fade-in duration-200"
                     onClick={() => setActiveLightbox(null)}
                 >
                     <div
-                        className="relative max-h-[90vh] max-w-4xl w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 p-5 shadow-2xl text-white"
+                        className="relative max-h-[90vh] max-w-4xl w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950 p-5 shadow-sm text-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -1037,11 +1108,23 @@ export default function Welcome({
                             )}
                         </div>
                         <div className="flex max-h-[65vh] items-center justify-center overflow-auto rounded-lg bg-black/50 p-2">
-                            <img
-                                src={activeLightbox.url}
-                                alt={activeLightbox.title}
-                                className="max-h-[60vh] w-auto object-contain"
-                            />
+                            {activeLightbox.isVideo || activeLightbox.url.match(/\.(mp4|webm|mov|ogg)$/i) ? (
+                                <video
+                                    src={activeLightbox.url}
+                                    controls
+                                    controlsList="nodownload"
+                                    autoPlay
+                                    className="max-h-[60vh] w-auto max-w-full rounded-lg"
+                                >
+                                    Peramban Anda tidak mendukung pemutar video.
+                                </video>
+                            ) : (
+                                <img
+                                    src={activeLightbox.url}
+                                    alt={activeLightbox.title}
+                                    className="max-h-[60vh] w-auto object-contain"
+                                />
+                            )}
                         </div>
                         {activeLightbox.desc && (
                             <p className="mt-3 text-xs text-slate-300">{activeLightbox.desc}</p>

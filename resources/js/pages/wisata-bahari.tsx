@@ -178,14 +178,14 @@ export default function WisataBahari({ documents = [] }: Props) {
                 {/* Hero */}
                 <div className="relative overflow-hidden bg-slate-900 pt-12 pb-16 lg:pt-20 lg:pb-24">
                     <div className="pointer-events-none absolute top-0 left-1/4 h-96 w-96 rounded-full bg-emerald-500 opacity-40 mix-blend-screen blur-[128px]" />
-                    <div className="pointer-events-none absolute right-1/4 bottom-0 h-96 w-96 rounded-full bg-cyan-400 opacity-30 mix-blend-screen blur-[128px]" />
+                    <div className="pointer-events-none absolute right-1/4 bottom-0 h-96 w-96 rounded-full bg-blue-400 opacity-30 mix-blend-screen blur-[128px]" />
 
                     <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase ">
                             <Palmtree className="h-4 w-4 text-emerald-300" />
                             <span>{DESTINATIONS.length} Destinasi Wisata Bahari Maluku</span>
                         </div>
-                        <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                        <h1 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-4xl">
                             Prakiraan Cuaca Wisata Bahari
                         </h1>
                         <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
@@ -204,8 +204,8 @@ export default function WisataBahari({ documents = [] }: Props) {
 
                 <div className="relative z-20 container mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
                     {!hasContent ? (
-                        <div className="mx-auto flex max-w-2xl flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-xl dark:border-slate-700 dark:bg-slate-800">
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+                        <div className="mx-auto flex max-w-2xl flex-col items-center rounded-lg border border-slate-200 bg-white px-6 py-12 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
                                 <ImageOff className="h-8 w-8" />
                             </div>
                             <h2 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
@@ -219,7 +219,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                     ) : (
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr] lg:gap-8">
                             {/* Navigasi destinasi: chip horizontal di HP, sidebar di desktop */}
-                            <aside className="sticky top-20 z-30 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-28 lg:mx-0 lg:h-fit lg:rounded-2xl lg:border lg:p-5 dark:border-slate-700 dark:bg-slate-800/95">
+                            <aside className="sticky top-20 z-30 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm sm:-mx-6 sm:px-6 lg:top-28 lg:mx-0 lg:h-fit lg:rounded-lg lg:border lg:p-5 dark:border-slate-700 dark:bg-slate-800/95">
                                 <h2 className="mb-3 hidden text-xs font-semibold tracking-wider text-slate-500 uppercase lg:block dark:text-slate-400">
                                     Pilih Destinasi
                                 </h2>
@@ -233,7 +233,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                                             id={`nav-bahari-${dest.key}`}
                                             href={`#${dest.key}`}
                                             onClick={() => setActiveDest(dest.key)}
-                                            className={`flex shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                                            className={`flex shrink-0 snap-start items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                                                 activeDest === dest.key
                                                     ? 'bg-emerald-600 text-white lg:bg-emerald-50 lg:text-emerald-700 dark:lg:bg-emerald-950/60 dark:lg:text-emerald-300'
                                                     : 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 lg:bg-transparent dark:bg-slate-700/60 dark:text-slate-200 dark:hover:bg-slate-700 lg:dark:bg-transparent'
@@ -253,7 +253,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                                         id="bahari-cover"
                                         type="button"
                                         onClick={() => openDoc(cover)}
-                                        className="group relative mx-auto w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 transition-transform active:scale-[0.98] dark:bg-slate-800 dark:ring-slate-700"
+                                        className="group relative mx-auto w-full max-w-md overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200 transition-transform active:scale-[0.98] dark:bg-slate-800 dark:ring-slate-700"
                                     >
                                         <img
                                             src={`/storage/${cover.file_path}`}
@@ -278,7 +278,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                                                     <button
                                                         type="button"
                                                         onClick={() => openDoc(doc)}
-                                                        className="group relative block w-full overflow-hidden rounded-2xl bg-white text-left shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] dark:bg-slate-800 dark:ring-slate-700"
+                                                        className="group relative block w-full overflow-hidden rounded-lg bg-white text-left shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-sm active:scale-[0.98] dark:bg-slate-800 dark:ring-slate-700"
                                                     >
                                                         <img
                                                             src={`/storage/${doc.file_path}`}
@@ -292,7 +292,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                                                         </div>
                                                     </button>
                                                 ) : (
-                                                    <div className="overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white/60 dark:border-slate-700 dark:bg-slate-800/40">
+                                                    <div className="overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white/60 dark:border-slate-700 dark:bg-slate-800/40">
                                                         <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 p-4 text-center text-slate-400">
                                                             <ImageOff className="h-8 w-8" />
                                                             <span className="text-xs">
@@ -314,7 +314,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                                             key={doc.id}
                                             type="button"
                                             onClick={() => openDoc(doc)}
-                                            className="group relative block w-full overflow-hidden rounded-2xl bg-white text-left shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-800 dark:ring-slate-700"
+                                            className="group relative block w-full overflow-hidden rounded-lg bg-white text-left shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-sm dark:bg-slate-800 dark:ring-slate-700"
                                         >
                                             <img
                                                 src={`/storage/${doc.file_path}`}
@@ -341,7 +341,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                     role="dialog"
                     aria-modal="true"
                     aria-label={active.label}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-md"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4 "
                     onClick={() => setLightboxIndex(null)}
                 >
                     <button
@@ -386,7 +386,7 @@ export default function WisataBahari({ documents = [] }: Props) {
                             key={active.doc.id}
                             src={`/storage/${active.doc.file_path}`}
                             alt={active.label}
-                            className="max-h-[80vh] max-w-[90vw] animate-in rounded-xl object-contain shadow-2xl duration-200 zoom-in-95 fade-in"
+                            className="max-h-[80vh] max-w-[90vw] animate-in rounded-lg object-contain shadow-sm duration-200 zoom-in-95 fade-in"
                         />
                         <figcaption className="mt-3 text-center text-sm font-medium text-slate-200">
                             {active.label}
@@ -403,7 +403,7 @@ export default function WisataBahari({ documents = [] }: Props) {
 
 function ZoomHint() {
     return (
-        <span className="pointer-events-none absolute top-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
+        <span className="pointer-events-none absolute top-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
             <Maximize2 className="h-3 w-3" /> Perbesar
         </span>
     );

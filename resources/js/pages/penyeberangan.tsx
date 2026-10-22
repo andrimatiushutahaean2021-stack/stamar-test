@@ -142,17 +142,17 @@ export default function Penyeberangan() {
                         </svg>
                     </div>
                     {/* Decorative Gradients */}
-                    <div className="pointer-events-none absolute top-0 right-1/4 h-96 w-96 rounded-full bg-teal-500 opacity-40 mix-blend-screen blur-[128px]"></div>
+                    <div className="pointer-events-none absolute top-0 right-1/4 h-96 w-96 rounded-full bg-blue-500 opacity-40 mix-blend-screen blur-[128px]"></div>
                     <div className="pointer-events-none absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-blue-400 opacity-30 mix-blend-screen blur-[128px]"></div>
 
                     <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
-                            <Navigation className="h-4 w-4 text-teal-300" />
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase ">
+                            <Navigation className="h-4 w-4 text-blue-300" />
                             <span>Area Penyeberangan Kapal Ferry</span>
                         </div>
-                        <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                        <h1 className="mb-6 text-4xl font-bold tracking-tight text-white md:text-4xl lg:text-4xl">
                             Prakiraan Cuaca <br className="hidden md:block" />
-                            <span className="bg-gradient-to-r from-teal-300 to-blue-400 bg-clip-text text-transparent">
+                            <span className="text-blue-300">
                                 Rute Penyeberangan
                             </span>
                         </h1>
@@ -167,13 +167,13 @@ export default function Penyeberangan() {
                 {/* Content Section */}
                 <div className="relative z-20 container mx-auto -mt-8 max-w-6xl px-4 sm:px-6 lg:px-8">
                     {/* Search & Filters */}
-                    <div className="mb-8 flex items-center gap-4 rounded-2xl border border-slate-200/50 bg-white/80 p-4 shadow-lg backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-800/80">
+                    <div className="mb-8 flex items-center gap-4 rounded-lg border border-slate-200/50 bg-white/80 p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-800/80">
                         <div className="relative flex-grow">
                             <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
                             <Input
                                 type="text"
                                 placeholder="Cari rute pelabuhan (contoh: Ambon - Namlea)..."
-                                className="w-full rounded-xl border-slate-200 bg-white pl-10 dark:border-slate-700 dark:bg-slate-900"
+                                className="w-full rounded-lg border-slate-200 bg-white pl-10 dark:border-slate-700 dark:bg-slate-900"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -181,7 +181,7 @@ export default function Penyeberangan() {
                     </div>
 
                     {/* Table Card */}
-                    <div className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white/80 shadow-2xl backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-800/80">
+                    <div className="overflow-hidden rounded-lg border border-slate-200/50 bg-white/80 shadow-sm dark:border-slate-700/50 dark:bg-slate-800/80">
                         <div className="overflow-x-auto">
                             <table className="w-full border-collapse text-left">
                                 <thead>
@@ -207,14 +207,14 @@ export default function Penyeberangan() {
                                     {filteredRoutes.map((item, index) => (
                                         <tr
                                             key={item.id}
-                                            className="group transition-all duration-200 hover:bg-teal-50/50 dark:hover:bg-slate-700/30"
+                                            className="group transition-all duration-200 hover:bg-blue-50/50 dark:hover:bg-slate-700/30"
                                         >
                                             <td className="px-6 py-5 text-center">
-                                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600 dark:bg-slate-800 dark:text-slate-400">
+                                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600 dark:bg-slate-800 dark:text-slate-400">
                                                     {index + 1}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-5 font-bold text-slate-800 transition-colors group-hover:text-teal-600 dark:text-slate-200 dark:group-hover:text-teal-400">
+                                            <td className="px-6 py-5 font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-slate-200 dark:group-hover:text-blue-400">
                                                 {item.route}
                                             </td>
                                             <td className="px-6 py-5">

@@ -77,31 +77,67 @@ class MfyUploadController extends Controller
             $uniqueId = substr(uniqid(), -4);
             $fileName = "{$safeBaseName}_{$dateSuffix}_{$uniqueId}.{$safeExtension}";
 
-            // Simpan ke storage/app/public/{category}/
-            $path = $file->storeAs($category, $fileName, 'public');
-
             $regionNumber = null;
             $regionCode = null;
             $forecastDate = date('Y-m-d');
             $docTitle = $baseName;
+            $periodType = 'weekly';
+            $docCategory = $category;
 
-            if (preg_match('/^AH[._\-\s]?0*([1-9][0-9]?)(?:[._\-\s](\d{6,8}))?/i', $baseName, $m)) {
+            $lower = strtolower($baseName);
+
+            // Cek cover resmi
+            if (
+                (str_contains($lower, 'cover') || str_contains($lower, 'sampul') || str_contains($lower, 'header') || str_contains($lower, 'slide'))
+                && (str_contains($lower, 'prov') || str_contains($lower, 'pelabuhan') || str_contains($lower, 'port') || str_contains($lower, 'maritim'))
+            ) {
+                if (str_contains($lower, 'prov') || str_contains($lower, 'maritim')) {
+                    $docCategory = 'provinsi';
+                    $regionCode = 'COVER_PROV';
+                    $regionNumber = 0;
+                    $docTitle = 'Sampul Prakiraan Cuaca Maritim Wilayah Provinsi Maluku';
+                } else {
+                    $docCategory = 'pelabuhan';
+                    $regionCode = 'COVER_PEL';
+                    $regionNumber = 0;
+                    $docTitle = 'Sampul Prakiraan Cuaca Pelabuhan Provinsi Maluku';
+                }
+            } elseif (preg_match('/(?:^|[^a-zA-Z0-9])(?:P[._\-\s]?AH)[._\-\s]?0*([1-9][0-9]?)(?:[._\-\s](\d{6,8}))?/i', $baseName, $m)) {
                 $regionNumber = (int) $m[1];
-                $regionCode = sprintf('AH%03d', $regionNumber);
-                $pelabuhanList = \App\Http\Controllers\Admin\DocumentController::PELABUHAN_LIST;
-                if (isset($pelabuhanList[$regionNumber])) {
-                    $docTitle = $pelabuhanList[$regionNumber] . " - " . date('d M Y') . " ({$regionCode})";
+                if ($regionNumber >= 1 && $regionNumber <= 18) {
+                    $regionCode = sprintf('P_AH%03d', $regionNumber);
+                    $docCategory = ($safeExtension === 'png') ? 'infografis' : 'provinsi';
+                    $provList = \App\Http\Controllers\Admin\DocumentController::PROVINSI_LIST;
+                    if (isset($provList[$regionNumber])) {
+                        $prefix = ($safeExtension === 'png') ? 'Infografis ' : '';
+                        $docTitle = $prefix . $provList[$regionNumber] . " - " . date('d M Y') . " ({$regionCode})";
+                    }
+                }
+            } elseif (preg_match('/(?:^|[^a-zA-Z0-9_])(?<!P[._\-\s])AH[._\-\s]?0*([1-9][0-9]?)(?:[._\-\s](\d{6,8}))?/i', $baseName, $m)) {
+                $regionNumber = (int) $m[1];
+                if ($regionNumber >= 1 && $regionNumber <= 37) {
+                    $regionCode = sprintf('AH%03d', $regionNumber);
+                    $docCategory = ($safeExtension === 'png') ? 'infografis' : 'pelabuhan';
+                    $pelabuhanList = \App\Http\Controllers\Admin\DocumentController::PELABUHAN_LIST;
+                    if (isset($pelabuhanList[$regionNumber])) {
+                        $prefix = ($safeExtension === 'png') ? 'Infografis ' : '';
+                        $docTitle = $prefix . $pelabuhanList[$regionNumber] . " - " . date('d M Y') . " ({$regionCode})";
+                    }
                 }
             }
+
+            // Simpan ke storage/app/public/{docCategory}/
+            $path = $file->storeAs($docCategory, $fileName, 'public');
 
             // Daftarkan di Document model
             Document::create([
                 'title' => $docTitle,
-                'category' => $category,
+                'category' => $docCategory,
                 'region_number' => $regionNumber,
                 'region_code' => $regionCode,
                 'forecast_date' => $forecastDate,
-                'description' => "File {$category} diunggah pada ".date('d-m-Y H:i'),
+                'period_type' => $periodType,
+                'description' => "File {$docCategory} diunggah pada ".date('d-m-Y H:i'),
                 'file_path' => $path,
                 'file_type' => $safeExtension,
                 'file_size' => $this->formatSizeUnits($file->getSize()),

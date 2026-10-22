@@ -18,13 +18,10 @@ export default function SurveyIkm() {
         <PublicLayout>
             <Head title="Survei Kepuasan Masyarakat (IKM) - Stasiun Meteorologi Maritim Yos Soedarso Ambon" />
 
-            <div className="relative min-h-[calc(100vh-140px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-950 overflow-hidden">
-                {/* Background Glows */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20" />
+            <div className="relative min-h-[calc(100vh-140px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-950 overflow-hidden">
 
                 <div className="relative z-10 w-full max-w-2xl">
-                    <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 sm:p-10 shadow-2xl backdrop-blur-xl text-center">
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-6 sm:p-10 shadow-sm text-center">
                         
                         {/* Header Badges */}
                         <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
@@ -50,7 +47,7 @@ export default function SurveyIkm() {
                         </div>
 
                         {/* Title & Description */}
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
                             Survei Kepuasan Masyarakat (IKM)
                         </h1>
                         <p className="mt-2 text-sm sm:text-base font-medium text-blue-300">
@@ -62,17 +59,17 @@ export default function SurveyIkm() {
 
                         {/* 3 Quick Features Info */}
                         <div className="grid grid-cols-3 gap-3 my-8 pt-6 border-t border-slate-800 text-slate-300">
-                            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-800/50 border border-slate-800">
+                            <div className="flex flex-col items-center p-3 rounded-lg bg-slate-800/50 border border-slate-800">
                                 <Clock className="h-5 w-5 text-blue-400 mb-1" />
                                 <span className="text-[11px] sm:text-xs font-semibold">± 3 Menit</span>
                                 <span className="text-[10px] text-slate-400">Pengisian Cepat</span>
                             </div>
-                            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-800/50 border border-slate-800">
+                            <div className="flex flex-col items-center p-3 rounded-lg bg-slate-800/50 border border-slate-800">
                                 <ShieldCheck className="h-5 w-5 text-emerald-400 mb-1" />
                                 <span className="text-[11px] sm:text-xs font-semibold">Anonim</span>
                                 <span className="text-[10px] text-slate-400">Data Terlindungi</span>
                             </div>
-                            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-800/50 border border-slate-800">
+                            <div className="flex flex-col items-center p-3 rounded-lg bg-slate-800/50 border border-slate-800">
                                 <Building2 className="h-5 w-5 text-amber-400 mb-1" />
                                 <span className="text-[11px] sm:text-xs font-semibold">Langsung</span>
                                 <span className="text-[10px] text-slate-400">Ke Sistem BMKG</span>
@@ -85,7 +82,7 @@ export default function SurveyIkm() {
                                 href={surveyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-blue-600 px-6 py-3.5 text-sm sm:text-base font-bold text-white shadow-xl shadow-blue-600/30 transition-all hover:bg-blue-500 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
+                                className="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-blue-600 px-6 py-3.5 text-sm sm:text-base font-bold text-white shadow-sm transition-all hover:bg-blue-500 active:translate-y-0"
                             >
                                 <span>Mulai Isi Survei di e-SKM BMKG</span>
                                 <ExternalLink className="h-4 w-4" />

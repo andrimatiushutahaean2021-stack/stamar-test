@@ -97,16 +97,45 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
+        // Deteksi rinci kegagalan upload file dari PHP
+        $uploadIssues = [];
+        if (!empty($_FILES)) {
+            foreach ($_FILES as $inputKey => $fileData) {
+                if (isset($fileData['error'])) {
+                    $errList = is_array($fileData['error']) ? $fileData['error'] : [$fileData['error']];
+                    $nameList = is_array($fileData['name']) ? $fileData['name'] : [$fileData['name']];
+                    foreach ($errList as $idx => $errCode) {
+                        if ($errCode !== UPLOAD_ERR_OK && $errCode !== UPLOAD_ERR_NO_FILE) {
+                            $fname = $nameList[$idx] ?? "Berkas #{$idx}";
+                            $reason = match ($errCode) {
+                                UPLOAD_ERR_INI_SIZE => "Ukuran berkas melebihi batas upload_max_filesize di php.ini (" . ini_get('upload_max_filesize') . ")",
+                                UPLOAD_ERR_FORM_SIZE => "Melebihi batas MAX_FILE_SIZE formulir",
+                                UPLOAD_ERR_PARTIAL => "Berkas hanya terunggah sebagian",
+                                UPLOAD_ERR_NO_TMP_DIR => "Direktori temporary server tidak ditemukan",
+                                UPLOAD_ERR_CANT_WRITE => "Server gagal menulis berkas ke disk",
+                                UPLOAD_ERR_EXTENSION => "Proses unggah dihentikan oleh ekstensi PHP",
+                                default => "Kode galat upload PHP: {$errCode}",
+                            };
+                            $uploadIssues[] = "{$fname}: {$reason}";
+                        }
+                    }
+                }
+            }
+        }
+        if (!empty($uploadIssues)) {
+            return redirect()->back()->withErrors(['files' => implode(' • ', $uploadIssues)]);
+        }
         $request->validate([
             'title' => 'nullable|string|max:255',
             'category' => 'required|string|in:auto,infografis,peringatan-dini,pelabuhan,mfy,bahari,buletin,provinsi',
             'files' => 'nullable|array|max:112',
-            'files.*' => 'file|mimes:pdf,png,jpg,jpeg|mimetypes:application/pdf,image/png,image/jpeg|max:114688', // 112MB per file
+            'files.*' => 'nullable',
             'file' => 'nullable',
             'description' => 'nullable|string|max:1000',
             'region_number' => 'nullable|integer',
             'forecast_date' => 'nullable|date',
-            'period_type' => 'nullable|string|in:daily,weekly',
+            'period_type' => 'nullable|string|in:auto,daily,weekly,1-hari,3-hari',
+            'purge_old' => 'nullable|boolean',
         ]);
 
         $files = [];
@@ -118,11 +147,31 @@ class DocumentController extends Controller
         }
 
         if (empty($files)) {
-            return redirect()->back()->withErrors(['file' => 'Wajib memilih minimal satu berkas file untuk diunggah.']);
+            return redirect()->back()->withErrors(['files' => 'Wajib memilih minimal satu berkas file untuk diunggah.']);
+        }
+
+        // Validasi kesehatan berkas secara mendalam dan jelas
+        foreach ($files as $idx => $f) {
+            if (!$f instanceof \Illuminate\Http\UploadedFile) {
+                return redirect()->back()->withErrors(['files' => "Berkas #{$idx} bukan objek berkas yang valid."]);
+            }
+            if (!$f->isValid()) {
+                $errCode = $f->getError();
+                $orig = $f->getClientOriginalName() ?: "Berkas #{$idx}";
+                $reason = match ($errCode) {
+                    UPLOAD_ERR_INI_SIZE => "Ukuran berkas melebihi batas upload_max_filesize di php.ini (" . ini_get('upload_max_filesize') . ")",
+                    UPLOAD_ERR_FORM_SIZE => "Melebihi batas ukuran formulir",
+                    UPLOAD_ERR_PARTIAL => "Berkas hanya terunggah sebagian",
+                    UPLOAD_ERR_NO_TMP_DIR => "Direktori temporary server tidak ditemukan",
+                    UPLOAD_ERR_CANT_WRITE => "Server gagal menulis berkas ke disk",
+                    default => "Berkas gagal diproses (kode galat: {$errCode})",
+                };
+                return redirect()->back()->withErrors(['files' => "Berkas '{$orig}' gagal: {$reason}"]);
+            }
         }
 
         if (count($files) > 112) {
-            return redirect()->back()->withErrors(['file' => 'Maksimal 112 file yang dapat diunggah sekaligus.']);
+            return redirect()->back()->withErrors(['files' => 'Maksimal 112 file yang dapat diunggah sekaligus.']);
         }
 
         $maxTotalBytes = 112 * 1024 * 1024; // Total 112 MB
@@ -140,6 +189,11 @@ class DocumentController extends Controller
             'application/pdf' => 'pdf',
             'image/png' => 'png',
             'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+            'video/mp4' => 'mp4',
+            'video/webm' => 'webm',
+            'video/quicktime' => 'mov',
+            'video/ogg' => 'ogg',
         ];
 
         $formCategory = $request->input('category', 'pelabuhan');
@@ -189,29 +243,13 @@ class DocumentController extends Controller
             if ($formCategory === 'auto') {
                 $targetCategory = $parsed['category'] ?? ($safeExtension === 'pdf' ? 'pelabuhan' : 'infografis');
             } else {
-                $targetCategory = $formCategory;
-            }
-
-            // Validasi khusus: Berkas Peringatan Dini saat ini wajib format PNG
-            if ($targetCategory === 'peringatan-dini' && $safeExtension !== 'png') {
-                return redirect()->back()->withErrors([
-                    'file' => "Berkas '{$originalName}' ditolak: Format untuk Peta Peringatan Dini Gelombang saat ini wajib berformat gambar .PNG."
-                ]);
-            }
-
-            // Validasi khusus: Berkas Infografis Cuaca saat ini wajib format PNG
-            if ($targetCategory === 'infografis' && $safeExtension !== 'png') {
-                return redirect()->back()->withErrors([
-                    'file' => "Berkas '{$originalName}' ditolak: Format untuk Infografis Cuaca saat ini wajib berformat gambar .PNG."
-                ]);
-            }
-
-            // Validasi khusus: Berkas Prakiraan Pelabuhan, Provinsi & Buletin wajib format PDF
-            if (in_array($targetCategory, ['pelabuhan', 'mfy', 'provinsi', 'buletin']) && $safeExtension !== 'pdf') {
-                $catLabel = $targetCategory === 'buletin' ? 'Buletin Maritim' : ($targetCategory === 'provinsi' ? 'Prakiraan Cuaca Provinsi' : 'Prakiraan Cuaca Pelabuhan');
-                return redirect()->back()->withErrors([
-                    'file' => "Berkas '{$originalName}' ditolak: Format untuk {$catLabel} wajib berformat dokumen .PDF."
-                ]);
+                // Jika formCategory diset 'pelabuhan' atau 'provinsi', tapi berkasnya adalah gambar (.png/.jpg)
+                // dan berformat AH atau P_AH, sistem otomatis mengalihkannya ke 'infografis' agar tidak ditolak sebagai PDF
+                if (in_array($formCategory, ['pelabuhan', 'mfy', 'provinsi']) && in_array($safeExtension, ['png', 'jpg', 'jpeg', 'webp'])) {
+                    $targetCategory = 'infografis';
+                } else {
+                    $targetCategory = $formCategory;
+                }
             }
 
             $regionNumber = $formRegionNumber ? (int) $formRegionNumber : null;
@@ -220,7 +258,7 @@ class DocumentController extends Controller
             $periodType = $formPeriodType;
 
             if ($parsed) {
-                if (!empty($parsed['region_number'])) {
+                if (isset($parsed['region_number'])) {
                     $regionNumber = $parsed['region_number'];
                 }
                 if (!empty($parsed['region_code'])) {
@@ -229,11 +267,68 @@ class DocumentController extends Controller
                 if (!$forecastDate && !empty($parsed['forecast_date'])) {
                     $forecastDate = $parsed['forecast_date'];
                 }
+                if (!empty($parsed['period_type'])) {
+                    $periodType = $parsed['period_type'];
+                }
             } elseif ($regionNumber) {
                 if ($targetCategory === 'pelabuhan' || $targetCategory === 'mfy') {
                     $regionCode = sprintf('AH%03d', $regionNumber);
                 } elseif ($targetCategory === 'provinsi') {
                     $regionCode = sprintf('P_AH%03d', $regionNumber);
+                }
+            }
+
+            // Validasi khusus: Berkas Peringatan Dini (1 Hari Gambar PNG/JPG, 3 Hari Video MP4/WebM, atau PDF dokumen)
+            if ($targetCategory === 'peringatan-dini' && !in_array($safeExtension, ['png', 'jpg', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'ogg', 'pdf'])) {
+                return redirect()->back()->withErrors([
+                    'file' => "Berkas '{$originalName}' ditolak: Format untuk Peringatan Dini wajib berupa Gambar (.PNG/.JPG), Video (.MP4/.WEBM), atau Dokumen (.PDF)."
+                ]);
+            }
+
+            // Validasi khusus: Berkas Infografis Cuaca saat ini wajib format PNG/JPG
+            if ($targetCategory === 'infografis' && !in_array($safeExtension, ['png', 'jpg', 'jpeg', 'webp'])) {
+                return redirect()->back()->withErrors([
+                    'file' => "Berkas '{$originalName}' ditolak: Format untuk Infografis Cuaca saat ini wajib berformat gambar (.PNG / .JPG)."
+                ]);
+            }
+
+            // Validasi khusus: Berkas Prakiraan Pelabuhan, Provinsi & Buletin wajib format PDF (kecuali berkas Sampul/Cover resmi)
+            if (in_array($targetCategory, ['pelabuhan', 'mfy', 'provinsi', 'buletin']) && $safeExtension !== 'pdf') {
+                if (!in_array($regionCode, ['COVER_PROV', 'COVER_PEL'])) {
+                    $catLabel = $targetCategory === 'buletin' ? 'Buletin Maritim' : ($targetCategory === 'provinsi' ? 'Prakiraan Cuaca Provinsi' : 'Prakiraan Cuaca Pelabuhan');
+                    return redirect()->back()->withErrors([
+                        'file' => "Berkas '{$originalName}' ditolak: Format untuk {$catLabel} wajib berformat dokumen .PDF (kecuali berkas Sampul/Cover resmi)."
+                    ]);
+                }
+            }
+
+            // Sesuaikan period_type jika peringatan dini
+            if ($targetCategory === 'peringatan-dini') {
+                $lowerName = strtolower($originalName);
+                $isExtVideo = in_array($safeExtension, ['mp4', 'webm', 'mov', 'ogg']);
+
+                // Jika diunggah bersamaan (lebih dari 1 berkas), atau form diset 'auto':
+                // Deteksi otomatis masing-masing berkas secara presisi (video/nama '3' => 3-hari, nama '1' => 1-hari)
+                if (count($files) > 1 || $formPeriodType === 'auto' || empty($formPeriodType)) {
+                    if ($isExtVideo || str_contains($lowerName, '3') || str_contains($lowerName, 'tiga')) {
+                        $periodType = '3-hari';
+                    } elseif (str_contains($lowerName, '1') || str_contains($lowerName, 'satu')) {
+                        $periodType = '1-hari';
+                    } else {
+                        // Default jika tidak ada angka: video adalah 3-hari, gambar adalah 1-hari
+                        $periodType = $isExtVideo ? '3-hari' : '1-hari';
+                    }
+                } else {
+                    // Jika berkas tunggal dan admin sengaja memilih opsi spesifik di form
+                    if ($formPeriodType && in_array($formPeriodType, ['1-hari', '3-hari'])) {
+                        $periodType = $formPeriodType;
+                    } elseif (!empty($parsed['period_type'])) {
+                        $periodType = $parsed['period_type'];
+                    } elseif ($isExtVideo || str_contains($lowerName, '3')) {
+                        $periodType = '3-hari';
+                    } else {
+                        $periodType = '1-hari';
+                    }
                 }
             }
 
@@ -246,7 +341,13 @@ class DocumentController extends Controller
             if (count($files) === 1 && $request->filled('title') && $formCategory !== 'auto') {
                 $title = $request->input('title');
             } else {
-                if (($targetCategory === 'pelabuhan' || $targetCategory === 'mfy') && $regionNumber && isset(self::PELABUHAN_LIST[$regionNumber])) {
+                if (!empty($parsed['title'])) {
+                    $title = $parsed['title'];
+                } elseif ($regionCode === 'COVER_PROV') {
+                    $title = 'Sampul Prakiraan Cuaca Maritim Wilayah Provinsi Maluku';
+                } elseif ($regionCode === 'COVER_PEL') {
+                    $title = 'Sampul Prakiraan Cuaca Pelabuhan Provinsi Maluku';
+                } elseif (($targetCategory === 'pelabuhan' || $targetCategory === 'mfy') && $regionNumber && isset(self::PELABUHAN_LIST[$regionNumber])) {
                     $formattedDateStr = $forecastDate ? date('d M Y', strtotime($forecastDate)) : date('d M Y');
                     $title = self::PELABUHAN_LIST[$regionNumber] . " - {$formattedDateStr} ({$regionCode})";
                 } elseif ($targetCategory === 'provinsi' && $regionNumber && isset(self::PROVINSI_LIST[$regionNumber])) {
@@ -259,10 +360,12 @@ class DocumentController extends Controller
                     } elseif ($regionNumber && isset(self::PELABUHAN_LIST[$regionNumber]) && $regionCode && str_starts_with($regionCode, 'AH')) {
                         $title = "Infografis " . self::PELABUHAN_LIST[$regionNumber] . " - {$formattedDateStr} ({$regionCode})";
                     } else {
-                        $title = "Infografis & Peta Cuaca - {$formattedDateStr}";
+                        $title = "Infografis Cuaca Maluku - {$formattedDateStr}";
                     }
                 } elseif ($targetCategory === 'peringatan-dini') {
-                    $title = "Peta Peringatan Dini Gelombang - " . ($forecastDate ? date('d M Y', strtotime($forecastDate)) : date('d M Y'));
+                    $periodLabel = ($periodType === '3-hari') ? '3 Hari Kedepan' : '1 Hari Kedepan';
+                    $formattedDateStr = $forecastDate ? date('d M Y', strtotime($forecastDate)) : date('d M Y');
+                    $title = "Peringatan Dini Gelombang Maluku {$periodLabel} - {$formattedDateStr}";
                 } elseif ($targetCategory === 'bahari') {
                     // Beri judul rapi untuk slide / destinasi wisata bahari
                     $title = $originalName;
@@ -299,6 +402,45 @@ class DocumentController extends Controller
             }
         }
 
+        // Jika admin memilih opsi pembersihan berkas di tanggal sebelumnya (purge_old)
+        $purgedCount = 0;
+        if ($request->boolean('purge_old')) {
+            $touchedCategories = array_keys(array_filter($categoryCounts, fn($c) => $c > 0));
+            foreach ($touchedCategories as $cat) {
+                // Untuk kategori produk harian/rolling window & peringatan dini
+                $query = Document::query();
+                if ($cat === 'pelabuhan') {
+                    $query->whereIn('category', ['pelabuhan', 'mfy']);
+                } else {
+                    $query->where('category', $cat);
+                }
+
+                // Cari 2 tanggal terbaru yang harus dipertahankan
+                $latestDates = (clone $query)
+                    ->whereNotNull('forecast_date')
+                    ->distinct()
+                    ->orderBy('forecast_date', 'desc')
+                    ->limit(2)
+                    ->pluck('forecast_date')
+                    ->toArray();
+
+                if (!empty($latestDates)) {
+                    // Berkas yang tanggalnya lebih lama dari 2 tanggal terbaru
+                    $oldDocs = (clone $query)
+                        ->whereNotIn('forecast_date', $latestDates)
+                        ->get();
+
+                    foreach ($oldDocs as $oldDoc) {
+                        if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                            Storage::disk('public')->delete($oldDoc->file_path);
+                        }
+                        $oldDoc->delete();
+                        $purgedCount++;
+                    }
+                }
+            }
+        }
+
         // Susun pesan ringkasan sukses
         if ($formCategory === 'auto' || $uploadedCount > 1) {
             $breakdown = [];
@@ -310,10 +452,12 @@ class DocumentController extends Controller
             if ($categoryCounts['peringatan-dini'] > 0) $breakdown[] = "{$categoryCounts['peringatan-dini']} Peringatan Dini";
 
             $detailStr = !empty($breakdown) ? ' (' . implode(', ', $breakdown) . ')' : '';
-            $message = "Sukses! {$uploadedCount} berkas berhasil diproses otomatis dan diterbitkan{$detailStr}.";
+            $purgeStr = $purgedCount > 0 ? " serta membersihkan {$purgedCount} berkas lama di tanggal sebelumnya." : '.';
+            $message = "Sukses! {$uploadedCount} berkas berhasil diproses otomatis dan diterbitkan{$detailStr}{$purgeStr}";
         } else {
             $categoryLabel = $this->getCategoryLabel($targetCategory);
-            $message = "Berkas berhasil diunggah dan disinkronkan ke kategori {$categoryLabel}.";
+            $purgeStr = $purgedCount > 0 ? " dan {$purgedCount} berkas di tanggal sebelumnya telah dibersihkan." : '.';
+            $message = "Berkas berhasil diunggah dan disinkronkan ke kategori {$categoryLabel}{$purgeStr}";
         }
 
         return redirect()->back()->with('success', $message);
@@ -332,13 +476,45 @@ class DocumentController extends Controller
         $lower = strtolower($filename);
         $ext = $extension ? strtolower($extension) : '';
 
-        // 1. Cek Peringatan Dini Gelombang
+        // 0. Cek Berkas Sampul / Cover Rilis Cuaca Resmi (Provinsi & Pelabuhan)
+        if (
+            (str_contains($lower, 'cover') || str_contains($lower, 'sampul') || str_contains($lower, 'header') || str_contains($lower, 'slide'))
+            && (str_contains($lower, 'prov') || str_contains($lower, 'pelabuhan') || str_contains($lower, 'port') || str_contains($lower, 'maritim'))
+        ) {
+            preg_match('/(\d{6,8})/', $filename, $dateMatch);
+            $forecastDate = isset($dateMatch[1]) ? $this->parseDateString($dateMatch[1]) : date('Y-m-d');
+            $isImage = in_array($ext, ['png', 'jpg', 'jpeg', 'webp']);
+
+            if (str_contains($lower, 'prov') || str_contains($lower, 'maritim')) {
+                return [
+                    'category' => $isImage ? 'infografis' : 'provinsi',
+                    'region_number' => 0,
+                    'region_code' => 'COVER_PROV',
+                    'forecast_date' => $forecastDate,
+                    'period_type' => 'weekly',
+                    'title' => 'Sampul Prakiraan Cuaca Maritim Wilayah Provinsi Maluku',
+                ];
+            } else {
+                return [
+                    'category' => $isImage ? 'infografis' : 'pelabuhan',
+                    'region_number' => 0,
+                    'region_code' => 'COVER_PEL',
+                    'forecast_date' => $forecastDate,
+                    'period_type' => 'weekly',
+                    'title' => 'Sampul Prakiraan Cuaca Pelabuhan Provinsi Maluku',
+                ];
+            }
+        }
+
+        // 1. Cek Peringatan Dini Gelombang (1 Hari Gambar / 3 Hari Video)
         if (str_contains($lower, 'peringatan') || str_contains($lower, 'warning') || str_contains($lower, 'dini') || str_contains($lower, 'gelombang')) {
             preg_match('/(\d{6,8})/', $filename, $dateMatch);
             $forecastDate = isset($dateMatch[1]) ? $this->parseDateString($dateMatch[1]) : null;
+            $periodType = (str_contains($lower, '3') || in_array($ext, ['mp4', 'webm', 'mov', 'ogg'])) ? '3-hari' : '1-hari';
 
             return [
                 'category' => 'peringatan-dini',
+                'period_type' => $periodType,
                 'region_number' => null,
                 'region_code' => null,
                 'forecast_date' => $forecastDate,
@@ -387,7 +563,6 @@ class DocumentController extends Controller
         $bahariKeywords = [
             'bahari', 'wisata', 'slide', 'pantai',
             'liang', 'ora', 'morela', 'hukurila', 'natsepa', 'jikumerasa',
-            'sampul', 'cover'
         ];
         foreach ($bahariKeywords as $kw) {
             if (str_contains($lower, $kw)) {
@@ -406,8 +581,7 @@ class DocumentController extends Controller
 
         // 5. Cek Buletin
         if (str_contains($lower, 'buletin') || str_contains($lower, 'bulletin')) {
-            preg_match('/(\d{6,8})/', $filename, $dateMatch);
-            $forecastDate = isset($dateMatch[1]) ? $this->parseDateString($dateMatch[1]) : null;
+            $forecastDate = $this->parseBuletinDate($filename);
 
             return [
                 'category' => 'buletin',
@@ -481,6 +655,53 @@ class DocumentController extends Controller
         return null;
     }
 
+    private function parseBuletinDate(string $filename): ?string
+    {
+        $lower = strtolower($filename);
+        $months = [
+            'januari' => '01', 'january' => '01', 'jan' => '01',
+            'februari' => '02', 'february' => '02', 'feb' => '02',
+            'maret' => '03', 'march' => '03', 'mar' => '03',
+            'april' => '04', 'apr' => '04',
+            'mei' => '05', 'may' => '05',
+            'juni' => '06', 'june' => '06', 'jun' => '06',
+            'juli' => '07', 'july' => '07', 'jul' => '07',
+            'agustus' => '08', 'august' => '08', 'ags' => '08', 'agu' => '08', 'aug' => '08',
+            'september' => '09', 'sep' => '09', 'sept' => '09',
+            'oktober' => '10', 'october' => '10', 'okt' => '10', 'oct' => '10',
+            'november' => '11', 'nov' => '11',
+            'desember' => '12', 'december' => '12', 'des' => '12', 'dec' => '12',
+        ];
+
+        // Cari tahun 4 digit (misal: 2025, 2026, dst)
+        $year = null;
+        if (preg_match('/\b(20[2-9]\d)\b/', $filename, $yMatch)) {
+            $year = $yMatch[1];
+        } else {
+            $year = date('Y');
+        }
+
+        // Cari nama bulan dari kata kunci teks
+        $month = null;
+        foreach ($months as $name => $num) {
+            if (preg_match('/\b' . preg_quote($name, '/') . '\b/i', $lower)) {
+                $month = $num;
+                break;
+            }
+        }
+
+        // Jika nama bulan tidak ditemukan, deteksi nomor urut edisi (misal: 03. BULETIN atau 10. BULETIN)
+        if (!$month && preg_match('/(?:^|[^0-9])0?([1-9]|1[0-2])(?:\.|\s|-|_)/', $filename, $mNumMatch)) {
+            $month = sprintf('%02d', (int) $mNumMatch[1]);
+        }
+
+        if ($year && $month) {
+            return "{$year}-{$month}-01";
+        }
+
+        return null;
+    }
+
     public function destroy(Document $document)
     {
         if (Storage::disk('public')->exists($document->file_path)) {
@@ -549,7 +770,7 @@ class DocumentController extends Controller
     private function getCategoryLabel($category)
     {
         return match ($category) {
-            'infografis' => 'Infografis & Peta Cuaca',
+            'infografis' => 'Infografis',
             'peringatan-dini' => 'Peringatan Dini',
             'provinsi' => 'Prakiraan Cuaca Provinsi',
             'buletin' => 'Buletin Maritim',

@@ -67,7 +67,7 @@ export default function Sejarah() {
             year: 'Era Sekarang',
             title: 'Modernisasi, SLCN & Transformasi Digital',
             badge: 'Pelayanan Prima',
-            badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+            badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
             description:
                 'Stasiun aktif menyelenggarakan Sekolah Lapang Cuaca Nelayan (SLCN) untuk meningkatkan literasi cuaca para nelayan tradisional, mengintegrasikan sistem prakiraan digital (Marine Forecast Year/MFY), serta menyediakan layanan informasi 24/7 bagi keselamatan pelayaran nasional dan internasional.',
             details: [
@@ -134,14 +134,14 @@ export default function Sejarah() {
             </div>
 
             {/* Hero Section - Solid, Crisp, High Contrast Dark Navy Theme */}
-            <section className="border-b border-slate-800 bg-slate-950 py-16 text-white lg:py-20">
+            <section className="border-b border-slate-800 bg-slate-950 py-12 text-white lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-3xl text-center">
                         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-blue-500/20 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-300">
                             <History className="h-3.5 w-3.5" />
                             <span>PROFIL KELEMBAGAAN BMKG</span>
                         </div>
-                        <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                        <h1 className="mb-6 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-4xl">
                             Sejarah Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
                         </h1>
                         <p className="text-base leading-relaxed text-slate-300 sm:text-lg">
@@ -153,35 +153,35 @@ export default function Sejarah() {
 
                     {/* Quick Stats Grid - Crisp Solid Cards without blur */}
                     <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6">
-                        <div className="rounded-2xl border border-slate-700/80 bg-slate-900/90 p-5 shadow-lg transition-transform duration-200 hover:-translate-y-1">
-                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
+                        <div className="rounded-lg border border-slate-700/80 bg-slate-900/90 p-5 shadow-sm transition-transform duration-200 ">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
                                 <Calendar className="h-5 w-5" />
                             </div>
-                            <div className="text-2xl font-extrabold text-white sm:text-3xl">2019</div>
+                            <div className="text-2xl font-bold text-white sm:text-3xl">2019</div>
                             <div className="mt-1 text-xs font-medium text-slate-300">Tahun Ditetapkan UPT</div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-700/80 bg-slate-900/90 p-5 shadow-lg transition-transform duration-200 hover:-translate-y-1">
-                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400">
+                        <div className="rounded-lg border border-slate-700/80 bg-slate-900/90 p-5 shadow-sm transition-transform duration-200 ">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
                                 <Award className="h-5 w-5" />
                             </div>
-                            <div className="text-2xl font-extrabold text-white sm:text-3xl">Kelas II</div>
+                            <div className="text-2xl font-bold text-white sm:text-3xl">Kelas II</div>
                             <div className="mt-1 text-xs font-medium text-slate-300">Klasifikasi Stasiun BMKG</div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-700/80 bg-slate-900/90 p-5 shadow-lg transition-transform duration-200 hover:-translate-y-1">
-                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                        <div className="rounded-lg border border-slate-700/80 bg-slate-900/90 p-5 shadow-sm transition-transform duration-200 ">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
                                 <Waves className="h-5 w-5" />
                             </div>
-                            <div className="text-2xl font-extrabold text-white sm:text-3xl">18 Wilayah</div>
+                            <div className="text-2xl font-bold text-white sm:text-3xl">18 Wilayah</div>
                             <div className="mt-1 text-xs font-medium text-slate-300">Zona Laut Maluku & Banda</div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-700/80 bg-slate-900/90 p-5 shadow-lg transition-transform duration-200 hover:-translate-y-1">
-                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                        <div className="rounded-lg border border-slate-700/80 bg-slate-900/90 p-5 shadow-sm transition-transform duration-200 ">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
                                 <Clock className="h-5 w-5" />
                             </div>
-                            <div className="text-2xl font-extrabold text-white sm:text-3xl">24 / 7</div>
+                            <div className="text-2xl font-bold text-white sm:text-3xl">24 / 7</div>
                             <div className="mt-1 text-xs font-medium text-slate-300">Operasional Pelayanan</div>
                         </div>
                     </div>
@@ -191,7 +191,7 @@ export default function Sejarah() {
             {/* Official Legal Basis Banner */}
             <section className="border-b bg-background py-12">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-blue-50/50 via-slate-50 to-cyan-50/50 p-8 shadow-sm dark:from-blue-950/20 dark:via-slate-900 dark:to-cyan-950/20 md:p-10">
+                    <div className="relative overflow-hidden rounded-lg border border-blue-500/20 bg-slate-50 p-8 shadow-sm dark:bg-blue-950/20 md:p-10">
                         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                             <div className="max-w-2xl">
                                 <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-600/10 px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
@@ -211,10 +211,14 @@ export default function Sejarah() {
                                 </p>
                             </div>
                             <div className="shrink-0">
-                                <div className="rounded-2xl border bg-card p-6 shadow-md dark:border-slate-800">
+                                <div className="rounded-lg border bg-card p-6 shadow-sm dark:border-slate-800">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-                                            <Building2 className="h-6 w-6" />
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white p-1.5 shadow-sm border border-slate-200 dark:border-slate-800">
+                                            <img
+                                                src="/images/logo-bmkg.png"
+                                                alt="Logo BMKG"
+                                                className="h-full w-full object-contain"
+                                            />
                                         </div>
                                         <div>
                                             <div className="text-xs font-semibold text-muted-foreground uppercase">
@@ -235,15 +239,42 @@ export default function Sejarah() {
                 </div>
             </section>
 
+            {/* Station Building & Staff Photo Showcase */}
+            <section className="border-b bg-muted/20 py-10">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 sm:aspect-[16/9]">
+                            <img
+                                src="/images/profil-stasiun.jpg"
+                                alt="Gedung Kantor & Seluruh Staf Stasiun Meteorologi Maritim Yos Soedarso Ambon - Zona Integritas Menuju WBK"
+                                className="h-full w-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                            <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-white">
+                                <span className="inline-block rounded-full bg-blue-600/95 px-3 py-1 text-[11px] font-bold shadow-sm">
+                                    Zona Integritas Menuju WBK
+                                </span>
+                                <h3 className="mt-2 text-base font-bold sm:text-xl">
+                                    Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
+                                </h3>
+                                <p className="mt-1 text-xs text-slate-300 sm:text-sm">
+                                    Komitmen bersama seluruh jajaran pegawai dalam mewujudkan Wilayah Bebas dari Korupsi (WBK) dan Wilayah Birokrasi Bersih dan Melayani (WBBM).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Timeline Section */}
-            <section className="py-16 lg:py-20">
+            <section className="py-12 lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto mb-16 max-w-2xl text-center">
                         <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase">
                             <Sparkles className="h-4 w-4" />
                             <span>PERJALANAN WAKTU</span>
                         </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             Kronologi Pembentukan & Perkembangan
                         </h2>
                         <p className="mt-3 text-muted-foreground">
@@ -268,13 +299,13 @@ export default function Sejarah() {
                                         }`}
                                     >
                                         {/* Center icon badge on timeline */}
-                                        <div className="absolute top-0 left-8 -ml-4 flex h-8 w-8 items-center justify-center rounded-full border-4 border-background bg-blue-600 text-white shadow-md md:top-1/2 md:left-1/2 md:-mt-4 md:-ml-4">
+                                        <div className="absolute top-0 left-8 -ml-4 flex h-8 w-8 items-center justify-center rounded-full border-4 border-background bg-blue-600 text-white shadow-sm md:top-1/2 md:left-1/2 md:-mt-4 md:-ml-4">
                                             <IconComponent className="h-4 w-4" />
                                         </div>
 
                                         {/* Content Box */}
                                         <div className="ml-16 md:ml-0 md:w-1/2 md:px-8">
-                                            <div className="rounded-2xl border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-md">
+                                            <div className="rounded-lg border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-sm">
                                                 <div className="mb-3 flex items-center justify-between gap-2">
                                                     <span className="text-sm font-bold text-primary">
                                                         {event.year}
@@ -316,14 +347,14 @@ export default function Sejarah() {
             </section>
 
             {/* Gallery Highlights & Documentation */}
-            <section className="border-t bg-muted/30 py-16 lg:py-20">
+            <section className="border-t bg-muted/30 py-12 lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto mb-12 max-w-2xl text-center">
                         <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase">
                             <Users className="h-4 w-4" />
                             <span>DOKUMENTASI & KIPRAH</span>
                         </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             Fokus Pengabdian & Kegiatan Stasiun
                         </h2>
                         <p className="mt-3 text-muted-foreground">
@@ -337,9 +368,9 @@ export default function Sejarah() {
                             return (
                                 <div
                                     key={idx}
-                                    className="flex flex-col rounded-2xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md"
+                                    className="flex flex-col rounded-lg border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-sm"
                                 >
-                                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                                         <IconCmp className="h-6 w-6" />
                                     </div>
                                     <div className="mb-1 text-xs font-semibold tracking-wider text-primary uppercase">
@@ -359,9 +390,9 @@ export default function Sejarah() {
             </section>
 
             {/* Station Identity & Specifications Table */}
-            <section className="py-16">
+            <section className="py-12">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mx-auto max-w-4xl rounded-3xl border bg-card p-8 shadow-sm md:p-12">
+                    <div className="mx-auto max-w-4xl rounded-lg border bg-card p-8 shadow-sm md:p-12">
                         <div className="mb-8 flex flex-col items-start justify-between gap-4 border-b pb-6 sm:flex-row sm:items-center">
                             <div>
                                 <h3 className="text-2xl font-bold tracking-tight text-foreground">
@@ -381,7 +412,7 @@ export default function Sejarah() {
                             {stationFacts.map((fact, fIdx) => (
                                 <div
                                     key={fIdx}
-                                    className="rounded-xl border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
+                                    className="rounded-lg border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
                                 >
                                     <div className="text-xs font-medium text-muted-foreground">
                                         {fact.label}
@@ -394,7 +425,7 @@ export default function Sejarah() {
                         </div>
 
                         {/* Location address highlight */}
-                        <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="mt-8 flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                                     <MapPin className="h-5 w-5" />
@@ -440,7 +471,7 @@ export default function Sejarah() {
                         </Link>
                         <Link
                             href="/buletin"
-                            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90"
+                            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                         >
                             <span>Buletin Maritim</span>
                             <ArrowRight className="h-4 w-4" />

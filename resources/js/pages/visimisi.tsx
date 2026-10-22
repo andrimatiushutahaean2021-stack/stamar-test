@@ -36,7 +36,7 @@ export default function VisiMisi() {
         {
             keyword: 'Berjangkauan Luas',
             icon: Globe2,
-            color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+            color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
             desc: 'Menjangkau 18 zona perairan Maluku, rute penyeberangan antarpulau, hingga pelabuhan terpencil di kawasan kepulauan Maluku.',
         },
         {
@@ -59,7 +59,7 @@ export default function VisiMisi() {
                 'Mempelajari karakteristik angin monsun, gelombang laut, dan dinamika iklim kepulauan Maluku',
             ],
             icon: Eye,
-            gradient: 'from-blue-600/20 to-cyan-600/20',
+            gradient: 'from-blue-600/20 to-blue-600/20',
         },
         {
             number: '02',
@@ -72,7 +72,7 @@ export default function VisiMisi() {
                 'Menyediakan layanan data meteorologi kelautan untuk kebutuhan riset, pelayaran, dan komersial',
             ],
             icon: Waves,
-            gradient: 'from-cyan-600/20 to-teal-600/20',
+            gradient: 'from-blue-600/20 to-blue-600/20',
         },
         {
             number: '03',
@@ -109,14 +109,14 @@ export default function VisiMisi() {
             </div>
 
             {/* Hero Section */}
-            <section className="border-b border-slate-800 bg-slate-950 py-16 text-white lg:py-20">
+            <section className="border-b border-slate-800 bg-slate-950 py-12 text-white lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-3xl text-center">
                         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-blue-500/20 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-300">
                             <Target className="h-3.5 w-3.5" />
                             <span>ARAH & TUJUAN STRATEGIS BMKG</span>
                         </div>
-                        <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                        <h1 className="mb-6 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-4xl">
                             Visi dan Misi Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
                         </h1>
                         <p className="text-base leading-relaxed text-slate-300 sm:text-lg">
@@ -128,16 +128,16 @@ export default function VisiMisi() {
             </section>
 
             {/* Visi Section */}
-            <section className="border-b bg-background py-16 lg:py-20">
+            <section className="border-b bg-background py-12 lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-4xl">
-                        <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-950 via-slate-900 to-slate-900 p-8 text-white shadow-xl sm:p-12">
+                        <div className="relative overflow-hidden rounded-lg border border-blue-500/20 bg-blue-950 p-8 text-white shadow-sm sm:p-12">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3.5 py-1 text-xs font-bold tracking-wider text-blue-300 uppercase">
                                 <Sparkles className="h-4 w-4" />
                                 <span>VISI KELEMBAGAAN</span>
                             </div>
 
-                            <blockquote className="relative mt-2 text-2xl font-extrabold leading-snug tracking-tight text-white sm:text-3xl lg:text-4xl">
+                            <blockquote className="relative mt-2 text-2xl font-bold leading-snug tracking-tight text-white sm:text-3xl lg:text-4xl">
                                 “Terwujudnya pelayanan jasa dan informasi meteorologi maritim yang cepat, tepat,
                                 akurat, berjangkauan luas, dan dapat dipahami di wilayah perairan Maluku.”
                             </blockquote>
@@ -155,10 +155,10 @@ export default function VisiMisi() {
                                     return (
                                         <div
                                             key={idx}
-                                            className="rounded-2xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10"
+                                            className="rounded-lg border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10"
                                         >
                                             <div
-                                                className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl border ${val.color}`}
+                                                className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg border ${val.color}`}
                                             >
                                                 <IconCmp className="h-4 w-4" />
                                             </div>
@@ -176,14 +176,14 @@ export default function VisiMisi() {
             </section>
 
             {/* Misi Section */}
-            <section className="py-16 lg:py-20">
+            <section className="py-12 lg:py-14">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto mb-14 max-w-2xl text-center">
                         <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-primary uppercase">
                             <Compass className="h-4 w-4" />
                             <span>LANGKAH STRATEGIS</span>
                         </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             3 Misi Utama Stasiun
                         </h2>
                         <p className="mt-3 text-muted-foreground">
@@ -197,10 +197,10 @@ export default function VisiMisi() {
                             return (
                                 <div
                                     key={idx}
-                                    className="overflow-hidden rounded-2xl border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-md sm:p-8"
+                                    className="overflow-hidden rounded-lg border bg-card p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-sm sm:p-8"
                                 >
                                     <div className="flex flex-col gap-6 md:flex-row md:items-start">
-                                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 font-extrabold text-white shadow-md">
+                                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-blue-600 font-bold text-white shadow-sm">
                                             <span className="text-xl">{misi.number}</span>
                                         </div>
 
@@ -212,7 +212,7 @@ export default function VisiMisi() {
                                                 {misi.title}
                                             </h3>
 
-                                            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm font-medium text-foreground italic">
+                                            <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm font-medium text-foreground italic">
                                                 "{misi.statement}"
                                             </div>
 
@@ -265,7 +265,7 @@ export default function VisiMisi() {
                         </Link>
                         <Link
                             href="/tupoksi"
-                            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90"
+                            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                         >
                             <span>Tugas dan Fungsi</span>
                             <ArrowRight className="h-4 w-4" />

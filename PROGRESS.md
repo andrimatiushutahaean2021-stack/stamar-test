@@ -225,5 +225,70 @@ Menjawab masukan terkait efisiensi tampilan admin dan penanganan elemen/halaman 
 
 ---
 
+## 🛡️ 9. Protokol Keamanan Deployment: Mitigasi Celah Kritis PHP2Shell (CVE-2026-109618)
+
+Menjawab peringatan celah keamanan global **PHP2Shell (CVE-2026-109618 & CVE-2026-109619)** dengan tingkat keparahan **CVSS 9.2 (Critical - Remote Code Execution)**:
+
+### A. Ringkasan Kerentanan & Korelasi Proyek:
+- **Akar Masalah:** Celah berada di level inti *interpreter* PHP (bukan di kode Laravel). Terjadi saat PHP mengalami terminasi mendadak (*Out-of-Memory / OOM* fatal error) menggunakan `longjmp()`, yang meninggalkan pointer memori liar (*uninitialized / use-after-free*). Penyerang jarak jauh dapat memanfaatkan celah ini untuk mengeksekusi perintah shell berbahaya (**RCE**) tanpa perlu login.
+- **Korelasi dengan Website Stamar:** Website ini memiliki modul upload berkas cuaca (infografis resolusi tinggi, buletin PDF, dan video animasi `.mp4`). Penyerang sering mencoba memanipulasi *multipart upload* atau payload besar untuk sengaja memicu kehabisan memori (*OOM condition*) pada worker PHP.
+- **Status Runtime Lokal:** Terdeteksi `PHP 8.4.25`. Versi resmi yang telah aman dan ditambal oleh tim pengembang PHP adalah **PHP 8.4.27+** atau **PHP 8.3.36+**.
+
+### B. Checklist Wajib Sebelum / Saat Deploy di Server BMKG (via MobaXterm):
+
+1. **Cek Versi PHP Server Linux:**
+   ```bash
+   php -v
+   ```
+   *Pastikan versi yang terpasang adalah PHP 8.4.27 ke atas, atau PHP 8.3.36 ke atas.*
+
+2. **Lakukan Pembaruan Paket PHP di Server (Jika Masih Versi Lama):**
+   ```bash
+   sudo apt update && sudo apt --only-upgrade install php8.4* -y
+   # Atau sesuaikan jika memakai PHP 8.3:
+   # sudo apt update && sudo apt --only-upgrade install php8.3* -y
+   sudo systemctl restart php8.4-fpm
+   sudo systemctl restart nginx
+   ```
+
+3. **Benteng Gerbang Depan di Web Server (Nginx / Apache):**
+   Batasi ukuran payload di Nginx sebelum request masuk dan membebani memori PHP:
+   ```nginx
+   # Tambahkan di /etc/nginx/nginx.conf atau blok server {}:
+   client_max_body_size 50M;
+   ```
+   *(Request raksasa yang mencoba memicu OOM akan otomatis ditolak HTTP 413 oleh Nginx).*
+
+4. **Konfigurasi Daur Ulang Worker PHP-FPM:**
+   Di file `/etc/php/8.4/fpm/pool.d/www.conf`:
+   ```ini
+   pm.max_requests = 500
+   ```
+   *(Memastikan proses worker otomatis direstart dan memori dibersihkan setiap melayani 500 permintaan).*
+
+---
+
+## 🌟 10. Integrasi 2 Gambar Sampul Resmi Folder `mfy` (Opsi 1: Banner Header & Auto-Classification) (22 Oktober 2026)
+
+Menjawab kebutuhan integrasi 2 berkas sampul resmi format PNG yang disertakan dalam folder rilis `mfy` (total 112 berkas: 36 Cuaca Provinsi, 74 Cuaca Pelabuhan, dan 2 Berkas Sampul):
+
+1. **Komponen Visual Sampul Resmi ([ForecastCoverBanner](file:///e:/herd/test/resources/js/components/forecast-cover-banner.tsx)):**
+   - Menghadirkan banner cover interaktif bergaya modern glassmorphism di bagian atas halaman terkait:
+     - **Cover Cuaca Provinsi:** Ditampilkan pada `/provinsi` (Prakiraan PDF) dan `/infografis-provinsi` (Infografis PNG).
+     - **Cover Cuaca Pelabuhan:** Ditampilkan pada `/pelabuhan` (Prakiraan PDF) dan `/infografis-pelabuhan` (Infografis PNG).
+   - Menampilkan visual cover rasio persegi (1:1), rincian teks periode masa berlaku resmi, serta tombol aksi *"Lihat Sampul Lengkap"* yang membuka modal Lightbox interaktif (Zoom In, Zoom Out, Reset).
+   - Dilengkapi tombol lintas format (*cross-link*) untuk memudahkan pengunjung berpindah secara mulus antara format Dokumen PDF dan format Infografis Visual PNG.
+
+2. **Auto-Classification & Penyelarasan Backend Dropzone ([DocumentController.php](file:///e:/herd/test/app/Http/Controllers/Admin/DocumentController.php) & [MfyUploadController.php](file:///e:/herd/test/app/Http/Controllers/MfyUploadController.php)):**
+   - Backend kini secara otomatis mengenali berkas cover (kata kunci `cover`, `sampul`, `slide`, `maritim`, `prov`, `pelabuhan`) dan mengklasifikasikannya dengan kode `COVER_PROV` dan `COVER_PEL`.
+   - Berkas cover format PNG/JPG kini dikecualikan dari validasi PDF pada kategori provinsi/pelabuhan sehingga tidak tertolak saat forecaster melakukan drag & drop seluruh isi folder `mfy` sekaligus.
+   - Tetap mengunci batasan unggah maksimal tepat **112 berkas** sesuai komposisi baku rilis harian BMKG.
+
+3. **Verifikasi Build & Tipe:**
+   - Telah lulus uji `npm run types:check` (0 error TypeScript) dan `npm run build` sukses 100%.
+
+---
+
 _Catatan: Anda dapat selalu merujuk ke file ini (`PROGRESS.md`) kapan pun Anda membuka kembali workspace Anda._
+
 

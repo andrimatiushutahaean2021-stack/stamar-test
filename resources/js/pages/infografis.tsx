@@ -105,7 +105,7 @@ export default function Infografis({ documents = [] }: Props) {
 
     return (
         <PublicLayout>
-            <Head title="Infografis Cuaca Visual & Peta Rilis - BMKG Stamar Ambon" />
+            <Head title="Infografis Cuaca - BMKG Stamar Ambon" />
 
             <div className="min-h-screen bg-slate-50 pb-24 dark:bg-[#0B1120]">
                 {/* Hero Header */}
@@ -123,11 +123,11 @@ export default function Infografis({ documents = [] }: Props) {
 
                     <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="mx-auto max-w-3xl text-center">
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300 backdrop-blur-md">
-                                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300 ">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
                                 <span>Publikasi Visual & Peta Rilis Harian</span>
                             </div>
-                            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-4xl">
                                 Infografis Cuaca Maritim
                             </h1>
                             <p className="mt-4 text-base text-slate-300 sm:text-lg">
@@ -143,7 +143,7 @@ export default function Infografis({ documents = [] }: Props) {
                                         placeholder="Cari judul infografis atau tema peta..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-12 w-full rounded-2xl border-white/20 bg-slate-800/80 pl-11 pr-4 text-sm text-white shadow-xl placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20"
+                                        className="h-12 w-full rounded-lg border-white/20 bg-slate-800/80 pl-11 pr-4 text-sm text-white shadow-sm placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
                                     />
                                 </div>
                             </div>
@@ -158,22 +158,22 @@ export default function Infografis({ documents = [] }: Props) {
                             {filteredItems.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+                                    className="group flex flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
                                 >
                                     {/* Thumbnail Image Container */}
                                     <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-800">
                                         <img
                                             src={item.file_path}
                                             alt={item.title}
-                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            className="h-full w-full object-cover transition-transform duration-700 "
                                             loading="lazy"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity group-hover:opacity-40" />
 
                                         {/* Badge Tanggal */}
                                         <div className="absolute top-3.5 left-3.5">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
-                                                <Calendar className="h-3 w-3 text-indigo-400" />
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1 text-xs font-semibold text-white shadow-sm ">
+                                                <Calendar className="h-3 w-3 text-blue-400" />
                                                 {new Date(item.forecast_date).toLocaleDateString('id-ID', {
                                                     day: 'numeric',
                                                     month: 'short',
@@ -197,7 +197,7 @@ export default function Infografis({ documents = [] }: Props) {
                                                     desc: item.description,
                                                 })
                                             }
-                                            className="absolute bottom-3.5 right-3.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/90 text-slate-900 shadow-xl backdrop-blur-md transition-all hover:scale-110 hover:bg-white dark:bg-slate-900/90 dark:text-white"
+                                            className="absolute bottom-3.5 right-3.5 flex h-10 w-10 items-center justify-center rounded-lg bg-white/90 text-slate-900 shadow-sm transition-all hover:bg-white dark:bg-slate-900/90 dark:text-white"
                                             title="Perbesar Tampilan"
                                         >
                                             <ZoomIn className="h-4 w-4" />
@@ -207,7 +207,7 @@ export default function Infografis({ documents = [] }: Props) {
                                     {/* Content Card Body */}
                                     <div className="flex flex-1 flex-col justify-between p-6">
                                         <div>
-                                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2 dark:text-white dark:group-hover:text-indigo-400">
+                                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 dark:text-white dark:group-hover:text-blue-400">
                                                 {item.title}
                                             </h3>
                                             <p className="mt-2 text-xs leading-relaxed text-slate-600 line-clamp-3 dark:text-slate-400">
@@ -235,7 +235,7 @@ export default function Infografis({ documents = [] }: Props) {
                                                             desc: item.description,
                                                         })
                                                     }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors"
                                                 >
                                                     <ZoomIn className="h-3.5 w-3.5" />
                                                     <span>Lihat Infografis</span>
@@ -247,7 +247,7 @@ export default function Infografis({ documents = [] }: Props) {
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
                             <ImageIcon className="h-12 w-12 text-slate-400 opacity-40 mb-3" />
                             <h3 className="text-base font-bold text-slate-900 dark:text-white">
                                 Tidak ada infografis yang sesuai pencarian
@@ -263,11 +263,11 @@ export default function Infografis({ documents = [] }: Props) {
             {/* Lightbox Modal Image Preview */}
             {activeModalImage && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 animate-in fade-in duration-200"
                     onClick={() => setActiveModalImage(null)}
                 >
                     <div
-                        className="relative max-h-[90vh] max-w-5xl w-full overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 p-6 shadow-2xl text-white"
+                        className="relative max-h-[90vh] max-w-5xl w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950 p-6 shadow-sm text-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
@@ -284,14 +284,14 @@ export default function Infografis({ documents = [] }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => setActiveModalImage(null)}
-                                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
                                 >
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="max-h-[70vh] overflow-auto flex items-center justify-center rounded-2xl bg-black/60 p-2">
+                        <div className="max-h-[70vh] overflow-auto flex items-center justify-center rounded-lg bg-black/60 p-2">
                             <img
                                 src={activeModalImage.url}
                                 alt={activeModalImage.title}

@@ -131,7 +131,6 @@ export default function Informasi() {
 
             {/* Compact Header / Hero */}
             <div className="relative border-b border-border bg-slate-950 py-10 text-white sm:py-12">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-slate-950" />
                 <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col items-center justify-between gap-6 md:flex-row md:items-end">
                         <div className="space-y-2 text-center md:text-left">
@@ -139,7 +138,7 @@ export default function Informasi() {
                                 <Scale className="h-3.5 w-3.5" />
                                 Standar Pelayanan Publik BMKG
                             </div>
-                            <h1 className="text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
+                            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
                                 Pelayanan Informasi dan Jasa
                             </h1>
                             <p className="text-sm font-medium text-blue-200/90 sm:text-base">
@@ -154,7 +153,7 @@ export default function Informasi() {
                         <div className="flex flex-wrap items-center justify-center gap-3">
                             <Link
                                 href="/survey-ikm"
-                                className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/20 px-4 text-xs font-bold text-blue-300 transition-all hover:bg-blue-500/30"
+                                className="inline-flex h-10 items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/20 px-4 text-xs font-bold text-blue-300 transition-all hover:bg-blue-500/30"
                             >
                                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                                 Survei IKM (e-SKM)
@@ -163,7 +162,7 @@ export default function Informasi() {
                                 href="https://wa.me/6281296265822?text=Halo%20Admin%20Layanan%20Informasi,%20saya%20ingin%20mengirimkan%20bukti%20bayar%20billing%20SIMPONI."
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex h-10 items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/20 px-4 text-xs font-bold text-amber-300 transition-all hover:bg-amber-500/30"
+                                className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/20 px-4 text-xs font-bold text-amber-300 transition-all hover:bg-amber-500/30"
                             >
                                 <Receipt className="h-4 w-4 text-amber-400" />
                                 Konfirmasi Bukti Bayar
@@ -172,7 +171,7 @@ export default function Informasi() {
                                 href="https://wa.me/6281296265822?text=Halo%20Admin%20Layanan%20Informasi%20Stamar%20Ambon,%20saya%20ingin%20berkonsultasi%20mengenai%20permohonan%20data%20cuaca%20maritim."
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:bg-emerald-500"
+                                className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-500"
                             >
                                 <Phone className="h-4 w-4" />
                                 Konsultasi WhatsApp
@@ -185,12 +184,12 @@ export default function Informasi() {
             {/* Main Interactive Hub Container */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 {/* Segmented Control / Tab Switcher Bar */}
-                <div className="mb-8 flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-sm sm:justify-start">
+                <div className="mb-8 flex flex-wrap items-center justify-center gap-2 rounded-lg border border-border bg-card p-1.5 shadow-sm sm:justify-start">
                     <button
                         onClick={() => setActiveTab('alur')}
-                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
+                        className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                             activeTab === 'alur'
-                                ? 'bg-primary text-primary-foreground shadow-md'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                     >
@@ -200,9 +199,9 @@ export default function Informasi() {
 
                     <button
                         onClick={() => setActiveTab('tarif')}
-                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
+                        className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                             activeTab === 'tarif'
-                                ? 'bg-primary text-primary-foreground shadow-md'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                     >
@@ -212,9 +211,9 @@ export default function Informasi() {
 
                     <button
                         onClick={() => setActiveTab('regulasi')}
-                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
+                        className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                             activeTab === 'regulasi'
-                                ? 'bg-primary text-primary-foreground shadow-md'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                     >
@@ -224,9 +223,9 @@ export default function Informasi() {
 
                     <button
                         onClick={() => setActiveTab('kontak')}
-                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
+                        className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                             activeTab === 'kontak'
-                                ? 'bg-primary text-primary-foreground shadow-md'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                     >
@@ -243,11 +242,11 @@ export default function Informasi() {
                             {serviceSteps.map((step, idx) => (
                                 <div
                                     key={idx}
-                                    className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+                                    className="flex flex-col justify-between rounded-lg border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-sm"
                                 >
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-black text-primary">
+                                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
                                                 {step.step}
                                             </span>
                                             <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
@@ -269,7 +268,7 @@ export default function Informasi() {
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                             {/* Kolom Kiri: Video Panduan */}
                             <div className="lg:col-span-6">
-                                <div className="flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm">
+                                <div className="flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card p-5 shadow-sm">
                                     <div className="mb-3 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
@@ -289,7 +288,7 @@ export default function Informasi() {
                                         </span>
                                     </div>
 
-                                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border/80 bg-black shadow-inner">
+                                    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border/80 bg-black shadow-inner">
                                         <iframe
                                             className="h-full w-full border-0"
                                             src="https://drive.google.com/file/d/17hW1OP4_uuOWc6u4bk2t6-cDqiTepncG/preview"
@@ -303,7 +302,7 @@ export default function Informasi() {
 
                             {/* Kolom Kanan: Bagan Alur Permintaan Data */}
                             <div className="lg:col-span-6">
-                                <div className="flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm">
+                                <div className="flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card p-5 shadow-sm">
                                     <div className="mb-3 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
@@ -347,7 +346,7 @@ export default function Informasi() {
                                     </div>
 
                                     <div
-                                        className="group relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-slate-900 shadow-inner"
+                                        className="group relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-border/80 bg-slate-900 shadow-inner"
                                         onClick={() =>
                                             setSelectedImage({
                                                 title: 'Bagan Alur Permintaan Data BMKG',
@@ -358,9 +357,9 @@ export default function Informasi() {
                                         <img
                                             src="https://stamar-ambon.bmkg.go.id/content/Alur-Permintaan-Data.png"
                                             alt="Bagan Alur Permintaan Data"
-                                            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                                            className="h-full w-full object-contain p-2 transition-transform duration-300 "
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity group-hover:opacity-100">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                                             <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-900 shadow">
                                                 <Maximize2 className="h-3.5 w-3.5" />
                                                 Klik untuk Memperbesar
@@ -378,7 +377,7 @@ export default function Informasi() {
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                         {/* Kolom Kiri: Bagan Tabel Tarif PNBP */}
                         <div className="lg:col-span-6">
-                            <div className="flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm">
+                            <div className="flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card p-5 shadow-sm">
                                 <div>
                                     <div className="mb-3 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -423,7 +422,7 @@ export default function Informasi() {
                                     </div>
 
                                     <div
-                                        className="group relative flex aspect-[4/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-slate-900 shadow-inner"
+                                        className="group relative flex aspect-[4/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-border/80 bg-slate-900 shadow-inner"
                                         onClick={() =>
                                             setSelectedImage({
                                                 title: 'Daftar Tarif PNBP Pelayanan Data BMKG',
@@ -434,9 +433,9 @@ export default function Informasi() {
                                         <img
                                             src="https://stamar-ambon.bmkg.go.id/content/TARIF.png"
                                             alt="Tabel Tarif PNBP BMKG"
-                                            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                                            className="h-full w-full object-contain p-2 transition-transform duration-300 "
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity group-hover:opacity-100">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                                             <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-900 shadow">
                                                 <Maximize2 className="h-3.5 w-3.5" />
                                                 Klik untuk Memperbesar Tabel
@@ -445,7 +444,7 @@ export default function Informasi() {
                                     </div>
                                 </div>
 
-                                <div className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-[11px] text-muted-foreground">
+                                <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3 text-[11px] text-muted-foreground">
                                     💡 <strong>Catatan:</strong> Pembayaran tarif PNBP menggunakan kode billing <strong>SIMPONI (MPN G2)</strong> yang langsung disetor ke kas negara tanpa pungutan perantara.
                                 </div>
                             </div>
@@ -453,14 +452,14 @@ export default function Informasi() {
 
                         {/* Kolom Kanan: Kategori Tarif Nol Rupiah (Rp 0,00) */}
                         <div className="lg:col-span-6">
-                            <div className="flex h-full flex-col justify-between rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-card to-card p-5 shadow-sm">
+                            <div className="flex h-full flex-col justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-5 shadow-sm">
                                 <div>
                                     <div className="mb-4">
                                         <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                                             <CheckCircle2 className="h-3.5 w-3.5" />
                                             Fasilitas Bebas Biaya (Rp 0,00)
                                         </div>
-                                        <h3 className="mt-2 text-base font-extrabold text-foreground sm:text-lg">
+                                        <h3 className="mt-2 text-base font-bold text-foreground sm:text-lg">
                                             Kategori Tarif Nol Rupiah
                                         </h3>
                                         <p className="text-xs text-muted-foreground">
@@ -474,7 +473,7 @@ export default function Informasi() {
                                             return (
                                                 <div
                                                     key={idx}
-                                                    className="flex flex-col justify-between rounded-2xl border border-border bg-card/90 p-3.5 shadow-xs transition-all hover:border-emerald-500/40"
+                                                    className="flex flex-col justify-between rounded-lg border border-border bg-card/90 p-3.5 shadow-xs transition-all hover:border-emerald-500/40"
                                                 >
                                                     <div className="space-y-1.5">
                                                         <div className="flex items-center gap-2">
@@ -509,7 +508,7 @@ export default function Informasi() {
                                     </div>
                                 </div>
 
-                                <div className="mt-4 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5">
+                                <div className="mt-4 flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5">
                                     <span className="text-xs font-medium text-emerald-800 dark:text-emerald-300">
                                         Pelajari tata cara & unduh juknis lengkap tarif Rp 0,00
                                     </span>
@@ -529,7 +528,7 @@ export default function Informasi() {
                 {/* TAB 3: REGULASI RESMI */}
                 {activeTab === 'regulasi' && (
                     <div className="space-y-6">
-                        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
                             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                                 <div>
                                     <h3 className="text-base font-bold text-foreground">
@@ -550,7 +549,7 @@ export default function Informasi() {
                             {regulations.map((reg, idx) => (
                                 <div
                                     key={idx}
-                                    className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
+                                    className="flex flex-col justify-between rounded-lg border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/50 hover:shadow-sm"
                                 >
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
@@ -574,7 +573,7 @@ export default function Informasi() {
                                             href={reg.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90"
+                                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90"
                                         >
                                             <Download className="h-3.5 w-3.5" />
                                             <span>Unduh Dokumen PDF</span>
@@ -592,9 +591,9 @@ export default function Informasi() {
                         {/* 3 Kartu Kompak */}
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                             {/* Card 1: Konfirmasi Bukti Bayar */}
-                            <div className="flex flex-col justify-between rounded-2xl border border-amber-500/20 bg-card p-5 shadow-sm">
+                            <div className="flex flex-col justify-between rounded-lg border border-amber-500/20 bg-card p-5 shadow-sm">
                                 <div className="space-y-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
                                         <Receipt className="h-5 w-5" />
                                     </div>
                                     <h3 className="text-sm font-bold text-foreground">
@@ -609,7 +608,7 @@ export default function Informasi() {
                                         href="https://wa.me/6281296265822?text=Halo%20Admin%20Layanan%20Informasi,%20saya%20ingin%20mengirimkan%20bukti%20bayar%20billing%20SIMPONI%20permohonan%20data."
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
                                     >
                                         <Receipt className="h-3.5 w-3.5" />
                                         <span>Kirim Bukti Bayar WhatsApp</span>
@@ -618,9 +617,9 @@ export default function Informasi() {
                             </div>
 
                             {/* Card 2: Jam Operasional */}
-                            <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                            <div className="flex flex-col justify-between rounded-lg border border-border bg-card p-5 shadow-sm">
                                 <div className="space-y-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
                                         <Clock className="h-5 w-5" />
                                     </div>
                                     <h3 className="text-sm font-bold text-foreground">
@@ -640,9 +639,9 @@ export default function Informasi() {
                             </div>
 
                             {/* Card 3: Narahubung & Alamat */}
-                            <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+                            <div className="flex flex-col justify-between rounded-lg border border-border bg-card p-5 shadow-sm">
                                 <div className="space-y-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
                                         <MapPin className="h-5 w-5" />
                                     </div>
                                     <h3 className="text-sm font-bold text-foreground">
@@ -662,7 +661,7 @@ export default function Informasi() {
                                         href="https://wa.me/6281296265822"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
                                     >
                                         <Phone className="h-3.5 w-3.5" />
                                         <span>Chat WhatsApp (0812-9626-5822)</span>
@@ -677,11 +676,11 @@ export default function Informasi() {
             {/* Modal Lightbox untuk Zoom Gambar */}
             {selectedImage && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 "
                     onClick={() => setSelectedImage(null)}
                 >
                     <div
-                        className="relative max-h-[90vh] max-w-5xl overflow-hidden rounded-3xl bg-slate-900 p-2 shadow-2xl"
+                        className="relative max-h-[90vh] max-w-5xl overflow-hidden rounded-lg bg-slate-900 p-2 shadow-sm"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between border-b border-slate-800 p-3 text-white">
@@ -699,7 +698,7 @@ export default function Informasi() {
                             <img
                                 src={selectedImage.src}
                                 alt={selectedImage.title}
-                                className="h-auto w-full rounded-xl object-contain"
+                                className="h-auto w-full rounded-lg object-contain"
                             />
                         </div>
                     </div>

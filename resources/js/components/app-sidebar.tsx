@@ -1,14 +1,5 @@
 import { Link } from '@inertiajs/react';
-import {
-    LayoutDashboard,
-    FileText,
-    UploadCloud,
-    MapPin,
-    BookOpen,
-    Globe,
-    CloudRain,
-    Anchor,
-} from 'lucide-react';
+import { FileText, Globe } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -24,11 +15,6 @@ import {
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard Panel',
-        href: '/dashboard',
-        icon: LayoutDashboard,
-    },
     {
         title: 'Manajemen File & Dokumen',
         href: '/admin/documents',
@@ -52,18 +38,20 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link
-                                href="/dashboard"
+                                href="/admin/documents"
                                 className="flex items-center gap-3"
                             >
-                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
-                                    <CloudRain className="h-5 w-5" />
-                                </div>
-                                <div className="flex flex-col text-left">
-                                    <span className="text-sm leading-tight font-extrabold text-sidebar-foreground">
-                                        STAMAR AMBON
+                                <img
+                                    src="/images/logo-bmkg.png"
+                                    alt="Logo BMKG"
+                                    className="h-9 w-auto object-contain shrink-0"
+                                />
+                                <div className="flex flex-col text-left overflow-hidden">
+                                    <span className="text-xs leading-tight font-extrabold text-sidebar-foreground truncate">
+                                        Badan Meteorologi Klimatologi Dan Geofisika
                                     </span>
-                                    <span className="text-[10px] font-medium text-muted-foreground">
-                                        Panel Administrasi
+                                    <span className="text-[10px] font-medium text-muted-foreground truncate">
+                                        Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
                                     </span>
                                 </div>
                             </Link>

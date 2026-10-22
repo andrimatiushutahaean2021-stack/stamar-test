@@ -279,11 +279,11 @@ export default function CuacaMaluku() {
 
                     <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="mx-auto max-w-3xl text-center">
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-1.5 text-xs font-semibold text-sky-300 backdrop-blur-md">
-                                <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300 ">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
                                 <span>Prakiraan Cuaca Wilayah Darat Maluku</span>
                             </div>
-                            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-4xl">
                                 Cuaca 10 Kota / Kabupaten Maluku
                             </h1>
                             <p className="mt-4 text-base text-slate-300 sm:text-lg">
@@ -299,7 +299,7 @@ export default function CuacaMaluku() {
                                         placeholder="Cari nama kota (contoh: Ambon, Tual, Dobo, Masohi)..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-12 w-full rounded-2xl border-white/20 bg-slate-800/80 pl-11 pr-4 text-sm text-white shadow-xl placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
+                                        className="h-12 w-full rounded-lg border-white/20 bg-slate-800/80 pl-11 pr-4 text-sm text-white shadow-sm placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
                                     />
                                 </div>
                             </div>
@@ -313,20 +313,20 @@ export default function CuacaMaluku() {
                         {filteredCities.map((city) => (
                             <div
                                 key={city.id}
-                                className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+                                className="group flex flex-col justify-between overflow-hidden rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
                             >
                                 <div>
                                     {/* City & Regency Header */}
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
-                                            <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors dark:text-white">
+                                            <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors dark:text-white">
                                                 {city.cityName}
                                             </h3>
                                             <p className="text-xs text-slate-500 font-medium dark:text-slate-400">
                                                 {city.regency}
                                             </p>
                                         </div>
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 dark:bg-sky-500/20 shadow-inner">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/20 shadow-inner">
                                             {getWeatherIcon(city.iconType)}
                                         </div>
                                     </div>
@@ -334,27 +334,27 @@ export default function CuacaMaluku() {
                                     {/* Temperature & Condition */}
                                     <div className="mt-5 flex items-baseline justify-between">
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-4xl font-extrabold text-slate-900 dark:text-white">
+                                            <span className="text-4xl font-bold text-slate-900 dark:text-white">
                                                 {city.temp}
                                             </span>
-                                            <span className="text-xl font-bold text-sky-600 dark:text-sky-400">°C</span>
+                                            <span className="text-xl font-bold text-blue-600 dark:text-blue-400">°C</span>
                                         </div>
-                                        <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">
+                                        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
                                             {city.condition}
                                         </span>
                                     </div>
 
                                     {/* Weather Metrics */}
                                     <div className="mt-5 grid grid-cols-2 gap-2 text-xs">
-                                        <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
                                             <Droplets className="h-4 w-4 text-blue-500 shrink-0" />
                                             <div>
                                                 <span className="text-[10px] text-slate-400 block">Kelembapan</span>
                                                 <span className="font-bold text-slate-700 dark:text-slate-200">{city.humidity}%</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/60">
-                                            <Wind className="h-4 w-4 text-teal-500 shrink-0" />
+                                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                                            <Wind className="h-4 w-4 text-blue-500 shrink-0" />
                                             <div>
                                                 <span className="text-[10px] text-slate-400 block">Angin</span>
                                                 <span className="font-bold text-slate-700 dark:text-slate-200">{city.windSpeed}</span>
@@ -363,7 +363,7 @@ export default function CuacaMaluku() {
                                     </div>
 
                                     {/* 3 Days Quick Forecast Glance */}
-                                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-3 text-xs dark:border-slate-800/60 dark:bg-slate-800/30">
+                                    <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50/50 p-3 text-xs dark:border-slate-800/60 dark:bg-slate-800/30">
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
                                             Prospek 3 Hari:
                                         </span>
@@ -388,7 +388,7 @@ export default function CuacaMaluku() {
                                         href={city.detailUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-sky-500 dark:text-sky-400"
+                                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400"
                                     >
                                         <span>Detail BMKG</span>
                                         <ExternalLink className="h-3.5 w-3.5" />

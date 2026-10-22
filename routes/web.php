@@ -6,10 +6,37 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    $warning1Hari = Document::where('category', 'peringatan-dini')
+        ->where(function ($q) {
+            $q->where('period_type', '1-hari')
+              ->orWhere('title', 'LIKE', '%1%hari%')
+              ->orWhere(function ($sub) {
+                  $sub->whereNotIn('file_type', ['mp4', 'webm', 'mov', 'ogg'])
+                      ->where(function ($sq) {
+                          $sq->whereNull('period_type')->orWhere('period_type', '!=', '3-hari');
+                      })
+                      ->where('title', 'NOT LIKE', '%3%hari%');
+              });
+        })
+        ->whereNotIn('file_type', ['mp4', 'webm', 'mov', 'ogg'])
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->first();
+
+    $warning3Hari = Document::where('category', 'peringatan-dini')
+        ->where(function ($q) {
+            $q->where('period_type', '3-hari')
+              ->orWhere('title', 'LIKE', '%3%hari%')
+              ->orWhereIn('file_type', ['mp4', 'webm', 'mov', 'ogg']);
+        })
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->first();
+
     $warningDocs = Document::where('category', 'peringatan-dini')
-        ->where('file_type', 'png')
-        ->latest()
-        ->take(5)
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->take(10)
         ->get();
 
     $latestProvinsiDocs = Document::where('category', 'provinsi')
@@ -28,43 +55,81 @@ Route::get('/', function () {
 
     $latestBuletinDocs = Document::where('category', 'buletin')
         ->where('file_type', 'pdf')
-        ->latest()
-        ->take(3)
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->take(8)
         ->get();
 
-    // Ambil 1 infografis provinsi dan 1 infografis pelabuhan terbaru
+    // Ambil dokumen Cover / Sampul Infografis terbaru (Tab 2 / Prospek H+1 s/d H+4)
+    // 1. Cover Infografis Perairan Provinsi Maluku
     $latestInfografisProv = Document::where('category', 'infografis')
-        ->where('file_type', 'png')
+        ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
         ->where(function ($q) {
-            $q->where('region_code', 'LIKE', 'P_AH%')
-              ->orWhereBetween('region_number', [1, 18]);
+            $q->where('region_code', 'COVER_PROV')
+              ->orWhere('title', 'LIKE', '%Sampul%Provinsi%')
+              ->orWhere('title', 'LIKE', '%Cover%Provinsi%')
+              ->orWhere('file_path', 'LIKE', '%cover%prov%')
+              ->orWhere('file_path', 'LIKE', '%sampul%prov%');
         })
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->first();
 
+    // Fallback jika belum ada berkas berlabel cover, ambil infografis provinsi dengan tanggal paling baru (Tab 2)
+    if (!$latestInfografisProv) {
+        $latestInfografisProv = Document::where('category', 'infografis')
+            ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
+            ->where(function ($q) {
+                $q->where('region_code', 'LIKE', 'P_AH%')
+                  ->orWhereBetween('region_number', [1, 18]);
+            })
+            ->orderByDesc('forecast_date')
+            ->latest('id')
+            ->first();
+    }
+
+    // 2. Cover Infografis Cuaca Pelabuhan Maluku
     $latestInfografisPel = Document::where('category', 'infografis')
-        ->where('file_type', 'png')
+        ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
         ->where(function ($q) {
-            $q->where('region_code', 'LIKE', 'AH%')
-              ->where('region_code', 'NOT LIKE', 'P_AH%');
+            $q->where('region_code', 'COVER_PEL')
+              ->orWhere('title', 'LIKE', '%Sampul%Pelabuhan%')
+              ->orWhere('title', 'LIKE', '%Cover%Pelabuhan%')
+              ->orWhere('file_path', 'LIKE', '%cover%pel%')
+              ->orWhere('file_path', 'LIKE', '%sampul%pel%');
         })
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->first();
+
+    // Fallback jika belum ada berkas berlabel cover, ambil infografis pelabuhan dengan tanggal paling baru (Tab 2)
+    if (!$latestInfografisPel) {
+        $latestInfografisPel = Document::where('category', 'infografis')
+            ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
+            ->where(function ($q) {
+                $q->where('region_code', 'LIKE', 'AH%')
+                  ->where('region_code', 'NOT LIKE', 'P_AH%');
+            })
+            ->orderByDesc('forecast_date')
+            ->latest('id')
+            ->first();
+    }
 
     $latestInfografisDocs = collect([$latestInfografisProv, $latestInfografisPel])->filter()->values();
     if ($latestInfografisDocs->isEmpty()) {
         $latestInfografisDocs = Document::where('category', 'infografis')
-            ->where('file_type', 'png')
+            ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
+            ->orderByDesc('forecast_date')
             ->latest('id')
-            ->take(4)
+            ->take(2)
             ->get();
     }
 
     $recentDocs = Document::latest()->take(6)->get();
 
     return Inertia::render('welcome', [
+        'warning1Hari' => $warning1Hari,
+        'warning3Hari' => $warning3Hari,
         'warningDocs' => $warningDocs,
         'latestProvinsiDocs' => $latestProvinsiDocs,
         'latestPelabuhanDocs' => $latestPelabuhanDocs,
@@ -75,6 +140,15 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/pelabuhan', function () {
+    $coverDocuments = Document::where(function ($q) {
+            $q->where('region_code', 'COVER_PEL')
+              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Pelabuhan%')
+              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Pelabuhan%');
+        })
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->get();
+
     $documents = Document::whereIn('category', ['pelabuhan', 'mfy'])
         ->where('file_type', 'pdf')
         ->orderByDesc('forecast_date')
@@ -83,6 +157,8 @@ Route::get('/pelabuhan', function () {
 
     return Inertia::render('pelabuhan', [
         'documents' => $documents,
+        'coverDocuments' => $coverDocuments,
+        'coverDocument' => $coverDocuments->first(),
     ]);
 })->name('pelabuhan');
 Route::redirect('/penyeberangan', 'https://maritim.bmkg.go.id/cuaca/rute')->name('penyeberangan');
@@ -103,6 +179,15 @@ Route::redirect('/eskm', '/survey-ikm');
 Route::redirect('/survei-ikm', '/survey-ikm');
 
 Route::get('/provinsi', function () {
+    $coverDocuments = Document::where(function ($q) {
+            $q->where('region_code', 'COVER_PROV')
+              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Maritim Wilayah Provinsi%')
+              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Maritim Wilayah Provinsi%');
+        })
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->get();
+
     $documents = Document::where('category', 'provinsi')
         ->where('file_type', 'pdf')
         ->orderByDesc('forecast_date')
@@ -111,6 +196,8 @@ Route::get('/provinsi', function () {
 
     return Inertia::render('provinsi', [
         'documents' => $documents,
+        'coverDocuments' => $coverDocuments,
+        'coverDocument' => $coverDocuments->first(),
     ]);
 })->name('provinsi');
 
@@ -129,7 +216,8 @@ Route::redirect('/mfy', '/pelabuhan');
 Route::get('/buletin', function () {
     $documents = Document::where('category', 'buletin')
         ->where('file_type', 'pdf')
-        ->latest()
+        ->orderByDesc('forecast_date')
+        ->latest('id')
         ->get();
 
     return Inertia::render('buletin', [
@@ -138,6 +226,15 @@ Route::get('/buletin', function () {
 })->name('buletin');
 
 Route::get('/infografis-provinsi', function () {
+    $coverDocuments = Document::where(function ($q) {
+            $q->where('region_code', 'COVER_PROV')
+              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Maritim Wilayah Provinsi%')
+              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Maritim Wilayah Provinsi%');
+        })
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->get();
+
     $documents = Document::where('category', 'infografis')
         ->where(function ($q) {
             $q->where('region_code', 'LIKE', 'P_AH%')
@@ -157,12 +254,23 @@ Route::get('/infografis-provinsi', function () {
 
     return Inertia::render('infografis-provinsi', [
         'documents' => $documents,
+        'coverDocuments' => $coverDocuments,
+        'coverDocument' => $coverDocuments->first(),
     ]);
 })->name('infografis-provinsi');
 Route::redirect('/infografis/provinsi', '/infografis-provinsi');
 Route::redirect('/infografis-perairan', '/infografis-provinsi');
 
 Route::get('/infografis-pelabuhan', function () {
+    $coverDocuments = Document::where(function ($q) {
+            $q->where('region_code', 'COVER_PEL')
+              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Pelabuhan%')
+              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Pelabuhan%');
+        })
+        ->orderByDesc('forecast_date')
+        ->latest('id')
+        ->get();
+
     $documents = Document::where('category', 'infografis')
         ->where(function ($q) {
             $q->where('region_code', 'LIKE', 'AH%')
@@ -182,6 +290,8 @@ Route::get('/infografis-pelabuhan', function () {
 
     return Inertia::render('infografis-pelabuhan', [
         'documents' => $documents,
+        'coverDocuments' => $coverDocuments,
+        'coverDocument' => $coverDocuments->first(),
     ]);
 })->name('infografis-pelabuhan');
 Route::redirect('/infografis/pelabuhan', '/infografis-pelabuhan');
@@ -198,28 +308,8 @@ Route::inertia('/berita', 'berita')->name('berita');
 Route::redirect('/siaran-pers', '/berita');
 
 Route::redirect('/login', '/panel-stamar/login');
-Route::redirect('/admin', '/dashboard');
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        $recentDocuments = Document::latest()->take(8)->get();
-        $totalDocuments = Document::count();
-        $categoryCounts = [
-            'infografis' => Document::where('category', 'infografis')->count(),
-            'peringatan-dini' => Document::where('category', 'peringatan-dini')->count(),
-            'provinsi' => Document::where('category', 'provinsi')->count(),
-            'buletin' => Document::where('category', 'buletin')->count(),
-            'pelabuhan' => Document::whereIn('category', ['pelabuhan', 'mfy'])->count(),
-            'bahari' => Document::where('category', 'bahari')->count(),
-        ];
-
-        return Inertia::render('dashboard', [
-            'recentDocuments' => $recentDocuments,
-            'totalDocuments' => $totalDocuments,
-            'categoryCounts' => $categoryCounts,
-        ]);
-    })->name('dashboard');
-});
+Route::redirect('/admin', '/admin/documents');
+Route::redirect('/dashboard', '/admin/documents');
 
 require __DIR__.'/settings.php';
 

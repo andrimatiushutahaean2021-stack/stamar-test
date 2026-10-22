@@ -9,11 +9,13 @@ import {
     BookMarked,
     Sparkles,
 } from 'lucide-react';
+import PdfCoverCanvas from '@/components/pdf-cover-canvas';
 
 interface DocumentItem {
     id: number;
     title: string;
     category: string;
+    forecast_date?: string;
     description?: string;
     file_path: string;
     file_type?: string;
@@ -28,6 +30,12 @@ interface Props {
 export default function Buletin({ documents = [] }: Props) {
     const defaultArchives = [
         {
+            title: '06. BULETIN Juni 2026.pdf',
+            date: 'Juni 2026',
+            size: '2.4 MB',
+            url: '#',
+        },
+        {
             title: '05. BULETIN MEI 2026.pdf',
             date: 'Mei 2026',
             size: '2.4 MB',
@@ -39,30 +47,25 @@ export default function Buletin({ documents = [] }: Props) {
             size: '3.1 MB',
             url: '#',
         },
-        {
-            title: '02. BULETIN Februari 2026.pdf',
-            date: 'Februari 2026',
-            size: '2.8 MB',
-            url: '#',
-        },
-        {
-            title: '12. BULETIN Desember 2025.pdf',
-            date: 'Desember 2025',
-            size: '4.2 MB',
-            url: '#',
-        },
     ];
+
+    const formatEditionDate = (doc: DocumentItem) => {
+        if (doc.forecast_date) {
+            const d = new Date(doc.forecast_date);
+            return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+        }
+        return new Date(doc.created_at).toLocaleDateString('id-ID', {
+            month: 'long',
+            year: 'numeric',
+        });
+    };
 
     const hasUploads = documents.length > 0;
     const latestDoc = hasUploads ? documents[0] : null;
     const archiveList = hasUploads
         ? documents.slice(1).map((doc) => ({
               title: doc.title,
-              date: new Date(doc.created_at).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-              }),
+              date: formatEditionDate(doc),
               size: doc.file_size || 'PDF',
               url: `/storage/${doc.file_path}`,
           }))
@@ -107,17 +110,17 @@ export default function Buletin({ documents = [] }: Props) {
                         </svg>
                     </div>
                     {/* Decorative Gradients */}
-                    <div className="pointer-events-none absolute top-0 right-1/4 h-96 w-96 rounded-full bg-indigo-500 opacity-40 mix-blend-screen blur-[128px]"></div>
+                    <div className="pointer-events-none absolute top-0 right-1/4 h-96 w-96 rounded-full bg-blue-500 opacity-40 mix-blend-screen blur-[128px]"></div>
                     <div className="pointer-events-none absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-blue-500 opacity-30 mix-blend-screen blur-[128px]"></div>
 
                     <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase backdrop-blur-md">
-                            <BookOpen className="h-4 w-4 text-indigo-300" />
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white uppercase ">
+                            <BookOpen className="h-4 w-4 text-blue-300" />
                             <span>Publikasi Bulanan</span>
                         </div>
-                        <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                        <h1 className="mb-6 text-4xl font-bold tracking-tight text-white md:text-4xl lg:text-4xl">
                             Buletin{' '}
-                            <span className="bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent">
+                            <span className="text-blue-400">
                                 Maritim
                             </span>
                         </h1>
@@ -133,9 +136,9 @@ export default function Buletin({ documents = [] }: Props) {
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                         {/* Latest Edition Section (Featured) */}
                         <div className="lg:col-span-8">
-                            <div className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8 dark:border-slate-700/50 dark:bg-slate-800">
+                            <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-700/50 dark:bg-slate-800">
                                 <div className="mb-6 flex items-center gap-3">
-                                    <div className="rounded-xl bg-indigo-100 p-3 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+                                    <div className="rounded-lg bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                         <BookMarked className="h-6 w-6" />
                                     </div>
                                     <div>
@@ -151,7 +154,7 @@ export default function Buletin({ documents = [] }: Props) {
                                 </div>
 
                                 {/* PDF Viewer Card */}
-                                <div className="relative flex min-h-[500px] flex-grow flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
+                                <div className="relative flex min-h-[500px] flex-grow flex-col items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
                                     {/* Mock / Actual Toolbar */}
                                     <div className="absolute top-0 right-0 left-0 flex h-12 items-center justify-between border-b border-slate-700 bg-slate-800 px-4 text-slate-300">
                                         <div className="line-clamp-1 font-mono text-xs">
@@ -161,41 +164,55 @@ export default function Buletin({ documents = [] }: Props) {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {hasUploads && (
-                                                <span className="flex items-center gap-1 rounded-full bg-indigo-500/20 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">
+                                                <span className="flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-300">
                                                     <Sparkles className="h-3 w-3" />{' '}
-                                                    Rilis Terbaru
+                                                    Edisi {latestDoc ? formatEditionDate(latestDoc) : 'Terbaru'}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
 
-                                    <FileText className="mt-12 mb-4 h-24 w-24 text-indigo-400 opacity-60" />
-                                    <h3 className="mb-2 text-xl font-bold text-slate-800 dark:text-white">
-                                        {latestDoc
-                                            ? latestDoc.title
-                                            : 'Buletin Maritim Edisi Resmi'}
-                                    </h3>
-                                    <p className="mb-6 max-w-md text-sm text-slate-500 dark:text-slate-400">
-                                        {latestDoc?.description ||
-                                            'Publikasi resmi bulanan Stasiun Meteorologi Maritim Ambon mengenai iklim, cuaca, dan kelautan wilayah Maluku.'}
-                                    </p>
-
                                     {latestDoc ? (
-                                        <a
-                                            href={`/storage/${latestDoc.file_path}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-indigo-700"
-                                        >
-                                            <Download className="h-5 w-5" />{' '}
-                                            Unduh Dokumen PDF (
-                                            {latestDoc.file_size || 'PDF'})
-                                        </a>
+                                        <div className="mt-14 mb-2 flex flex-col items-center">
+                                            <div className="w-full max-w-[320px] aspect-[1/1.38] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950 shadow-sm transition-transform hover:scale-[1.02]">
+                                                <PdfCoverCanvas
+                                                    pdfUrl={`/storage/${latestDoc.file_path}`}
+                                                    title={latestDoc.title}
+                                                    editionLabel={formatEditionDate(latestDoc)}
+                                                    className="h-full w-full"
+                                                />
+                                            </div>
+                                            <h3 className="mt-4 mb-1 text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
+                                                {latestDoc.title}
+                                            </h3>
+                                            <p className="mb-5 max-w-md text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                                                {latestDoc.description ||
+                                                    'Publikasi resmi bulanan Stasiun Meteorologi Maritim Ambon mengenai iklim, cuaca, dan kelautan wilayah Maluku.'}
+                                            </p>
+                                            <a
+                                                href={`/storage/${latestDoc.file_path}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 font-semibold text-white shadow-sm transition-transform duration-300 hover:bg-blue-700 text-xs sm:text-sm"
+                                            >
+                                                <Download className="h-4 w-4" />{' '}
+                                                Unduh Dokumen PDF ({latestDoc.file_size || 'PDF'})
+                                            </a>
+                                        </div>
                                     ) : (
-                                        <button className="flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 font-medium text-white opacity-70">
-                                            <Download className="h-5 w-5" />{' '}
-                                            Belum Ada Berkas Terunggah
-                                        </button>
+                                        <>
+                                            <FileText className="mt-12 mb-4 h-24 w-24 text-blue-400 opacity-60" />
+                                            <h3 className="mb-2 text-xl font-bold text-slate-800 dark:text-white">
+                                                Buletin Maritim Edisi Resmi
+                                            </h3>
+                                            <p className="mb-6 max-w-md text-sm text-slate-500 dark:text-slate-400">
+                                                Publikasi resmi bulanan Stasiun Meteorologi Maritim Ambon mengenai iklim, cuaca, dan kelautan wilayah Maluku.
+                                            </p>
+                                            <button className="flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 font-medium text-white opacity-70">
+                                                <Download className="h-5 w-5" />{' '}
+                                                Belum Ada Berkas Terunggah
+                                            </button>
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -203,9 +220,9 @@ export default function Buletin({ documents = [] }: Props) {
 
                         {/* Archive Section */}
                         <div className="lg:col-span-4">
-                            <div className="h-full rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700/50 dark:bg-slate-800">
+                            <div className="h-full rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700/50 dark:bg-slate-800">
                                 <div className="mb-6 flex items-center gap-3">
-                                    <div className="rounded-xl bg-slate-100 p-3 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                    <div className="rounded-lg bg-slate-100 p-3 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                                         <Calendar className="h-6 w-6" />
                                     </div>
                                     <div>
@@ -229,26 +246,31 @@ export default function Buletin({ documents = [] }: Props) {
                                                     : undefined
                                             }
                                             rel="noopener noreferrer"
-                                            className="group block rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-indigo-500 dark:hover:bg-slate-800"
+                                            className="group block rounded-lg border border-slate-100 bg-slate-50/50 p-3.5 transition-all hover:border-blue-300 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-blue-500 dark:hover:bg-slate-800"
                                         >
-                                            <div className="flex gap-4">
-                                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-900/30">
-                                                    <FileText className="h-6 w-6" />
+                                            <div className="flex gap-3.5 items-center">
+                                                <div className="h-16 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-900 shadow-xs">
+                                                    <PdfCoverCanvas
+                                                        pdfUrl={item.url}
+                                                        title={item.title}
+                                                        editionLabel={item.date}
+                                                        className="h-full w-full"
+                                                    />
                                                 </div>
-                                                <div className="flex-grow">
-                                                    <h4 className="mb-1 line-clamp-2 text-sm font-semibold text-slate-800 group-hover:text-indigo-600 dark:text-slate-200 dark:group-hover:text-indigo-400">
+                                                <div className="flex-grow min-w-0">
+                                                    <h4 className="mb-1 line-clamp-2 text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-blue-600 dark:text-slate-200 dark:group-hover:text-blue-400">
                                                         {item.title}
                                                     </h4>
                                                     <div className="flex items-center justify-between text-xs text-slate-500">
-                                                        <span>{item.date}</span>
-                                                        <span className="font-medium">
+                                                        <span className="font-medium text-blue-600 dark:text-blue-400">{item.date}</span>
+                                                        <span className="font-mono text-[11px]">
                                                             {item.size}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="mt-3 flex justify-end border-t border-slate-100 pt-3 dark:border-slate-700">
-                                                <span className="flex translate-x-2 transform items-center gap-1 text-xs font-bold text-indigo-600 opacity-0 transition-opacity group-hover:translate-x-0 group-hover:opacity-100 dark:text-indigo-400">
+                                                <span className="flex translate-x-2 transform items-center gap-1 text-xs font-bold text-blue-600 opacity-0 transition-opacity group-hover:translate-x-0 group-hover:opacity-100 dark:text-blue-400">
                                                     Buka Berkas{' '}
                                                     <ArrowRight className="h-3 w-3" />
                                                 </span>
@@ -257,7 +279,7 @@ export default function Buletin({ documents = [] }: Props) {
                                     ))}
                                 </div>
 
-                                <button className="mt-6 w-full rounded-xl border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-600 dark:hover:bg-indigo-900/20">
+                                <button className="mt-6 w-full rounded-lg border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-600 dark:hover:bg-blue-900/20">
                                     Muat Arsip Lama...
                                 </button>
                             </div>
