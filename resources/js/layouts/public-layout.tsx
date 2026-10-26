@@ -34,7 +34,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             name: 'Prakiraan',
             href: '#',
             dropdown: [
-                { name: 'Cuaca Maluku (10 Kota/Kab)', href: '/cuaca-maluku' },
                 { name: 'Cuaca Provinsi Maluku', href: '/provinsi' },
                 { name: 'Area Pelabuhan', href: '/pelabuhan' },
                 {
@@ -312,11 +311,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 <li>
                                     <Link href="/infografis" className="transition-colors text-blue-400 hover:text-blue-300 font-semibold">
                                         Infografis Cuaca
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/cuaca-maluku" className="transition-colors text-blue-400 hover:text-blue-300 font-semibold">
-                                        Cuaca 10 Kota / Kab. Maluku
                                     </Link>
                                 </li>
                                 <li>

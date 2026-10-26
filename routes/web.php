@@ -321,8 +321,8 @@ Route::redirect('/infografis/pelabuhan', '/infografis-pelabuhan');
 
 Route::redirect('/infografis', '/infografis-provinsi')->name('infografis');
 
-Route::inertia('/cuaca-maluku', 'cuaca-maluku')->name('cuaca-maluku');
-Route::redirect('/cuaca-kota', '/cuaca-maluku');
+Route::redirect('/cuaca-maluku', '/provinsi');
+Route::redirect('/cuaca-kota', '/provinsi');
 
 Route::inertia('/galeri', 'galeri')->name('galeri');
 Route::redirect('/galeri-foto', '/galeri');
