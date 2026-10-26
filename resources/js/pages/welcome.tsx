@@ -243,25 +243,35 @@ export default function Welcome({
         return () => clearInterval(timer);
     }, [galleryItems.length]);
 
-    // Data Berita & Siaran Pers Stasiun (untuk widget sidebar)
+    // Data Berita & Siaran Pers Stasiun (diselaraskan dengan halaman /berita)
     const recentNews = [
         {
-            id: 1,
-            title: 'Apel Siaga Kesiapan Angkutan Laut & Posko Terpadu Keselamatan Pelayaran di Ambon',
-            date: '18 Oktober 2026',
+            id: 4,
+            title: 'STAMAR Ambon Sediakan Infografis Prakiraan Cuaca Maritim Perairan Maluku',
+            date: '24 Oktober 2026',
             category: 'Siaran Pers',
-        },
-        {
-            id: 2,
-            title: 'BMKG Stamar Ambon Gelar SLCN: Tingkatkan Keselamatan Nelayan Hadapi Cuaca Ekstrem Laut Banda',
-            date: '14 Oktober 2026',
-            category: 'Kegiatan',
+            image: '/images/berita/prakiraan.png',
         },
         {
             id: 3,
-            title: 'Prakiraan Musim Angin Timuran & Potensi Upwelling Perairan Maluku Tenggara',
-            date: '10 Oktober 2026',
-            category: 'Analisis Cuaca',
+            title: 'BMKG: Asap Sempat Terpantau Sesaat di Jabodetabek, Kini Sudah Menjauh',
+            date: '17 Oktober 2026',
+            category: 'Siaran Pers',
+            image: '/images/berita/asap.png',
+        },
+        {
+            id: 2,
+            title: 'BMKG Resmikan HF Radar Array di Aceh untuk Memperkuat Observasi Maritim',
+            date: '8 Oktober 2026',
+            category: 'Siaran Pers',
+            image: '/images/berita/HF-Radar.png',
+        },
+        {
+            id: 1,
+            title: 'BMKG dan Bakamla RI Perkuat Kolaborasi untuk Keselamatan dan Keamanan Maritim',
+            date: '31 Agustus 2026',
+            category: 'Siaran Pers',
+            image: '/images/berita/kolaborasi.png',
         },
     ];
 
@@ -1004,20 +1014,35 @@ export default function Welcome({
 
                             <div className="divide-y divide-border/60">
                                 {recentNews.map((news) => (
-                                    <div key={news.id} className="py-2.5 first:pt-0 last:pb-0">
-                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1">
-                                            <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                                {news.category}
-                                            </span>
-                                            <span>•</span>
-                                            <span>{news.date}</span>
+                                    <div key={news.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 group">
+                                        {news.image && (
+                                            <Link
+                                                href="/berita"
+                                                className="shrink-0 overflow-hidden rounded-md border border-border/80 bg-muted"
+                                            >
+                                                <img
+                                                    src={news.image}
+                                                    alt={news.title}
+                                                    className="h-12 w-16 object-cover transition-transform duration-300 group-hover:scale-105"
+                                                    loading="lazy"
+                                                />
+                                            </Link>
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="mb-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                                                    {news.category}
+                                                </span>
+                                                <span>•</span>
+                                                <span>{news.date}</span>
+                                            </div>
+                                            <Link
+                                                href="/berita"
+                                                className="line-clamp-2 text-xs font-bold leading-snug text-foreground transition-colors group-hover:text-primary"
+                                            >
+                                                {news.title}
+                                            </Link>
                                         </div>
-                                        <Link
-                                            href="/berita"
-                                            className="text-xs font-bold text-foreground hover:text-primary transition-colors line-clamp-2"
-                                        >
-                                            {news.title}
-                                        </Link>
                                     </div>
                                 ))}
                             </div>

@@ -59,7 +59,7 @@ const newsArticles: ArticleItem[] = [
         category: 'Siaran Pers',
         date: '8 Oktober 2026',
         author: 'Humas BMKG',
-        image: '/images/berita/hf-radar.png',
+        image: '/images/berita/HF-Radar.png',
         summary:
             'BMKG meresmikan pengoperasian HF Radar Array di Ujong Batee, Aceh Besar, sebagai bagian dari penguatan observasi kelautan, layanan meteorologi maritim, dan mitigasi bencana pesisir.',
         content: [
@@ -93,7 +93,7 @@ const newsArticles: ArticleItem[] = [
         category: 'Siaran Pers',
         date: '24 Oktober 2026',
         author: 'STAMAR Ambon',
-        image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1000&q=80',
+        image: '/images/berita/prakiraan.png',
         summary:
             'Website resmi STAMAR Ambon menyediakan infografis prakiraan cuaca maritim untuk berbagai wilayah perairan Maluku, termasuk Perairan Pulau Ambon–Pulau Lease. Waktu pembaruan dan periode prakiraan perlu diperiksa pada halaman sumber.',
         content: [
