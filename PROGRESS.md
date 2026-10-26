@@ -289,6 +289,36 @@ Menjawab kebutuhan integrasi 2 berkas sampul resmi format PNG yang disertakan da
 
 ---
 
+## 🔐 11. Implementasi Autentikasi Google SSO & Peningkatan Halaman Login (26 Oktober 2026)
+
+Menjawab kebutuhan autentikasi yang lebih cepat dan aman bagi tim administrator/forecaster BMKG:
+
+1. **Integrasi Laravel Socialite (Google OAuth 2.0):**
+   - Menginstal `laravel/socialite` versi ^5.31.
+   - Migrasi database: Menambahkan kolom `google_id` (unique, nullable), `avatar` (nullable), dan membuat `password` nullable pada tabel `users`.
+   - Menambahkan konfigurasi provider Google di [config/services.php](file:///e:/herd/test/config/services.php) dan variabel lingkungan di [.env](file:///e:/herd/test/.env) serta [.env.example](file:///e:/herd/test/.env.example).
+   - Opsi pembatasan domain (`GOOGLE_RESTRICT_DOMAIN=true`) untuk mengunci hanya email berakhiran `@bmkg.go.id` yang diizinkan mengakses panel admin.
+
+2. **Backend Controller & Routing:**
+   - Dibuat controller [GoogleAuthController.php](file:///e:/herd/test/app/Http/Controllers/Auth/GoogleAuthController.php):
+     - `redirect()`: Mengarahkan pengguna ke Google OAuth consent screen dengan parameter domain hint BMKG (`hd=bmkg.go.id`).
+     - `callback()`: Memverifikasi profil Google user, melakukan otentikasi login, mendaftarkan akun baru secara otomatis atau menyinkronkan dengan user yang sudah ada, meregenerasi session, dan redirect ke panel admin.
+   - Rute terdaftar: `/panel-stamar/auth/google` dan `/panel-stamar/auth/google/callback`.
+
+3. **Penyederhanaan Halaman Login Khusus Google SSO ([login.tsx](file:///e:/herd/test/resources/js/pages/auth/login.tsx)):**
+   - Menghapus form manual input email/password, checkbox ingat saya, dan link lupa password.
+   - Halaman login kini difokuskan secara eksklusif menggunakan **Google Single Sign-On (SSO)** melalui tombol interaktif dengan logo resmi Google beranimasi hover dan badge SSO BMKG.
+   - Dilengkapi kotak informasi keamanan resmi: *"Akses Resmi Terpusat - Panel ini dilindungi oleh Google OAuth 2.0"*.
+   - Menambahkan banner notifikasi status / error adaptif untuk feedback langsung.
+   - Menambahkan badge footer keamanan: *"Dilindungi Rate Limiting, Zero-Trust Architecture, & SSL 256-Bit"*.
+
+4. **Konfigurasi Retensi Sesi 3 Hari (Inactivity Expiration):**
+   - Mengatur `SESSION_LIFETIME=4320` (4.320 menit = tepat 3 hari) dan `SESSION_EXPIRE_ON_CLOSE=false` di file [.env](file:///e:/herd/test/.env).
+   - Menghubungkan sesi ke `SESSION_DRIVER=database` dengan parameter `remember: false` pada `Auth::login()`.
+   - **Mekanisme:** Informasi login tersimpan di perangkat selama pengguna aktif. Setiap kali pengguna membuka web, timestamp aktivitas diperbarui. Namun jika perangkat **tidak mengakses sistem selama lebih dari 3 hari**, sesi otomatis kedaluwarsa dan pengguna diwajibkan untuk login ulang melalui Google SSO.
+
+---
+
 _Catatan: Anda dapat selalu merujuk ke file ini (`PROGRESS.md`) kapan pun Anda membuka kembali workspace Anda._
 
 

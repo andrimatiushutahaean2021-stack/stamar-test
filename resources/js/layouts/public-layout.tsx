@@ -85,7 +85,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     ];
 
     return (
-        <div className="flex min-h-screen flex-col bg-background font-sans">
+        <div className="flex min-h-screen flex-col bg-background font-sans min-w-[320px]">
             {/* Running Text / Welcome Banner */}
             <div className="relative z-[60] flex items-center bg-blue-900 border-b border-blue-800/40 px-4 py-1.5 text-xs font-medium text-slate-200 shadow-xs">
                 <div className="flex items-center gap-1.5 mr-4 font-bold tracking-wider whitespace-nowrap uppercase text-blue-300">
@@ -107,19 +107,19 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 }`}
             >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-20 items-center justify-between">
+                    <div className="flex h-20 items-center justify-between gap-2">
                         {/* Logo & Identitas Resmi BMKG */}
-                        <Link href="/" className="flex flex-shrink-0 items-center gap-3 sm:gap-3.5 group">
+                        <Link href="/" className="flex flex-shrink items-center gap-2.5 sm:gap-3.5 group min-w-0 pr-2">
                             <img
                                 src="/images/logo-bmkg.png"
                                 alt="Logo BMKG"
-                                className="h-11 sm:h-12 w-auto object-contain transition-transform shrink-0"
+                                className="h-10 sm:h-12 w-auto object-contain transition-transform shrink-0"
                             />
-                            <div className="flex flex-col text-left">
-                                <span className="text-xs sm:text-sm lg:text-[15px] font-bold tracking-tight text-foreground leading-tight">
+                            <div className="flex flex-col text-left min-w-0">
+                                <span className="text-[11px] sm:text-sm lg:text-[15px] font-bold tracking-tight text-foreground leading-tight truncate sm:whitespace-normal">
                                     Badan Meteorologi Klimatologi Dan Geofisika
                                 </span>
-                                <span className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                                <span className="text-[9px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate sm:whitespace-normal">
                                     Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
                                 </span>
                             </div>
@@ -432,39 +432,31 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 <p className="text-[11px] text-slate-400 mb-3">
                                     Akses info cuaca maritim, gempa bumi & tsunami real-time melalui smartphone Anda.
                                 </p>
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-2.5 pt-1">
                                     <a
                                         href="https://play.google.com/store/apps/details?id=com.Info_BMKG"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="group flex items-center gap-2.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 transition-all hover:border-slate-500 hover:bg-slate-800"
+                                        className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.98] w-fit"
                                     >
-                                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
-                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.95 1.95 0 01-.61-.954V2.768c0-.36.216-.71.609-.954zm11.602 11.602l2.366-2.366-2.366-2.366v4.732zm1.414-6.146l3.834 2.215a1.74 1.74 0 010 3.03l-3.834 2.215-2.062-2.062 2.062-2.062zM4.717.755L14.28 10.32l-2.06 2.06-7.503-7.504A1.94 1.94 0 014.717.755z"/>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div className="text-[9px] uppercase tracking-wider text-slate-400">Tersedia di</div>
-                                            <div className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">Google Play Store</div>
-                                        </div>
+                                        <img
+                                            src="/images/google-play-badge.svg"
+                                            alt="Temukan di Google Play"
+                                            className="h-10 w-auto object-contain drop-shadow-xs"
+                                        />
                                     </a>
 
                                     <a
                                         href="https://apps.apple.com/id/app/info-bmkg/id1114372539"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="group flex items-center gap-2.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 transition-all hover:border-slate-500 hover:bg-slate-800"
+                                        className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.98] w-fit"
                                     >
-                                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
-                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.66-.8 1.11-1.92.99-3.04-.96.04-2.12.64-2.8 1.44-.6.69-1.12 1.82-.98 2.91 1.07.08 2.15-.54 2.79-1.31z"/>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div className="text-[9px] uppercase tracking-wider text-slate-400">Unduh di</div>
-                                            <div className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">Apple App Store</div>
-                                        </div>
+                                        <img
+                                            src="/images/app-store-badge.svg"
+                                            alt="Unduh di App Store"
+                                            className="h-10 w-auto object-contain drop-shadow-xs"
+                                        />
                                     </a>
                                 </div>
                             </div>

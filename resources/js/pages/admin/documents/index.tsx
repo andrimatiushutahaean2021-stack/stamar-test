@@ -358,30 +358,30 @@ export default function DocumentIndex({
     };
 
     const processFilesSelection = (filesArr: File[]): boolean => {
-        const allowedExts = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'ogg'];
+        const allowedExts = ['png', 'pdf', 'mp4', 'jpg', 'jpeg'];
         const invalidFile = filesArr.find((f) => {
             const ext = f.name.split('.').pop()?.toLowerCase() || '';
             return !allowedExts.includes(ext);
         });
         if (invalidFile) {
-            alert(`File "${invalidFile.name}" tidak didukung. Format didukung: PDF, PNG, JPG, JPEG, MP4, WEBM.`);
+            alert(`File "${invalidFile.name}" tidak didukung. Format yang didukung hanya: PNG, PDF, MP4, dan JPG.`);
             return false;
         }
 
-        // Khusus peringatan-dini: izinkan Gambar (.png, .jpg, .jpeg, .webp), Video (.mp4, .webm, .mov, .ogg), dan Dokumen (.pdf)
+        // Khusus peringatan-dini: izinkan Gambar (.png, .jpg, .jpeg), Video (.mp4), dan Dokumen (.pdf)
         if (data.category === 'peringatan-dini') {
             const invalidWarning = filesArr.find((f) => {
                 const lower = f.name.toLowerCase();
-                return !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
+                return !['.png', '.jpg', '.jpeg', '.mp4', '.pdf'].some((ext) => lower.endsWith(ext));
             });
             if (invalidWarning) {
-                alert(`File "${invalidWarning.name}" ditolak. Kategori Peringatan Dini wajib berformat Gambar (.PNG/.JPG) atau Video (.MP4/.WEBM).`);
+                alert(`File "${invalidWarning.name}" ditolak. Kategori Peringatan Dini wajib berformat Gambar (.PNG/.JPG), Video (.MP4), atau Dokumen (.PDF).`);
                 return false;
             }
         } else if (data.category === 'infografis') {
             const nonImg = filesArr.find((f) => {
                 const lower = f.name.toLowerCase();
-                return !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
+                return !['.png', '.jpg', '.jpeg'].some((ext) => lower.endsWith(ext));
             });
             if (nonImg) {
                 alert(`File "${nonImg.name}" ditolak. Kategori Infografis Cuaca saat ini wajib berformat gambar (.PNG / .JPG).`);
@@ -391,17 +391,17 @@ export default function DocumentIndex({
             const invalidWarning = filesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
-                return isWarning && !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
+                return isWarning && !['.png', '.jpg', '.jpeg', '.mp4', '.pdf'].some((ext) => lower.endsWith(ext));
             });
             if (invalidWarning) {
-                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk Peringatan Dini wajib Gambar (.PNG/.JPG) atau Video (.MP4/.WEBM).`);
+                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk Peringatan Dini wajib Gambar (.PNG/.JPG) atau Video (.MP4).`);
                 return false;
             }
 
             const invalidInfografis = filesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
-                return isInfografis && !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
+                return isInfografis && !['.png', '.jpg', '.jpeg'].some((ext) => lower.endsWith(ext));
             });
             if (invalidInfografis) {
                 alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis saat ini wajib .PNG / .JPG.`);
@@ -432,16 +432,16 @@ export default function DocumentIndex({
         if (data.category === 'peringatan-dini') {
             const invalidWarning = data.files.find((f) => {
                 const lower = f.name.toLowerCase();
-                return !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
+                return !['.png', '.jpg', '.jpeg', '.mp4', '.pdf'].some((ext) => lower.endsWith(ext));
             });
             if (invalidWarning) {
-                alert(`File "${invalidWarning.name}" ditolak. Kategori Peringatan Dini wajib berformat Gambar (.PNG/.JPG) untuk 1 Hari atau Video (.MP4/.WEBM) untuk 3 Hari.`);
+                alert(`File "${invalidWarning.name}" ditolak. Kategori Peringatan Dini wajib berformat Gambar (.PNG/.JPG) untuk 1 Hari atau Video (.MP4) untuk 3 Hari.`);
                 return;
             }
         } else if (data.category === 'infografis') {
             const nonImg = data.files.find((f) => {
                 const lower = f.name.toLowerCase();
-                return !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
+                return !['.png', '.jpg', '.jpeg'].some((ext) => lower.endsWith(ext));
             });
             if (nonImg) {
                 alert(`File "${nonImg.name}" ditolak. Kategori Infografis Cuaca saat ini wajib berformat gambar (.PNG / .JPG).`);
@@ -451,17 +451,17 @@ export default function DocumentIndex({
             const invalidWarning = data.files.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
-                return isWarning && !['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.webm', '.mov', '.ogg', '.pdf'].some((ext) => lower.endsWith(ext));
+                return isWarning && !['.png', '.jpg', '.jpeg', '.mp4', '.pdf'].some((ext) => lower.endsWith(ext));
             });
             if (invalidWarning) {
-                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk Peringatan Dini wajib Gambar (.PNG/.JPG) atau Video (.MP4/.WEBM).`);
+                alert(`File "${invalidWarning.name}" terdeteksi sebagai Peringatan Dini. Format file untuk Peringatan Dini wajib Gambar (.PNG/.JPG) atau Video (.MP4).`);
                 return;
             }
 
             const invalidInfografis = data.files.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
-                return isInfografis && !['.png', '.jpg', '.jpeg', '.webp'].some((ext) => lower.endsWith(ext));
+                return isInfografis && !['.png', '.jpg', '.jpeg'].some((ext) => lower.endsWith(ext));
             });
             if (invalidInfografis) {
                 alert(`File "${invalidInfografis.name}" terdeteksi sebagai Infografis Cuaca. Format file untuk fitur Infografis wajib gambar (.PNG / .JPG).`);
@@ -581,7 +581,7 @@ export default function DocumentIndex({
                                 </p>
                             </div>
                             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                Maks. 112 File • Total 112MB • PDF / PNG / JPG / MP4 / WEBM
+                                Maks. 112 File • Total 112MB • PNG / PDF / MP4 / JPG
                             </span>
                         </div>
 
@@ -676,7 +676,7 @@ export default function DocumentIndex({
                                         id="smart-file-upload"
                                         type="file"
                                         multiple
-                                        accept=".pdf,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov"
+                                        accept=".png,.pdf,.mp4,.jpg,.jpeg"
                                         onChange={(e) => {
                                             const fileList = e.target.files;
                                             if (fileList && fileList.length > 0) {
@@ -722,8 +722,8 @@ export default function DocumentIndex({
 
                                     data.files.forEach((f) => {
                                         const name = f.name.toLowerCase();
-                                        const isPng = name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp');
-                                        const isVideo = name.endsWith('.mp4') || name.endsWith('.webm') || name.endsWith('.mov') || name.endsWith('.ogg');
+                                        const isPng = name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg');
+                                        const isVideo = name.endsWith('.mp4');
 
                                         if (
                                             name.includes('peringatan') ||
@@ -731,7 +731,8 @@ export default function DocumentIndex({
                                             name.includes('dini') ||
                                             name.includes('gelombang') ||
                                             isVideo ||
-                                            name.includes('instagram')
+                                            name.includes('instagram') ||
+                                            /(?:^|[^a-z0-9])(?:no[._\-\s]?pd|nopd|nihil)/i.test(name)
                                         ) {
                                             detectedCounts['peringatan-dini']++;
                                         } else if (
@@ -962,8 +963,8 @@ export default function DocumentIndex({
                                             )}
                                         </div>
 
-                                {/* Opsi Pembersihan Berkas Tanggal Lama (Hanya untuk MFY & Peringatan Dini) */}
-                                {(isMfyCategory || isPeringatanDini) && (
+                                {/* Opsi Pembersihan Berkas Produk Hari Sebelumnya (Wisata Bahari, Peringatan Dini, & MFY) */}
+                                {(isMfyCategory || isPeringatanDini || isBahari) && (
                                     <div className="mt-4 pt-3 border-t border-border/60">
                                         <label
                                             htmlFor="purge_old_checkbox"
@@ -977,10 +978,10 @@ export default function DocumentIndex({
                                             />
                                             <div className="space-y-0.5">
                                                 <span className="text-xs font-bold text-amber-900 dark:text-amber-200 block">
-                                                    Bersihkan otomatis berkas di tanggal sebelumnya (Hapus Berkas Lama)?
+                                                    Hapus berkas produk hari sebelumnya secara otomatis?
                                                 </span>
                                                 <p className="text-[11px] leading-relaxed text-amber-800/80 dark:text-amber-300/80">
-                                                    Jika dicentang, berkas produk di tanggal yang lebih lama dari 2 tanggal aktif terbaru akan otomatis dihapus bersih dari sistem dan penyimpanan agar folder tetap rapi dan tidak menumpuk.
+                                                    Jika dicentang, seluruh berkas produk dari hari sebelumnya (tanggal sebelum produk baru ini) pada kategori terkait (seperti Wisata Bahari & Peringatan Dini) akan otomatis dibersihkan dari penyimpanan server agar hanya produk terbaru yang aktif.
                                                 </p>
                                             </div>
                                         </label>
@@ -1260,13 +1261,18 @@ export default function DocumentIndex({
                         <table className="w-full text-left text-sm">
                             <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
                                 <tr>
-                                    <th className="w-10 px-4 py-4 text-center">
-                                        <Checkbox
-                                            checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
-                                            onCheckedChange={toggleSelectAll}
-                                            aria-label="Pilih semua file"
-                                            className="translate-y-0.5"
-                                        />
+                                    <th 
+                                        className="w-10 px-4 py-4 text-center cursor-pointer select-none"
+                                        onClick={toggleSelectAll}
+                                        title="Klik untuk memilih atau membatalkan semua berkas"
+                                    >
+                                        <div className="flex items-center justify-center">
+                                            <Checkbox
+                                                checked={isAllSelected ? true : isSomeSelected ? 'indeterminate' : false}
+                                                aria-label="Pilih semua file"
+                                                className="translate-y-0.5 pointer-events-none"
+                                            />
+                                        </div>
                                     </th>
                                     <th className="w-12 px-2 py-4 text-center">
                                         No
@@ -1348,17 +1354,28 @@ export default function DocumentIndex({
                                         return (
                                             <tr
                                                 key={doc.id}
-                                                className={`group transition-colors ${
-                                                    isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-muted/30'
+                                                onClick={() => toggleSelectOne(doc.id)}
+                                                className={`group transition-all cursor-pointer select-none ${
+                                                    isSelected
+                                                        ? 'bg-primary/10 dark:bg-primary/20 border-l-4 border-l-primary shadow-xs'
+                                                        : 'hover:bg-muted/40'
                                                 }`}
+                                                title="Klik baris untuk memilih berkas ini"
                                             >
-                                                <td className="px-4 py-4 text-center">
-                                                    <Checkbox
-                                                        checked={isSelected}
-                                                        onCheckedChange={() => toggleSelectOne(doc.id)}
-                                                        aria-label={`Pilih file ${doc.title}`}
-                                                        className="translate-y-0.5"
-                                                    />
+                                                <td 
+                                                    className="px-4 py-4 text-center cursor-pointer"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleSelectOne(doc.id);
+                                                    }}
+                                                >
+                                                    <div className="flex items-center justify-center">
+                                                        <Checkbox
+                                                            checked={isSelected}
+                                                            aria-label={`Pilih file ${doc.title}`}
+                                                            className="translate-y-0.5 pointer-events-none"
+                                                        />
+                                                    </div>
                                                 </td>
                                                 <td className="px-2 py-4 text-center font-mono text-xs text-muted-foreground">
                                                     {rowNumber}
@@ -1437,7 +1454,10 @@ export default function DocumentIndex({
                                                         },
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td 
+                                                    className="px-6 py-4 text-right"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         {/* Pratinjau / Preview */}
                                                         <a

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Models\Document;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,8 +31,30 @@ Route::get('/', function () {
               ->orWhereIn('file_type', ['mp4', 'webm', 'mov', 'ogg']);
         })
         ->orderByDesc('forecast_date')
+        ->orderByRaw("CASE WHEN file_type IN ('mp4', 'webm', 'mov', 'ogg') THEN 0 ELSE 1 END")
         ->latest('id')
         ->first();
+
+    // Fallback Cerdas: Jika rilis 1-hari adalah status NO PD (Nihil Peringatan Dini)
+    // dan pada tanggal tersebut forecaster tidak mengunggah berkas terpisah untuk 3-hari,
+    // maka berkas NO PD 1-hari secara otomatis mengisi slide 3-hari agar kedua slide berstatus "Nihil / Aman".
+    if ($warning1Hari) {
+        $is1HariNoPd = str_contains(strtolower($warning1Hari->title ?? ''), 'nihil')
+            || str_contains(strtolower($warning1Hari->title ?? ''), 'no pd')
+            || preg_match('/(?:^|[^a-z0-9])(?:no[._\-\s]?pd|nopd|nihil)/i', $warning1Hari->file_path ?? '');
+
+        $hasFresh3Hari = $warning3Hari
+            && $warning3Hari->forecast_date >= $warning1Hari->forecast_date
+            && $warning3Hari->id !== $warning1Hari->id;
+
+        if ($is1HariNoPd && !$hasFresh3Hari) {
+            $warning3Hari = clone $warning1Hari;
+            $warning3Hari->period_type = '3-hari';
+            $formattedDateStr = $warning1Hari->forecast_date ? date('d M Y', strtotime($warning1Hari->forecast_date)) : date('d M Y');
+            $warning3Hari->title = "Peringatan Dini Gelombang Maluku 3 Hari Kedepan (Nihil / Kondisi Aman) - {$formattedDateStr}";
+            $warning3Hari->description = "Rilis resmi BMKG: Kondisi dinamika gelombang perairan Maluku terpantau aman dan kondusif untuk 72 jam (3 hari) kedepan.";
+        }
+    }
 
     $warningDocs = Document::where('category', 'peringatan-dini')
         ->orderByDesc('forecast_date')
@@ -308,8 +331,13 @@ Route::inertia('/berita', 'berita')->name('berita');
 Route::redirect('/siaran-pers', '/berita');
 
 Route::redirect('/login', '/panel-stamar/login');
+Route::redirect('/forgot-password', '/panel-stamar/forgot-password');
 Route::redirect('/admin', '/admin/documents');
 Route::redirect('/dashboard', '/admin/documents');
+
+// Google SSO Authentication
+Route::get('/panel-stamar/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/panel-stamar/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 require __DIR__.'/settings.php';
 

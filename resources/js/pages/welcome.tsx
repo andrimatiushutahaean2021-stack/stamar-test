@@ -1034,22 +1034,30 @@ export default function Welcome({
                             <p className="text-xs text-muted-foreground leading-relaxed">
                                 Dapatkan info cuaca maritim, gempa bumi, dan peringatan dini langsung di smartphone Anda.
                             </p>
-                            <div className="mt-3 flex gap-2">
+                            <div className="mt-3 flex flex-wrap gap-2">
                                 <a
                                     href="https://play.google.com/store/apps/details?id=com.Info_BMKG"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1 rounded-lg border border-border bg-muted/40 p-2 text-center text-[11px] font-bold text-foreground hover:bg-muted transition-colors"
+                                    className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    Google Play ↗
+                                    <img
+                                        src="/images/google-play-badge.svg"
+                                        alt="Temukan di Google Play"
+                                        className="h-9 w-auto object-contain drop-shadow-xs"
+                                    />
                                 </a>
                                 <a
-                                    href="https://itunes.apple.com/id/app/id1114372539?l=id"
+                                    href="https://apps.apple.com/id/app/info-bmkg/id1114372539"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1 rounded-lg border border-border bg-muted/40 p-2 text-center text-[11px] font-bold text-foreground hover:bg-muted transition-colors"
+                                    className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    App Store ↗
+                                    <img
+                                        src="/images/app-store-badge.svg"
+                                        alt="Unduh di App Store"
+                                        className="h-9 w-auto object-contain drop-shadow-xs"
+                                    />
                                 </a>
                             </div>
                         </div>

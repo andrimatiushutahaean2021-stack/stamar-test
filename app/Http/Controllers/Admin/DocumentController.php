@@ -189,11 +189,7 @@ class DocumentController extends Controller
             'application/pdf' => 'pdf',
             'image/png' => 'png',
             'image/jpeg' => 'jpg',
-            'image/webp' => 'webp',
             'video/mp4' => 'mp4',
-            'video/webm' => 'webm',
-            'video/quicktime' => 'mov',
-            'video/ogg' => 'ogg',
         ];
 
         $formCategory = $request->input('category', 'pelabuhan');
@@ -203,6 +199,8 @@ class DocumentController extends Controller
 
         $uploadedCount = 0;
         $dateSuffix = date('dmY_His');
+        $uploadedDocIds = [];
+        $categoryNewestDates = [];
 
         $categoryCounts = [
             'all' => 0,
@@ -221,7 +219,7 @@ class DocumentController extends Controller
 
             if (!array_key_exists($mimeType, $allowedMimes)) {
                 return redirect()->back()->withErrors([
-                    'file' => "Berkas '{$file->getClientOriginalName()}' ditolak: Tipe konten binary ({$mimeType}) tidak diizinkan demi keamanan server."
+                    'file' => "Berkas '{$file->getClientOriginalName()}' ditolak: Format tidak didukung. Format yang diizinkan hanya PNG, PDF, MP4, dan JPG."
                 ]);
             }
 
@@ -245,7 +243,7 @@ class DocumentController extends Controller
             } else {
                 // Jika formCategory diset 'pelabuhan' atau 'provinsi', tapi berkasnya adalah gambar (.png/.jpg)
                 // dan berformat AH atau P_AH, sistem otomatis mengalihkannya ke 'infografis' agar tidak ditolak sebagai PDF
-                if (in_array($formCategory, ['pelabuhan', 'mfy', 'provinsi']) && in_array($safeExtension, ['png', 'jpg', 'jpeg', 'webp'])) {
+                if (in_array($formCategory, ['pelabuhan', 'mfy', 'provinsi']) && in_array($safeExtension, ['png', 'jpg', 'jpeg'])) {
                     $targetCategory = 'infografis';
                 } else {
                     $targetCategory = $formCategory;
@@ -278,15 +276,15 @@ class DocumentController extends Controller
                 }
             }
 
-            // Validasi khusus: Berkas Peringatan Dini (1 Hari Gambar PNG/JPG, 3 Hari Video MP4/WebM, atau PDF dokumen)
-            if ($targetCategory === 'peringatan-dini' && !in_array($safeExtension, ['png', 'jpg', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'ogg', 'pdf'])) {
+            // Validasi khusus: Berkas Peringatan Dini (1 Hari Gambar PNG/JPG, 3 Hari Video MP4, atau Dokumen PDF)
+            if ($targetCategory === 'peringatan-dini' && !in_array($safeExtension, ['png', 'jpg', 'jpeg', 'mp4', 'pdf'])) {
                 return redirect()->back()->withErrors([
-                    'file' => "Berkas '{$originalName}' ditolak: Format untuk Peringatan Dini wajib berupa Gambar (.PNG/.JPG), Video (.MP4/.WEBM), atau Dokumen (.PDF)."
+                    'file' => "Berkas '{$originalName}' ditolak: Format untuk Peringatan Dini wajib berupa Gambar (.PNG/.JPG), Video (.MP4), atau Dokumen (.PDF)."
                 ]);
             }
 
             // Validasi khusus: Berkas Infografis Cuaca saat ini wajib format PNG/JPG
-            if ($targetCategory === 'infografis' && !in_array($safeExtension, ['png', 'jpg', 'jpeg', 'webp'])) {
+            if ($targetCategory === 'infografis' && !in_array($safeExtension, ['png', 'jpg', 'jpeg'])) {
                 return redirect()->back()->withErrors([
                     'file' => "Berkas '{$originalName}' ditolak: Format untuk Infografis Cuaca saat ini wajib berformat gambar (.PNG / .JPG)."
                 ]);
@@ -305,14 +303,29 @@ class DocumentController extends Controller
             // Sesuaikan period_type jika peringatan dini
             if ($targetCategory === 'peringatan-dini') {
                 $lowerName = strtolower($originalName);
-                $isExtVideo = in_array($safeExtension, ['mp4', 'webm', 'mov', 'ogg']);
+                $isExtVideo = in_array($safeExtension, ['mp4']);
+                $isNoPd = (bool) (
+                    (!empty($parsed['is_no_pd'])) ||
+                    preg_match('/(?:^|[^a-zA-Z0-9])(?:no[._\-\s]?pd|nopd|nihil(?:[._\-\s]?pd)?)/i', $baseName)
+                );
+
+                // Bersihkan string tanggal agar angka tanggal (seperti 20261023) tidak keliru dianggap indikator '3' hari atau '1' hari
+                $nameWithoutDates = preg_replace('/(?:\d{4}[-_.]?\d{2}[-_.]?\d{2}|\d{2}[-_.]?\d{2}[-_.]?\d{4}|\d{6,8})/', '', $lowerName);
+                $isThreeExplicit = preg_match('/(?:^|[^0-9])(?:3[\s_.-]*(?:hari|days?|h\b)?|tiga)(?:$|[^0-9])/i', $nameWithoutDates)
+                    || str_contains($lowerName, '72');
+                $isOneExplicit = preg_match('/(?:^|[^0-9])(?:1[\s_.-]*(?:hari|days?|h\b)?|satu)(?:$|[^0-9])/i', $nameWithoutDates)
+                    || str_contains($lowerName, '24');
 
                 // Jika diunggah bersamaan (lebih dari 1 berkas), atau form diset 'auto':
-                // Deteksi otomatis masing-masing berkas secara presisi (video/nama '3' => 3-hari, nama '1' => 1-hari)
+                // Deteksi otomatis masing-masing berkas secara presisi:
+                // - File video atau eksplisit 3-hari => '3-hari'
+                // - File NO PD / Nihil atau gambar 1-hari => '1-hari'
                 if (count($files) > 1 || $formPeriodType === 'auto' || empty($formPeriodType)) {
-                    if ($isExtVideo || str_contains($lowerName, '3') || str_contains($lowerName, 'tiga')) {
+                    if ($isNoPd) {
+                        $periodType = ($isExtVideo || $isThreeExplicit) ? '3-hari' : '1-hari';
+                    } elseif ($isExtVideo || $isThreeExplicit) {
                         $periodType = '3-hari';
-                    } elseif (str_contains($lowerName, '1') || str_contains($lowerName, 'satu')) {
+                    } elseif ($isOneExplicit) {
                         $periodType = '1-hari';
                     } else {
                         // Default jika tidak ada angka: video adalah 3-hari, gambar adalah 1-hari
@@ -324,7 +337,9 @@ class DocumentController extends Controller
                         $periodType = $formPeriodType;
                     } elseif (!empty($parsed['period_type'])) {
                         $periodType = $parsed['period_type'];
-                    } elseif ($isExtVideo || str_contains($lowerName, '3')) {
+                    } elseif ($isNoPd) {
+                        $periodType = ($isExtVideo || $isThreeExplicit) ? '3-hari' : '1-hari';
+                    } elseif ($isExtVideo || $isThreeExplicit) {
                         $periodType = '3-hari';
                     } else {
                         $periodType = '1-hari';
@@ -363,9 +378,17 @@ class DocumentController extends Controller
                         $title = "Infografis Cuaca Maluku - {$formattedDateStr}";
                     }
                 } elseif ($targetCategory === 'peringatan-dini') {
+                    $isNoPd = (bool) (
+                        (!empty($parsed['is_no_pd'])) ||
+                        preg_match('/(?:^|[^a-zA-Z0-9])(?:no[._\-\s]?pd|nopd|nihil(?:[._\-\s]?pd)?)/i', $baseName)
+                    );
                     $periodLabel = ($periodType === '3-hari') ? '3 Hari Kedepan' : '1 Hari Kedepan';
                     $formattedDateStr = $forecastDate ? date('d M Y', strtotime($forecastDate)) : date('d M Y');
-                    $title = "Peringatan Dini Gelombang Maluku {$periodLabel} - {$formattedDateStr}";
+                    if ($isNoPd) {
+                        $title = "Peringatan Dini Gelombang Maluku {$periodLabel} (Nihil / Kondisi Aman) - {$formattedDateStr}";
+                    } else {
+                        $title = "Peringatan Dini Gelombang Maluku {$periodLabel} - {$formattedDateStr}";
+                    }
                 } elseif ($targetCategory === 'bahari') {
                     // Beri judul rapi untuk slide / destinasi wisata bahari
                     $title = $originalName;
@@ -382,18 +405,28 @@ class DocumentController extends Controller
             $filePath = $file->storeAs($targetCategory, $fileName, 'public');
             $fileSize = $this->formatSizeUnits($file->getSize());
 
-            Document::create([
+            $docDescription = $request->input('description', null);
+            if (!$docDescription && $targetCategory === 'peringatan-dini' && !empty($isNoPd)) {
+                $docDescription = "Rilis resmi BMKG: Tidak ada potensi gelombang tinggi (kondisi tenang dan kondusif) untuk {$periodLabel}.";
+            }
+
+            $createdDoc = Document::create([
                 'title' => $title,
                 'category' => $targetCategory,
                 'region_code' => $regionCode,
                 'region_number' => $regionNumber,
                 'forecast_date' => $forecastDate,
                 'period_type' => $periodType,
-                'description' => $request->input('description', null),
+                'description' => $docDescription,
                 'file_path' => $filePath,
                 'file_type' => $safeExtension,
                 'file_size' => $fileSize,
             ]);
+
+            $uploadedDocIds[] = $createdDoc->id;
+            if ($forecastDate) {
+                $categoryNewestDates[$targetCategory] = max($categoryNewestDates[$targetCategory] ?? '', $forecastDate);
+            }
 
             $uploadedCount++;
             $categoryKey = in_array($targetCategory, ['pelabuhan', 'mfy']) ? 'pelabuhan' : $targetCategory;
@@ -402,12 +435,12 @@ class DocumentController extends Controller
             }
         }
 
-        // Jika admin memilih opsi pembersihan berkas di tanggal sebelumnya (purge_old)
+        // Jika admin memilih opsi pembersihan berkas produk hari sebelumnya (purge_old)
         $purgedCount = 0;
         if ($request->boolean('purge_old')) {
             $touchedCategories = array_keys(array_filter($categoryCounts, fn($c) => $c > 0));
             foreach ($touchedCategories as $cat) {
-                // Untuk kategori produk harian/rolling window & peringatan dini
+                // Untuk kategori produk harian, peringatan dini, maupun wisata bahari
                 $query = Document::query();
                 if ($cat === 'pelabuhan') {
                     $query->whereIn('category', ['pelabuhan', 'mfy']);
@@ -415,28 +448,29 @@ class DocumentController extends Controller
                     $query->where('category', $cat);
                 }
 
-                // Cari 2 tanggal terbaru yang harus dipertahankan
-                $latestDates = (clone $query)
-                    ->whereNotNull('forecast_date')
-                    ->distinct()
-                    ->orderBy('forecast_date', 'desc')
-                    ->limit(2)
-                    ->pluck('forecast_date')
-                    ->toArray();
+                // Tentukan tanggal aktif terbaru dari kumpulan berkas yang baru diunggah
+                $activeDate = $categoryNewestDates[$cat] 
+                    ?? (clone $query)->whereIn('id', $uploadedDocIds)->whereNotNull('forecast_date')->max('forecast_date')
+                    ?? date('Y-m-d');
 
-                if (!empty($latestDates)) {
-                    // Berkas yang tanggalnya lebih lama dari 2 tanggal terbaru
-                    $oldDocs = (clone $query)
-                        ->whereNotIn('forecast_date', $latestDates)
-                        ->get();
+                // Berkas produk yang tanggalnya lebih lama dari activeDate (hari/tanggal sebelumnya)
+                $oldDocs = (clone $query)
+                    ->whereNotIn('id', $uploadedDocIds)
+                    ->where(function ($q) use ($activeDate) {
+                        $q->whereDate('forecast_date', '<', $activeDate)
+                          ->orWhere(function ($sub) use ($activeDate) {
+                              $sub->whereNull('forecast_date')
+                                  ->whereDate('created_at', '<', $activeDate);
+                          });
+                    })
+                    ->get();
 
-                    foreach ($oldDocs as $oldDoc) {
-                        if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
-                            Storage::disk('public')->delete($oldDoc->file_path);
-                        }
-                        $oldDoc->delete();
-                        $purgedCount++;
+                foreach ($oldDocs as $oldDoc) {
+                    if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                        Storage::disk('public')->delete($oldDoc->file_path);
                     }
+                    $oldDoc->delete();
+                    $purgedCount++;
                 }
             }
         }
@@ -452,11 +486,11 @@ class DocumentController extends Controller
             if ($categoryCounts['peringatan-dini'] > 0) $breakdown[] = "{$categoryCounts['peringatan-dini']} Peringatan Dini";
 
             $detailStr = !empty($breakdown) ? ' (' . implode(', ', $breakdown) . ')' : '';
-            $purgeStr = $purgedCount > 0 ? " serta membersihkan {$purgedCount} berkas lama di tanggal sebelumnya." : '.';
+            $purgeStr = $purgedCount > 0 ? " serta membersihkan {$purgedCount} berkas produk hari sebelumnya." : '.';
             $message = "Sukses! {$uploadedCount} berkas berhasil diproses otomatis dan diterbitkan{$detailStr}{$purgeStr}";
         } else {
             $categoryLabel = $this->getCategoryLabel($targetCategory);
-            $purgeStr = $purgedCount > 0 ? " dan {$purgedCount} berkas di tanggal sebelumnya telah dibersihkan." : '.';
+            $purgeStr = $purgedCount > 0 ? " dan {$purgedCount} berkas produk hari sebelumnya telah dibersihkan." : '.';
             $message = "Berkas berhasil diunggah dan disinkronkan ke kategori {$categoryLabel}{$purgeStr}";
         }
 
@@ -483,7 +517,7 @@ class DocumentController extends Controller
         ) {
             preg_match('/(\d{6,8})/', $filename, $dateMatch);
             $forecastDate = isset($dateMatch[1]) ? $this->parseDateString($dateMatch[1]) : date('Y-m-d');
-            $isImage = in_array($ext, ['png', 'jpg', 'jpeg', 'webp']);
+            $isImage = in_array($ext, ['png', 'jpg', 'jpeg']);
 
             if (str_contains($lower, 'prov') || str_contains($lower, 'maritim')) {
                 return [
@@ -506,11 +540,27 @@ class DocumentController extends Controller
             }
         }
 
-        // 1. Cek Peringatan Dini Gelombang (1 Hari Gambar / 3 Hari Video)
-        if (str_contains($lower, 'peringatan') || str_contains($lower, 'warning') || str_contains($lower, 'dini') || str_contains($lower, 'gelombang')) {
+        // 1. Cek Peringatan Dini Gelombang (1 Hari Gambar / 3 Hari Video / NO PD)
+        $isNoPd = (bool) preg_match('/(?:^|[^a-zA-Z0-9])(?:no[._\-\s]?pd|nopd|nihil(?:[._\-\s]?pd)?)/i', $filename);
+        $isPd = str_contains($lower, 'peringatan')
+            || str_contains($lower, 'warning')
+            || str_contains($lower, 'dini')
+            || str_contains($lower, 'gelombang')
+            || in_array($ext, ['mp4'])
+            || str_contains($lower, 'instagram')
+            || $isNoPd;
+
+        if ($isPd) {
             preg_match('/(\d{6,8})/', $filename, $dateMatch);
             $forecastDate = isset($dateMatch[1]) ? $this->parseDateString($dateMatch[1]) : null;
-            $periodType = (str_contains($lower, '3') || in_array($ext, ['mp4', 'webm', 'mov', 'ogg'])) ? '3-hari' : '1-hari';
+
+            // Bersihkan string tanggal agar angka tanggal (seperti 20261023) tidak keliru dianggap '3' hari atau '1' hari
+            $nameWithoutDates = preg_replace('/(?:\d{4}[-_.]?\d{2}[-_.]?\d{2}|\d{2}[-_.]?\d{2}[-_.]?\d{4}|\d{6,8})/', '', $lower);
+            $isThreeDays = in_array($ext, ['mp4'])
+                || preg_match('/(?:^|[^0-9])(?:3[\s_.-]*(?:hari|days?|h\b)?|tiga)(?:$|[^0-9])/i', $nameWithoutDates)
+                || str_contains($lower, '72');
+
+            $periodType = ($isThreeDays && !$isNoPd) ? '3-hari' : '1-hari';
 
             return [
                 'category' => 'peringatan-dini',
@@ -518,6 +568,7 @@ class DocumentController extends Controller
                 'region_number' => null,
                 'region_code' => null,
                 'forecast_date' => $forecastDate,
+                'is_no_pd' => $isNoPd,
             ];
         }
 

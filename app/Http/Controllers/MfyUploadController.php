@@ -19,7 +19,7 @@ class MfyUploadController extends Controller
         $request->validate([
             'category' => 'nullable|string|in:peringatan-dini,mfy,bahari,buletin',
             'files' => 'required|array|max:112',
-            'files.*' => 'file|mimes:pdf,png,jpg,jpeg|mimetypes:application/pdf,image/png,image/jpeg|max:114688', // 112MB per file
+            'files.*' => 'file|mimes:pdf,png,jpg,jpeg,mp4|max:114688', // 112MB per file
         ]);
 
         $category = $request->input('category', 'mfy');
@@ -44,9 +44,11 @@ class MfyUploadController extends Controller
             'application/pdf' => 'pdf',
             'image/png' => 'png',
             'image/jpeg' => 'jpg',
+            'video/mp4' => 'mp4',
         ];
 
         $uploaded = [];
+        $uploadedDocIds = [];
         $dateSuffix = date('dmY_His');
 
         foreach ($request->file('files') as $file) {
@@ -55,7 +57,7 @@ class MfyUploadController extends Controller
             $mimeType = $finfo->file($file->getRealPath());
 
             if (!array_key_exists($mimeType, $allowedMimes)) {
-                $msg = "Berkas '{$file->getClientOriginalName()}' ditolak: Tipe konten binary ({$mimeType}) tidak diizinkan demi keamanan server.";
+                $msg = "Berkas '{$file->getClientOriginalName()}' ditolak: Format tidak didukung. Format yang diizinkan hanya PNG, PDF, MP4, dan JPG.";
                 if ($request->wantsJson()) {
                     return response()->json(['message' => $msg], 422);
                 }
@@ -102,6 +104,22 @@ class MfyUploadController extends Controller
                     $regionNumber = 0;
                     $docTitle = 'Sampul Prakiraan Cuaca Pelabuhan Provinsi Maluku';
                 }
+            } elseif ($docCategory === 'peringatan-dini' || str_contains($lower, 'peringatan') || str_contains($lower, 'warning') || str_contains($lower, 'gelombang') || in_array($safeExtension, ['mp4']) || preg_match('/(?:^|[^a-zA-Z0-9])(?:no[._\-\s]?pd|nopd|nihil)/i', $baseName)) {
+                $docCategory = 'peringatan-dini';
+                $isExtVideo = in_array($safeExtension, ['mp4']);
+                $isNoPd = (bool) preg_match('/(?:^|[^a-zA-Z0-9])(?:no[._\-\s]?pd|nopd|nihil)/i', $baseName);
+                $nameWithoutDates = preg_replace('/(?:\d{4}[-_.]?\d{2}[-_.]?\d{2}|\d{2}[-_.]?\d{2}[-_.]?\d{4}|\d{6,8})/', '', $lower);
+                $isThreeExplicit = preg_match('/(?:^|[^0-9])(?:3[\s_.-]*(?:hari|days?|h\b)?|tiga)(?:$|[^0-9])/i', $nameWithoutDates) || str_contains($lower, '72');
+
+                if ($isNoPd) {
+                    $periodType = ($isExtVideo || $isThreeExplicit) ? '3-hari' : '1-hari';
+                    $periodLabel = ($periodType === '3-hari') ? '3 Hari Kedepan' : '1 Hari Kedepan';
+                    $docTitle = "Peringatan Dini Gelombang Maluku {$periodLabel} (Nihil / Kondisi Aman) - " . date('d M Y');
+                } else {
+                    $periodType = ($isExtVideo || $isThreeExplicit) ? '3-hari' : '1-hari';
+                    $periodLabel = ($periodType === '3-hari') ? '3 Hari Kedepan' : '1 Hari Kedepan';
+                    $docTitle = "Peringatan Dini Gelombang Maluku {$periodLabel} - " . date('d M Y');
+                }
             } elseif (preg_match('/(?:^|[^a-zA-Z0-9])(?:P[._\-\s]?AH)[._\-\s]?0*([1-9][0-9]?)(?:[._\-\s](\d{6,8}))?/i', $baseName, $m)) {
                 $regionNumber = (int) $m[1];
                 if ($regionNumber >= 1 && $regionNumber <= 18) {
@@ -130,7 +148,7 @@ class MfyUploadController extends Controller
             $path = $file->storeAs($docCategory, $fileName, 'public');
 
             // Daftarkan di Document model
-            Document::create([
+            $created = Document::create([
                 'title' => $docTitle,
                 'category' => $docCategory,
                 'region_number' => $regionNumber,
@@ -144,17 +162,43 @@ class MfyUploadController extends Controller
             ]);
 
             $uploaded[] = $fileName;
+            $uploadedDocIds[] = $created->id;
         }
+
+        $purgedCount = 0;
+        if ($request->boolean('purge_old') && !empty($uploadedDocIds)) {
+            $activeDate = date('Y-m-d');
+            $oldDocs = Document::where('category', $category)
+                ->whereNotIn('id', $uploadedDocIds)
+                ->where(function ($q) use ($activeDate) {
+                    $q->whereDate('forecast_date', '<', $activeDate)
+                      ->orWhere(function ($sub) use ($activeDate) {
+                          $sub->whereNull('forecast_date')
+                              ->whereDate('created_at', '<', $activeDate);
+                      });
+                })
+                ->get();
+
+            foreach ($oldDocs as $oldDoc) {
+                if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                    Storage::disk('public')->delete($oldDoc->file_path);
+                }
+                $oldDoc->delete();
+                $purgedCount++;
+            }
+        }
+
+        $purgeMsg = $purgedCount > 0 ? " serta membersihkan {$purgedCount} berkas hari sebelumnya." : '.';
 
         if ($request->wantsJson()) {
             return response()->json([
                 'status' => 'success',
-                'message' => count($uploaded).' file berhasil diunggah ke folder '.ucfirst($category).'.',
+                'message' => count($uploaded).' file berhasil diunggah ke folder '.ucfirst($category).$purgeMsg,
                 'files' => $uploaded,
             ]);
         }
 
-        return redirect()->back()->with('success', count($uploaded).' file berhasil diunggah.');
+        return redirect()->back()->with('success', count($uploaded).' file berhasil diunggah'.$purgeMsg);
     }
 
     private function formatSizeUnits($bytes)

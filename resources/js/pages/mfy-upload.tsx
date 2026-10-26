@@ -13,6 +13,7 @@ import {
     Compass,
     Waves,
     BookOpen,
+    Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -32,7 +33,7 @@ export default function MfyUpload() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
+    const allowedExtensions = ['png', 'pdf', 'mp4', 'jpg', 'jpeg'];
 
     const categories = [
         {
@@ -78,7 +79,7 @@ export default function MfyUpload() {
                 });
             } else {
                 setErrorMessage(
-                    `File "${file.name}" tidak didukung. Format JSON sudah dinonaktifkan. Hanya file .pdf, .png, .jpg, dan .jpeg yang diperbolehkan.`,
+                    `File "${file.name}" tidak didukung. Format yang diizinkan hanya: PNG, PDF, MP4, dan JPG.`,
                 );
             }
         }
@@ -187,7 +188,7 @@ export default function MfyUpload() {
         if (ext === 'pdf') return <FileText className="h-5 w-5 text-red-500" />;
         if (ext === 'png' || ext === 'jpg' || ext === 'jpeg')
             return <ImageIcon className="h-5 w-5 text-cyan-500" />;
-        if (ext === 'json') return <Code className="h-5 w-5 text-amber-500" />;
+        if (ext === 'mp4') return <Video className="h-5 w-5 text-violet-500" />;
         return <FileText className="h-5 w-5 text-slate-400" />;
     };
 
@@ -343,7 +344,7 @@ export default function MfyUpload() {
                                 ref={fileInputRef}
                                 type="file"
                                 multiple
-                                accept=".pdf,.png,.jpg,.jpeg"
+                                accept=".png,.pdf,.mp4,.jpg,.jpeg"
                                 onChange={handleInputChange}
                                 className="hidden"
                             />
@@ -364,12 +365,16 @@ export default function MfyUpload() {
 
                             <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-400 dark:bg-slate-800">
                                 <span>Format:</span>
+                                <span className="font-bold text-cyan-500">
+                                    PNG / JPG
+                                </span>
+                                <span>&bull;</span>
                                 <span className="font-bold text-red-500">
                                     PDF
                                 </span>
                                 <span>&bull;</span>
-                                <span className="font-bold text-cyan-500">
-                                    PNG / JPG / JPEG
+                                <span className="font-bold text-violet-500">
+                                    MP4
                                 </span>
                             </div>
                         </div>

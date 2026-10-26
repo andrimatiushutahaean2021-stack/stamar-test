@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => trim((string) env('GOOGLE_CLIENT_ID')),
+        'client_secret' => trim((string) env('GOOGLE_CLIENT_SECRET')),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/panel-stamar/auth/google/callback'),
+        'hosted_domain' => env('GOOGLE_HOSTED_DOMAIN', 'bmkg.go.id'),
+        'restrict_domain' => (bool) env('GOOGLE_RESTRICT_DOMAIN', false),
+    ],
+
 ];
