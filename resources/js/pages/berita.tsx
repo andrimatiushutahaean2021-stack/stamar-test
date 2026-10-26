@@ -14,7 +14,8 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-interface ArticleItem {
+
+type ArticleItem = {
     id: number;
     title: string;
     category: string;
@@ -23,71 +24,89 @@ interface ArticleItem {
     image: string;
     summary: string;
     content: string[];
-}
+    sourceUrl: string;
+};
+
 
 export default function Berita() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [activeArticle, setActiveArticle] = useState<ArticleItem | null>(null);
 
-    const newsArticles: ArticleItem[] = [
-        {
-            id: 1,
-            title: 'BMKG Stamar Ambon Gelar SLCN: Tingkatkan Keselamatan Nelayan Tradisional Hadapi Cuaca Ekstrem Laut Banda',
-            category: 'Siaran Pers',
-            date: '18 Oktober 2026',
-            author: 'Humas Stamar Ambon',
-            image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1000&q=80',
-            summary: 'Stasiun Meteorologi Maritim Yos Soedarso Ambon kembali menyelenggarakan Sekolah Lapang Cuaca Nelayan guna meningkatkan kapasitas nelayan dalam memanfaatkan informasi cuaca maritim demi keselamatan berlayar dan peningkatan hasil tangkapan.',
-            content: [
-                'AMBON - Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon secara konsisten berkomitmen mendukung keselamatan para nelayan di Provinsi Maluku. Pada kegiatan Sekolah Lapang Cuaca Nelayan (SLCN) terbaru, puluhan nelayan tradisional diberikan pelatihan intensif mengenai cara membaca arah angin, memprediksi potensi gelombang tinggi, serta mengenali tanda-tanda awan Cumulonimbus (CB) di laut lepas.',
-                'Kepala Stasiun Meteorologi Maritim Yos Soedarso Ambon menyampaikan bahwa Maluku sebagai provinsi kepulauan sangat bergantung pada perairan laut. Dengan pemahaman cuaca yang baik, nelayan tidak hanya terhindar dari marabahaya laut, namun juga mampu merencanakan jalur tangkap ikan yang lebih produktif dan hemat bahan bakar.',
-                'Para peserta mengapresiasi kemudahan akses informasi maritim melalui website dan aplikasi mobile Info BMKG yang kini menyajikan data tinggi gelombang dan peringatan dini hingga 3 hari ke depan.',
-            ],
-        },
-        {
-            id: 2,
-            title: 'Peringatan Gelombang Signifikan 2.5 - 4.0 Meter: BMKG Imbau Nahkoda di Jalur Tanimbar dan Babar Selalu Waspada',
-            category: 'Peringatan Cuaca',
-            date: '16 Oktober 2026',
-            author: 'Tim Forecaster Maritim',
-            image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80',
-            summary: 'Berdasarkan analisis dinamika atmosfer dan laut terkini, peningkatan kecepatan angin timuran hingga 25 knot memicu peningkatan tinggi gelombang laut di bagian selatan kepulauan Maluku.',
-            content: [
-                'AMBON - Forecaster BMKG Stamar Ambon merilis imbauan penting bagi operator pelayaran kapal penyeberangan feri, tongkang, serta perahu nelayan menyusul potensi gelombang laut setinggi 2.5 hingga 4.0 meter di perairan Kepulauan Tanimbar, Babar, dan Laut Arafura.',
-                'Kecepatan angin yang bertiup kencang dari arah Timur ke Tenggara dengan kecepatan mencapai 25 knot diperkirakan masih berpeluang terjadi selama beberapa hari ke depan.',
-                'BMKG meminta pihak pelabuhan dan operator kapal untuk secara berkala memantau update cuaca pelabuhan (AH) dan peta rute penyeberangan sebelum menerbitkan Surat Persetujuan Berlayar (SPB).',
-            ],
-        },
-        {
-            id: 3,
-            title: 'Perkuat Sinergi Maritim: Stamar Ambon Bersama KSOP & Basarnas Tingkatkan Respon Cepat Cuaca Buruk',
-            category: 'Kemitraan',
-            date: '12 Oktober 2026',
-            author: 'Humas Stamar Ambon',
-            image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1000&q=80',
-            summary: 'Pertemuan koordinasi triwulan antara BMKG Maritim, KSOP Kelas I Ambon, dan Kantor SAR Ambon memantapkan integrasi diseminasi peringatan dini di seluruh titik pelabuhan dan dermaga rakyat.',
-            content: [
-                'AMBON - Dalam rangka menciptakan transportasi laut yang aman, selamat, dan tertib, BMKG Stasiun Meteorologi Maritim Ambon menggelar audiensi kerja sama dengan KSOP Kelas I Ambon dan Kantor SAR Ambon.',
-                'Fokus utama kolaborasi ini adalah percepatan penyampaian informasi peringatan dini gelombang ekstrem ke nakhoda kapal rakyat serta integrasi data cuaca maritim ke posko pengawasan pelabuhan Yos Sudarso dan Tulehu.',
-                'Dengan sinergi lintas instansi ini, langkah pencegahan insiden maritim dapat diambil lebih awal dan terkoordinasi secara efektif.',
-            ],
-        },
-        {
-            id: 4,
-            title: 'Kunjungan Edukasi Maritim: Puluhan Siswa Mengenal Pengamatan Cuaca dan Gelombang Laut di BMKG Ambon',
-            category: 'Edukasi',
-            date: '5 Oktober 2026',
-            author: 'Staf Edukasi Stamar',
-            image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1000&q=80',
-            summary: 'Siswa-siswi sekolah menengah diajak berkeliling taman alat meteorologi dan melihat langsung proses kerja forecaster menyusun prakiraan cuaca maritim.',
-            content: [
-                'AMBON - Stasiun Meteorologi Maritim Ambon menerima kunjungan edukasi puluhan siswa dan guru pendamping dalam rangka program BMKG Mengajar.',
-                'Para siswa antusias mempelajari instrumen pengukur arah angin, termometer bola basah dan bola kering, serta pengamatan visual awan laut.',
-                'Diharapkan kegiatan ini memicu minat generasi muda Maluku terhadap ilmu kelautan dan sains kebumian.',
-            ],
-        },
-    ];
+    
+const newsArticles: ArticleItem[] = [
+    {
+        id: 1,
+        title: 'BMKG dan Bakamla RI Perkuat Kolaborasi untuk Keselamatan dan Keamanan Maritim',
+        category: 'siaran pers',
+        date: '31 Agustus 2026',
+        author: 'Humas BMKG',
+        image: '/images/berita/kolaborasi.png',
+        summary:
+            'BMKG dan Bakamla RI memperkuat sinergi melalui pemanfaatan data meteorologi dan oseanografi, informasi pemantauan kapal, serta pengembangan teknologi observasi maritim untuk mendukung keselamatan di wilayah perairan Indonesia.',
+        content: [
+            'Badan Meteorologi, Klimatologi, dan Geofisika (BMKG) memperkuat kerja sama dengan Badan Keamanan Laut Republik Indonesia (Bakamla RI) untuk mendukung keselamatan dan keamanan wilayah perairan Indonesia.',
+            'Kerja sama ini mencakup pertukaran informasi, peningkatan kapasitas sumber daya manusia, dan pemanfaatan sarana serta prasarana. Integrasi data cuaca dan kondisi laut dengan informasi pergerakan kapal juga menjadi salah satu peluang pengembangan.',
+            'Informasi tersebut diharapkan membantu pemantauan wilayah laut, perencanaan operasi, serta penguatan layanan informasi maritim.',
+            'Sumber: BMKG. Artikel ini merupakan berita tingkat nasional, bukan laporan kegiatan khusus STAMAR Ambon.',
+        ],
+        sourceUrl:
+            'https://www.bmkg.go.id/berita/utama/bmkg-dan-bakamla-ri-berkolaborasi-dalam-mendukung-keselamatan-dan-keamanan-maritim',
+    },
+    {
+        id: 2,
+        title: 'BMKG Resmikan HF Radar Array di Aceh untuk Memperkuat Observasi Maritim',
+        category: 'Siaran Pers',
+        date: '8 Oktober 2026',
+        author: 'Humas BMKG',
+        image: '/images/berita/hf-radar.png',
+        summary:
+            'BMKG meresmikan pengoperasian HF Radar Array di Ujong Batee, Aceh Besar, sebagai bagian dari penguatan observasi kelautan, layanan meteorologi maritim, dan mitigasi bencana pesisir.',
+        content: [
+            'BMKG meresmikan pengoperasian High Frequency (HF) Radar Array di Ujong Batee, Kabupaten Aceh Besar, Provinsi Aceh.',
+            'Teknologi tersebut menjadi bagian dari upaya penguatan observasi kelautan dan peningkatan kualitas layanan informasi meteorologi maritim.',
+            'Pengembangan observasi maritim juga mendukung upaya mitigasi bencana di kawasan pesisir.',
+            'Sumber: Siaran Pers resmi BMKG, 8 Oktober 2026. Informasi ini merupakan kegiatan BMKG di Aceh, bukan kegiatan STAMAR Ambon.',
+        ],
+        sourceUrl: 'https://www.bmkg.go.id/siaran-pers/bmkg-resmikan-hf-radar-array-ujong-batee-aceh-perkuat-observasi-maritim-dan-mitigasi-bencana-pesisir',
+    },
+    {
+        id: 3,
+        title: 'BMKG: Asap Sempat Terpantau Sesaat di Jabodetabek, Kini Sudah Menjauh',
+        category: 'Siaran Pers',
+        date: '17 Oktober 2026',
+        author: 'Humas BMKG',
+        image: '/images/berita/asap.png',
+        summary:
+            'Portal resmi BMKG menyediakan siaran pers terkait informasi meteorologi, klimatologi, geofisika, dan upaya penanganan berbagai fenomena yang berdampak pada masyarakat.',
+        content: [
+            'Badan Meteorologi, Klimatologi, dan Geofisika (BMKG) memantau sebaran asap kebakaran hutan dan lahan (karhutla) yang mulai menjauhi wilayah Jawa bagian Barat, termasuk Jakarta, Bogor, Depok, Tangerang, dan Bekasi (Jabodetabek), sejak Sabtu, 17 Oktober 2026. Meski demikian, BMKG masih mendeteksi sisa sebaran asap di Pesisir Barat Banten pada ketinggian sekitar 10.000–18.000 kaki atau 3–5,4 kilometer.',
+            'Pengunjung dapat membaca artikel asli melalui portal BMKG untuk memperoleh konteks, tanggal publikasi, dan penjelasan lengkap dari sumbernya.',
+            'Untuk informasi cuaca maritim yang berkaitan dengan Maluku, masyarakat juga dapat menggunakan layanan khusus STAMAR Ambon.',
+            'Sumber: Portal Siaran Pers resmi BMKG. Judul ini merupakan pengantar ke portal publikasi, bukan judul siaran pers tertentu.',
+        ],
+        sourceUrl: 'https://www.bmkg.go.id/siaran-pers/bmkg-asap-sempat-terpantau-sesaat-di-jabodetabek-kini-sudah-menjauh',
+    },
+    {
+        id: 4,
+        title: 'STAMAR Ambon Sediakan Infografis Prakiraan Cuaca Maritim Perairan Maluku',
+        category: 'Siaran Pers',
+        date: '24 Oktober 2026',
+        author: 'STAMAR Ambon',
+        image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1000&q=80',
+        summary:
+            'Website resmi STAMAR Ambon menyediakan infografis prakiraan cuaca maritim untuk berbagai wilayah perairan Maluku, termasuk Perairan Pulau Ambon–Pulau Lease. Waktu pembaruan dan periode prakiraan perlu diperiksa pada halaman sumber.',
+        content: [
+            'Stasiun Meteorologi Maritim Ambon menyediakan halaman infografis prakiraan cuaca maritim perairan melalui website resminya.',
+            'Informasi yang tersedia mencakup sejumlah wilayah perairan di Provinsi Maluku, termasuk Perairan Pulau Ambon–Pulau Lease.',
+            'Masyarakat, nelayan, dan pengguna transportasi laut dianjurkan membuka halaman resmi untuk melihat periode prakiraan dan waktu pembaruan terbaru sebelum melakukan perjalanan.',
+            'Catatan: tanggal 24 Oktober 2026 merupakan tanggal data yang ditemukan pada hasil penelusuran, bukan jaminan bahwa data tersebut masih berlaku saat halaman dibuka.',
+        ],
+        sourceUrl:
+            'https://stamar-ambon.bmkg.go.id/Infografis_Perairan_BMKG_Maluku/',
+    },
+];
+
 
     const filteredArticles = useMemo(() => {
         return newsArticles.filter((item) => {
@@ -136,12 +155,10 @@ export default function Berita() {
 
                             {/* Category Filter Pills */}
                             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                                
                                 {[
                                     { key: 'all', label: 'Semua Berita' },
-                                    { key: 'siaran pers', label: 'Siaran Pers' },
-                                    { key: 'peringatan cuaca', label: 'Peringatan Cuaca' },
-                                    { key: 'kemitraan', label: 'Kemitraan' },
-                                    { key: 'edukasi', label: 'Edukasi' },
+                                    { key: 'siaran pers', label: 'Siaran Pers' }
                                 ].map((tab) => (
                                     <button
                                         key={tab.key}
@@ -155,6 +172,7 @@ export default function Berita() {
                                         {tab.label}
                                     </button>
                                 ))}
+
                             </div>
                         </div>
                     </div>
@@ -270,6 +288,15 @@ export default function Berita() {
                                 <p key={idx}>{p}</p>
                             ))}
                         </div>
+                        
+                        <a
+                            href={activeArticle.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+                        >
+                            Baca Sumber Resmi BMKG
+                        </a>
 
                         <div className="mt-6 border-t border-border pt-4 flex justify-end">
                             <Button
