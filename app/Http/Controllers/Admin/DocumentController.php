@@ -134,7 +134,7 @@ class DocumentController extends Controller
             'description' => 'nullable|string|max:1000',
             'region_number' => 'nullable|integer',
             'forecast_date' => 'nullable|date',
-            'period_type' => 'nullable|string|in:auto,daily,weekly,1-hari,3-hari',
+            'period_type' => 'nullable|string|in:auto,daily,weekly,monthly,1-hari,3-hari',
             'purge_old' => 'nullable|boolean',
         ]);
 
@@ -195,7 +195,7 @@ class DocumentController extends Controller
         $formCategory = $request->input('category', 'pelabuhan');
         $formRegionNumber = $request->input('region_number');
         $formForecastDate = $request->input('forecast_date');
-        $formPeriodType = $request->input('period_type', 'daily');
+        $formPeriodType = $request->input('period_type', 'weekly');
 
         $uploadedCount = 0;
         $dateSuffix = date('dmY_His');
@@ -435,37 +435,141 @@ class DocumentController extends Controller
             }
         }
 
-        // Jika admin memilih opsi pembersihan berkas produk hari sebelumnya (purge_old)
+        // === SIKLUS HIDUP OTOMATIS (CLEAN-SLATE LIFECYCLE) ===
+        // Aturan Pembersihan Berkas Lama:
+        // 1. MFY (infografis, pelabuhan, provinsi, mfy):
+        //    Setiap upload produk baru di Tab 1 (daily) atau Tab 2 (weekly), berkas lama di tab tersebut otomatis terhapus.
+        //    Jika upload batch (>= 5 berkas), hapus seluruh berkas lama di period_type tersebut.
+        //    Jika upload revisi (< 5 berkas), hapus berkas lama yang region_code / jenisnya cocok.
+        // 2. Wisata Bahari (bahari):
+        //    Setiap upload produk baru, seluruh berkas wisata bahari lama otomatis terhapus.
+        // 3. Peringatan Dini (peringatan-dini):
+        //    Setiap upload produk baru, berkas peringatan dini lama otomatis terhapus.
+        //    (Jika berkas NO PD / Nihil atau batch mencakup 1-hari & 3-hari: hapus semua PD lama.
+        //     Jika 1-hari saja: hapus 1-hari lama. Jika 3-hari saja: hapus 3-hari lama).
+        // 4. Buletin Maritim (buletin):
+        //    Tidak dihapus (arsip historis bulanan dipertahankan).
         $purgedCount = 0;
-        if ($request->boolean('purge_old')) {
-            $touchedCategories = array_keys(array_filter($categoryCounts, fn($c) => $c > 0));
-            foreach ($touchedCategories as $cat) {
-                // Untuk kategori produk harian, peringatan dini, maupun wisata bahari
-                $query = Document::query();
-                if ($cat === 'pelabuhan') {
-                    $query->whereIn('category', ['pelabuhan', 'mfy']);
-                } else {
-                    $query->where('category', $cat);
+        if (!empty($uploadedDocIds)) {
+            $newlyCreatedDocs = Document::whereIn('id', $uploadedDocIds)->get();
+
+            // 1. MFY (infografis, pelabuhan, provinsi, mfy) - SIKLUS ESTAFET 2-TAB BERJALAN (ROLLING 2-TAB FIFO)
+            $mfyDocs = $newlyCreatedDocs->filter(fn($d) => in_array($d->category, ['infografis', 'pelabuhan', 'provinsi', 'mfy']));
+            if ($mfyDocs->isNotEmpty()) {
+                $mfyPeriods = $mfyDocs->pluck('period_type')->filter()->unique()->values();
+
+                // Cek apakah upload ini menyasar Tab 2 (weekly / default rilis harian)
+                if ($mfyPeriods->contains('weekly')) {
+                    $weeklyNewDocs = $mfyDocs->where('period_type', 'weekly');
+                    $newForecastDate = $weeklyNewDocs->pluck('forecast_date')->filter()->first();
+                    $newDateOnly = $newForecastDate ? explode('T', (string)$newForecastDate)[0] : date('Y-m-d');
+
+                    // Cari berkas Tab 2 lama yang sudah ada di database sebelum upload ini
+                    $existingWeeklyDocs = Document::whereIn('category', ['infografis', 'pelabuhan', 'provinsi', 'mfy'])
+                        ->where('period_type', 'weekly')
+                        ->whereNotIn('id', $uploadedDocIds)
+                        ->get();
+
+                    $existingWeeklyDateRaw = $existingWeeklyDocs->pluck('forecast_date')->filter()->first();
+                    $existingDateOnly = $existingWeeklyDateRaw ? explode('T', (string)$existingWeeklyDateRaw)[0] : null;
+
+                    // Cek apakah tanggal rilis baru berbeda dengan tanggal di Tab 2 lama
+                    // Jika berbeda atau batch baru lengkap: lakukan estafet (Roll)!
+                    $shouldRoll = $existingWeeklyDocs->isNotEmpty() && $existingDateOnly && ($newDateOnly !== $existingDateOnly);
+
+                    if ($shouldRoll) {
+                        // A. Hapus SELURUH berkas Tab 1 (daily) yang lama (karena sudah usang / tergeser keluar)
+                        $oldDailyDocs = Document::whereIn('category', ['infografis', 'pelabuhan', 'provinsi', 'mfy'])
+                            ->where('period_type', 'daily')
+                            ->whereNotIn('id', $uploadedDocIds)
+                            ->get();
+
+                        foreach ($oldDailyDocs as $oldDoc) {
+                            if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                                Storage::disk('public')->delete($oldDoc->file_path);
+                            }
+                            $oldDoc->delete();
+                            $purgedCount++;
+                        }
+
+                        // B. GESER berkas Tab 2 lama menjadi Tab 1 (ubah period_type menjadi 'daily')
+                        foreach ($existingWeeklyDocs as $docToShift) {
+                            $docToShift->update(['period_type' => 'daily']);
+                        }
+                    } else {
+                        // Jika tanggal sama (revisi rilis hari ini), gantikan berkas lama di Tab 2 saja
+                        if ($weeklyNewDocs->count() >= 30) {
+                            foreach ($existingWeeklyDocs as $oldDoc) {
+                                if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                                    Storage::disk('public')->delete($oldDoc->file_path);
+                                }
+                                $oldDoc->delete();
+                                $purgedCount++;
+                            }
+                        } else {
+                            foreach ($weeklyNewDocs as $newDoc) {
+                                $matchedOld = $existingWeeklyDocs->filter(function ($old) use ($newDoc) {
+                                    if (!empty($newDoc->region_code)) {
+                                        return $old->region_code === $newDoc->region_code;
+                                    }
+                                    return $old->category === $newDoc->category && $old->title === $newDoc->title;
+                                });
+
+                                foreach ($matchedOld as $oldDoc) {
+                                    if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                                        Storage::disk('public')->delete($oldDoc->file_path);
+                                    }
+                                    $oldDoc->delete();
+                                    $purgedCount++;
+                                }
+                            }
+                        }
+                    }
+                } elseif ($mfyPeriods->contains('daily')) {
+                    // Forecaster sengaja memilih tombol Tab 1 untuk koreksi berkas Tab 1 saja
+                    $dailyNewDocs = $mfyDocs->where('period_type', 'daily');
+                    $oldDailyDocs = Document::whereIn('category', ['infografis', 'pelabuhan', 'provinsi', 'mfy'])
+                        ->where('period_type', 'daily')
+                        ->whereNotIn('id', $uploadedDocIds)
+                        ->get();
+
+                    if ($dailyNewDocs->count() >= 30) {
+                        foreach ($oldDailyDocs as $oldDoc) {
+                            if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                                Storage::disk('public')->delete($oldDoc->file_path);
+                            }
+                            $oldDoc->delete();
+                            $purgedCount++;
+                        }
+                    } else {
+                        foreach ($dailyNewDocs as $newDoc) {
+                            $matchedOld = $oldDailyDocs->filter(function ($old) use ($newDoc) {
+                                if (!empty($newDoc->region_code)) {
+                                    return $old->region_code === $newDoc->region_code;
+                                }
+                                return $old->category === $newDoc->category && $old->title === $newDoc->title;
+                            });
+
+                            foreach ($matchedOld as $oldDoc) {
+                                if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                                    Storage::disk('public')->delete($oldDoc->file_path);
+                                }
+                                $oldDoc->delete();
+                                $purgedCount++;
+                            }
+                        }
+                    }
                 }
+            }
 
-                // Tentukan tanggal aktif terbaru dari kumpulan berkas yang baru diunggah
-                $activeDate = $categoryNewestDates[$cat] 
-                    ?? (clone $query)->whereIn('id', $uploadedDocIds)->whereNotNull('forecast_date')->max('forecast_date')
-                    ?? date('Y-m-d');
-
-                // Berkas produk yang tanggalnya lebih lama dari activeDate (hari/tanggal sebelumnya)
-                $oldDocs = (clone $query)
+            // 2. Wisata Bahari (bahari)
+            $hasBahari = $newlyCreatedDocs->contains(fn($d) => $d->category === 'bahari');
+            if ($hasBahari) {
+                $oldBahariDocs = Document::where('category', 'bahari')
                     ->whereNotIn('id', $uploadedDocIds)
-                    ->where(function ($q) use ($activeDate) {
-                        $q->whereDate('forecast_date', '<', $activeDate)
-                          ->orWhere(function ($sub) use ($activeDate) {
-                              $sub->whereNull('forecast_date')
-                                  ->whereDate('created_at', '<', $activeDate);
-                          });
-                    })
                     ->get();
 
-                foreach ($oldDocs as $oldDoc) {
+                foreach ($oldBahariDocs as $oldDoc) {
                     if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
                         Storage::disk('public')->delete($oldDoc->file_path);
                     }
@@ -473,6 +577,51 @@ class DocumentController extends Controller
                     $purgedCount++;
                 }
             }
+
+            // 3. Peringatan Dini (peringatan-dini)
+            $pdDocs = $newlyCreatedDocs->filter(fn($d) => $d->category === 'peringatan-dini');
+            if ($pdDocs->isNotEmpty()) {
+                $hasNoPd = $pdDocs->contains(function ($d) {
+                    $titleLower = strtolower($d->title ?? '');
+                    $pathLower = strtolower($d->file_path ?? '');
+                    return str_contains($titleLower, 'nihil') || str_contains($titleLower, 'no pd') || preg_match('/(?:^|[^a-z0-9])(?:no[._\-\s]?pd|nopd|nihil)/i', $pathLower);
+                });
+
+                $pdPeriods = $pdDocs->pluck('period_type')->filter()->unique()->values();
+
+                if ($hasNoPd || ($pdPeriods->contains('1-hari') && $pdPeriods->contains('3-hari'))) {
+                    // Jika NO PD atau mengunggah batch lengkap 1-hari & 3-hari: hapus semua berkas peringatan dini lama
+                    $oldPdDocs = Document::where('category', 'peringatan-dini')
+                        ->whereNotIn('id', $uploadedDocIds)
+                        ->get();
+
+                    foreach ($oldPdDocs as $oldDoc) {
+                        if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                            Storage::disk('public')->delete($oldDoc->file_path);
+                        }
+                        $oldDoc->delete();
+                        $purgedCount++;
+                    }
+                } else {
+                    // Jika mengunggah spesifik salah satu tipe: hapus berkas lama untuk tipe tersebut
+                    foreach ($pdPeriods as $period) {
+                        $oldPdDocs = Document::where('category', 'peringatan-dini')
+                            ->where('period_type', $period)
+                            ->whereNotIn('id', $uploadedDocIds)
+                            ->get();
+
+                        foreach ($oldPdDocs as $oldDoc) {
+                            if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
+                                Storage::disk('public')->delete($oldDoc->file_path);
+                            }
+                            $oldDoc->delete();
+                            $purgedCount++;
+                        }
+                    }
+                }
+            }
+
+            // 4. Buletin Maritim (buletin): sengaja diabaikan agar seluruh riwayat edisi bulanan tetap tersimpan
         }
 
         // Susun pesan ringkasan sukses
@@ -486,11 +635,11 @@ class DocumentController extends Controller
             if ($categoryCounts['peringatan-dini'] > 0) $breakdown[] = "{$categoryCounts['peringatan-dini']} Peringatan Dini";
 
             $detailStr = !empty($breakdown) ? ' (' . implode(', ', $breakdown) . ')' : '';
-            $purgeStr = $purgedCount > 0 ? " serta membersihkan {$purgedCount} berkas produk hari sebelumnya." : '.';
+            $purgeStr = $purgedCount > 0 ? " serta membersihkan otomatis {$purgedCount} berkas produk sebelumnya." : '.';
             $message = "Sukses! {$uploadedCount} berkas berhasil diproses otomatis dan diterbitkan{$detailStr}{$purgeStr}";
         } else {
             $categoryLabel = $this->getCategoryLabel($targetCategory);
-            $purgeStr = $purgedCount > 0 ? " dan {$purgedCount} berkas produk hari sebelumnya telah dibersihkan." : '.';
+            $purgeStr = $purgedCount > 0 ? " dan {$purgedCount} berkas produk sebelumnya telah dibersihkan otomatis." : '.';
             $message = "Berkas berhasil diunggah dan disinkronkan ke kategori {$categoryLabel}{$purgeStr}";
         }
 
@@ -519,23 +668,21 @@ class DocumentController extends Controller
             $forecastDate = isset($dateMatch[1]) ? $this->parseDateString($dateMatch[1]) : date('Y-m-d');
             $isImage = in_array($ext, ['png', 'jpg', 'jpeg']);
 
-            if (str_contains($lower, 'prov') || str_contains($lower, 'maritim')) {
-                return [
-                    'category' => $isImage ? 'infografis' : 'provinsi',
-                    'region_number' => 0,
-                    'region_code' => 'COVER_PROV',
-                    'forecast_date' => $forecastDate,
-                    'period_type' => 'weekly',
-                    'title' => 'Sampul Prakiraan Cuaca Maritim Wilayah Provinsi Maluku',
-                ];
-            } else {
+            if (str_contains($lower, 'pelabuhan') || str_contains($lower, 'port')) {
                 return [
                     'category' => $isImage ? 'infografis' : 'pelabuhan',
                     'region_number' => 0,
                     'region_code' => 'COVER_PEL',
                     'forecast_date' => $forecastDate,
-                    'period_type' => 'weekly',
-                    'title' => 'Sampul Prakiraan Cuaca Pelabuhan Provinsi Maluku',
+                    'title' => 'Sampul Prakiraan Cuaca Pelabuhan Maluku',
+                ];
+            } else {
+                return [
+                    'category' => $isImage ? 'infografis' : 'provinsi',
+                    'region_number' => 0,
+                    'region_code' => 'COVER_PROV',
+                    'forecast_date' => $forecastDate,
+                    'title' => 'Sampul Prakiraan Cuaca Perairan Maritim Maluku',
                 ];
             }
         }
@@ -639,6 +786,7 @@ class DocumentController extends Controller
                 'region_number' => null,
                 'region_code' => null,
                 'forecast_date' => $forecastDate,
+                'period_type' => 'monthly',
             ];
         }
 

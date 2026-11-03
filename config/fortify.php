@@ -86,7 +86,7 @@ return [
     |
     */
 
-    'prefix' => 'panel-stamar',
+    'prefix' => 'produkmarambon',
 
     'domain' => null,
 

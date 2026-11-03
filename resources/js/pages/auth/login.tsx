@@ -5,7 +5,6 @@ import {
     CheckCircle2,
     ShieldCheck,
     Sparkles,
-    Building2,
     ArrowRight,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -54,12 +53,12 @@ export default function Login({ status, error }: Props) {
 
     const handleGoogleLogin = () => {
         setIsGoogleRedirecting(true);
-        window.location.href = '/panel-stamar/auth/google';
+        window.location.href = '/produkmarambon/auth/google';
     };
 
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070b14] p-4 text-slate-100 selection:bg-blue-600 selection:text-white sm:p-6">
-            <Head title="Login Administrator SSO - BMKG Stamar Ambon" />
+            <Head title="Login SSO Administrator - BMKG Stamar Ambon" />
 
             {/* Ambient Background Glowing Lights */}
             <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-blue-600/20 blur-[140px]"></div>
@@ -68,15 +67,15 @@ export default function Login({ status, error }: Props) {
 
             <div className="relative z-10 my-auto w-full max-w-md">
                 {/* Header with BMKG Branding */}
-                <div className="mb-8 text-center">
+                <div className="mb-6 text-center">
                     <Link
                         href="/"
-                        className="group mb-5 inline-flex items-center justify-center gap-3.5"
+                        className="group mb-4 inline-flex items-center justify-center gap-3.5"
                     >
                         <img
                             src="/images/logo-bmkg.png"
                             alt="Logo BMKG"
-                            className="h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
+                            className="h-13 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
                         />
                         <div className="text-left">
                             <span className="block text-sm font-extrabold tracking-tight text-white leading-tight sm:text-base">
@@ -90,13 +89,13 @@ export default function Login({ status, error }: Props) {
                     <h1 className="text-2xl font-bold tracking-tight text-white">
                         Panel Administrasi
                     </h1>
-                    <p className="mt-1.5 text-xs text-slate-400 sm:text-sm">
-                        Autentikasi Terpadu Single Sign-On (SSO) Google
+                    <p className="mt-1 text-xs text-slate-400">
+                        Masuk untuk mengelola data cuaca, berkas MFY, dan dokumen maritim.
                     </p>
                 </div>
 
                 {/* Login Form Card */}
-                <div className="rounded-3xl border border-slate-800/80 bg-slate-900/85 p-6 shadow-2xl shadow-black/70 backdrop-blur-2xl sm:p-8">
+                <div className="rounded-3xl border border-slate-800/80 bg-slate-900/85 p-6 shadow-2xl shadow-black/70 backdrop-blur-2xl sm:p-7">
                     {/* Status Alert Banner */}
                     {displayStatus && (
                         <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-emerald-800/60 bg-emerald-950/70 p-3.5 text-xs font-medium text-emerald-300">
@@ -113,49 +112,49 @@ export default function Login({ status, error }: Props) {
                         </div>
                     )}
 
-                    {/* Google SSO Login Main Button */}
+                    {/* SSO BMKG Exclusive Login Action */}
                     <div className="space-y-4">
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
                             disabled={isGoogleRedirecting}
-                            className="group relative flex w-full items-center justify-between gap-3.5 rounded-2xl border border-slate-700/80 bg-gradient-to-r from-slate-800/90 via-slate-800 to-slate-850 p-4 text-left shadow-xl transition-all duration-200 hover:border-blue-500/60 hover:from-slate-800 hover:to-blue-950/40 hover:shadow-blue-500/15 active:scale-[0.99] disabled:opacity-70 cursor-pointer"
+                            className="group relative flex w-full items-center justify-between gap-3 rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-900/40 to-slate-800/80 p-4 text-left shadow-xl shadow-blue-950/40 transition-all duration-200 hover:border-blue-400 hover:from-blue-900/60 hover:to-slate-800 active:scale-[0.99] disabled:opacity-70 cursor-pointer"
                         >
                             <div className="flex items-center gap-3.5">
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900/90 border border-slate-700/80 shadow-sm transition-transform duration-200 group-hover:scale-105">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-md">
                                     {isGoogleRedirecting ? (
-                                        <Spinner className="h-5 w-5 text-blue-400" />
+                                        <Spinner className="h-5 w-5 text-blue-600" />
                                     ) : (
                                         <GoogleIcon className="h-5 w-5" />
                                     )}
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-white group-hover:text-blue-100 transition-colors">
-                                        Masuk dengan Akun Google
-                                    </span>
-                                    <span className="text-xs text-slate-400">
-                                        Single Sign-On (SSO) BMKG
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-bold text-white group-hover:text-blue-200">
+                                            Masuk via SSO BMKG
+                                        </span>
+                                        <span className="rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-blue-300 border border-blue-500/30">
+                                            Resmi
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-slate-400 mt-0.5">
+                                        Single Sign-On Khusus Forecaster & Staf
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="rounded-full bg-blue-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-blue-400 border border-blue-500/25">
-                                    SSO
-                                </span>
-                                <ArrowRight className="h-4 w-4 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-blue-400" />
-                            </div>
+                            <ArrowRight className="h-5 w-5 text-blue-400 transition-transform duration-200 group-hover:translate-x-1" />
                         </button>
 
                         {/* Informational Security Notice Box */}
-                        <div className="rounded-2xl border border-slate-800/90 bg-slate-950/50 p-4">
+                        <div className="rounded-2xl border border-slate-800/90 bg-slate-950/60 p-4">
                             <div className="flex items-start gap-3">
-                                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
+                                <ShieldCheck className="h-5 w-5 shrink-0 text-cyan-400 mt-0.5" />
                                 <div className="space-y-1">
                                     <p className="text-xs font-semibold text-slate-200">
-                                        Akses Resmi Terpusat
+                                        Verifikasi 2FA Google Authenticator
                                     </p>
                                     <p className="text-[11px] leading-relaxed text-slate-400">
-                                        Panel ini dilindungi oleh Google OAuth 2.0. Silakan masuk menggunakan akun Google Anda yang telah memiliki otorisasi administratif.
+                                        Otorisasi login diverifikasi secara terpusat melalui Google Workspace resmi BMKG. Masukkan kode 6 digit dari aplikasi Google Authenticator akun kantor Anda saat diminta.
                                     </p>
                                 </div>
                             </div>
@@ -163,7 +162,7 @@ export default function Login({ status, error }: Props) {
                     </div>
 
                     {/* Back link */}
-                    <div className="mt-6 border-t border-slate-800/80 pt-5 text-center">
+                    <div className="mt-6 border-t border-slate-800/80 pt-4 text-center">
                         <Link
                             href="/"
                             className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-cyan-400"

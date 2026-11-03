@@ -84,21 +84,31 @@ Route::get('/', function () {
         ->get();
 
     // Ambil dokumen Cover / Sampul Infografis terbaru (Tab 2 / Prospek H+1 s/d H+4)
-    // 1. Cover Infografis Perairan Provinsi Maluku
+    // 1. Cover Infografis Perairan Maritim
     $latestInfografisProv = Document::where('category', 'infografis')
         ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
         ->where(function ($q) {
             $q->where('region_code', 'COVER_PROV')
-              ->orWhere('title', 'LIKE', '%Sampul%Provinsi%')
-              ->orWhere('title', 'LIKE', '%Cover%Provinsi%')
-              ->orWhere('file_path', 'LIKE', '%cover%prov%')
-              ->orWhere('file_path', 'LIKE', '%sampul%prov%');
+              ->orWhere(function ($sub) {
+                  $sub->where(function ($c) {
+                      $c->where('title', 'LIKE', '%Sampul%')->orWhere('title', 'LIKE', '%Cover%');
+                  })
+                  ->where('title', 'NOT LIKE', '%Pelabuhan%')
+                  ->where('file_path', 'NOT LIKE', '%pelabuhan%')
+                  ->where(function ($sub2) {
+                      $sub2->where('title', 'LIKE', '%Maritim%')
+                           ->orWhere('title', 'LIKE', '%Provinsi%')
+                           ->orWhere('file_path', 'LIKE', '%maritim%')
+                           ->orWhere('file_path', 'LIKE', '%prov%');
+                  });
+              });
         })
+        ->where('region_code', '!=', 'COVER_PEL')
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->first();
 
-    // Fallback jika belum ada berkas berlabel cover, ambil infografis provinsi dengan tanggal paling baru (Tab 2)
+    // Fallback jika belum ada berkas berlabel cover, ambil infografis perairan maritim dengan tanggal paling baru (Tab 2)
     if (!$latestInfografisProv) {
         $latestInfografisProv = Document::where('category', 'infografis')
             ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
@@ -116,11 +126,17 @@ Route::get('/', function () {
         ->whereIn('file_type', ['png', 'jpg', 'jpeg', 'webp'])
         ->where(function ($q) {
             $q->where('region_code', 'COVER_PEL')
-              ->orWhere('title', 'LIKE', '%Sampul%Pelabuhan%')
-              ->orWhere('title', 'LIKE', '%Cover%Pelabuhan%')
-              ->orWhere('file_path', 'LIKE', '%cover%pel%')
-              ->orWhere('file_path', 'LIKE', '%sampul%pel%');
+              ->orWhere(function ($sub) {
+                  $sub->where(function ($c) {
+                      $c->where('title', 'LIKE', '%Sampul%')->orWhere('title', 'LIKE', '%Cover%');
+                  })
+                  ->where(function ($sub2) {
+                      $sub2->where('title', 'LIKE', '%Pelabuhan%')
+                           ->orWhere('file_path', 'LIKE', '%pelabuhan%');
+                  });
+              });
         })
+        ->where('region_code', '!=', 'COVER_PROV')
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->first();
@@ -168,6 +184,7 @@ Route::get('/pelabuhan', function () {
               ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Pelabuhan%')
               ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Pelabuhan%');
         })
+        ->where('region_code', '!=', 'COVER_PROV')
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->get();
@@ -204,9 +221,10 @@ Route::redirect('/survei-ikm', '/survey-ikm');
 Route::get('/provinsi', function () {
     $coverDocuments = Document::where(function ($q) {
             $q->where('region_code', 'COVER_PROV')
-              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Maritim Wilayah Provinsi%')
-              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Maritim Wilayah Provinsi%');
+              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Maritim%')
+              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Maritim%');
         })
+        ->where('region_code', '!=', 'COVER_PEL')
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->get();
@@ -251,9 +269,10 @@ Route::get('/buletin', function () {
 Route::get('/infografis-provinsi', function () {
     $coverDocuments = Document::where(function ($q) {
             $q->where('region_code', 'COVER_PROV')
-              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Maritim Wilayah Provinsi%')
-              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Maritim Wilayah Provinsi%');
+              ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Maritim%')
+              ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Maritim%');
         })
+        ->where('region_code', '!=', 'COVER_PEL')
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->get();
@@ -290,6 +309,7 @@ Route::get('/infografis-pelabuhan', function () {
               ->orWhere('title', 'LIKE', '%Sampul Prakiraan Cuaca Pelabuhan%')
               ->orWhere('title', 'LIKE', '%Cover Prakiraan Cuaca Pelabuhan%');
         })
+        ->where('region_code', '!=', 'COVER_PROV')
         ->orderByDesc('forecast_date')
         ->latest('id')
         ->get();
@@ -330,14 +350,47 @@ Route::redirect('/galeri-foto', '/galeri');
 Route::inertia('/berita', 'berita')->name('berita');
 Route::redirect('/siaran-pers', '/berita');
 
-Route::redirect('/login', '/panel-stamar/login');
-Route::redirect('/forgot-password', '/panel-stamar/forgot-password');
+// Keamanan URL: Alihkan /login & /panel-stamar ke halaman utama agar rute admin tersembunyi
+Route::redirect('/login', '/');
+Route::redirect('/panel-stamar/login', '/');
+Route::redirect('/panel-stamar', '/');
+
+// Rute Login Resmi Khusus Tim BMKG Stamar Ambon (/produkmarambon)
+Route::redirect('/produkmarambon', '/produkmarambon/login');
+Route::redirect('/forgot-password', '/produkmarambon/forgot-password');
 Route::redirect('/admin', '/admin/documents');
 Route::redirect('/dashboard', '/admin/documents');
 
+// Shortcut URL Cepat / Bookmark Forecaster langsung ke Dropzone Kategori Terkait
+$shortcutRoutes = [
+    'produkmfy' => 'mfy',
+    'wisatabahari' => 'bahari',
+    'PD' => 'peringatan-dini',
+    'pd' => 'peringatan-dini',
+    'buletinmaritim' => 'buletin',
+];
+
+foreach ($shortcutRoutes as $path => $cat) {
+    Route::get('/'.$path, function () use ($cat) {
+        return redirect('/admin/documents?category='.$cat);
+    });
+
+    Route::get('/admin/documents/'.$path, function () use ($cat) {
+        return redirect('/admin/documents?category='.$cat);
+    });
+
+    Route::get('/produkmarambon/'.$path, function () use ($cat) {
+        return redirect('/admin/documents?category='.$cat);
+    });
+}
+
+Route::get('/admin/documents/buletin', function () {
+    return redirect('/admin/documents?category=buletin');
+});
+
 // Google SSO Authentication
-Route::get('/panel-stamar/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
-Route::get('/panel-stamar/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+Route::get('/produkmarambon/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/produkmarambon/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 require __DIR__.'/settings.php';
 

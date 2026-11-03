@@ -32,6 +32,9 @@ import {
     ChevronRight,
     ChevronLeft,
     Ship,
+    Loader2,
+    CheckCircle2,
+    X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,7 +97,7 @@ export default function DocumentIndex({
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isDeletingBatch, setIsDeletingBatch] = useState(false);
     const [showUploadModal, setShowUploadModal] = useState(
-        initialAction === 'upload',
+        initialAction !== 'close',
     );
     const [showNamingGuide, setShowNamingGuide] = useState(false);
     const [isMfyExpanded, setIsMfyExpanded] = useState<boolean>(() => {
@@ -118,7 +121,7 @@ export default function DocumentIndex({
             : 'pelabuhan'
     ) as 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'bahari';
 
-    const { data, setData, post, processing, errors, reset } = useForm<{
+    const { data, setData, post, processing, progress, errors, reset } = useForm<{
         title: string;
         category: 'auto' | 'infografis' | 'peringatan-dini' | 'provinsi' | 'buletin' | 'pelabuhan' | 'mfy' | 'bahari';
         region_number: string | number;
@@ -132,10 +135,10 @@ export default function DocumentIndex({
         title: '',
         category: 'auto',
         region_number: '',
-        forecast_date: new Date().toISOString().split('T')[0],
-        period_type: 'daily',
+        forecast_date: tomorrowStr,
+        period_type: 'weekly',
         description: '',
-        purge_old: false,
+        purge_old: true,
         files: [],
         file: null,
     });
@@ -146,13 +149,15 @@ export default function DocumentIndex({
             setData((prev) => ({
                 ...prev,
                 category: 'auto',
-                period_type: 'daily',
+                period_type: 'weekly',
+                forecast_date: tomorrowStr,
             }));
         } else if (['infografis', 'pelabuhan', 'provinsi'].includes(selectedTab)) {
             setData((prev) => ({
                 ...prev,
                 category: selectedTab as any,
-                period_type: 'daily',
+                period_type: 'weekly',
+                forecast_date: tomorrowStr,
             }));
         } else if (selectedTab === 'peringatan-dini') {
             setData((prev) => ({
@@ -238,6 +243,90 @@ export default function DocumentIndex({
             badgeBg:
                 'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-900',
             folder: 'uploads/bahari/',
+        },
+    };
+
+    const filterTabStyles: Record<
+        string,
+        {
+            active: string;
+            inactive: string;
+            badgeActive: string;
+            badgeInactive: string;
+            icon: string;
+        }
+    > = {
+        all: {
+            active: 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900/20 dark:bg-slate-100 dark:text-slate-950',
+            inactive:
+                'bg-slate-100 text-slate-800 hover:bg-slate-200/80 border border-slate-300/80 dark:bg-slate-800/80 dark:text-slate-200 dark:border-slate-700',
+            badgeActive: 'bg-white/20 text-white dark:bg-black/20 dark:text-black',
+            badgeInactive:
+                'bg-slate-200/90 text-slate-800 border border-slate-300 dark:bg-slate-700 dark:text-slate-200',
+            icon: 'text-slate-600 dark:text-slate-300',
+        },
+        mfy: {
+            active: 'bg-blue-600 text-white shadow-md ring-2 ring-blue-500/25 border border-blue-600',
+            inactive:
+                'bg-blue-100/90 text-blue-800 hover:bg-blue-200/80 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-blue-200/90 text-blue-900 border border-blue-300 dark:bg-blue-900/80 dark:text-blue-100',
+            icon: 'text-blue-700 dark:text-blue-300',
+        },
+        bahari: {
+            active: 'bg-teal-600 text-white shadow-md ring-2 ring-teal-500/25 border border-teal-600',
+            inactive:
+                'bg-teal-100/90 text-teal-800 hover:bg-teal-200/80 border border-teal-300 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-teal-200/90 text-teal-900 border border-teal-300 dark:bg-teal-900/80 dark:text-teal-100',
+            icon: 'text-teal-700 dark:text-teal-300',
+        },
+        buletin: {
+            active: 'bg-purple-600 text-white shadow-md ring-2 ring-purple-500/25 border border-purple-600',
+            inactive:
+                'bg-purple-100/90 text-purple-800 hover:bg-purple-200/80 border border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-purple-200/90 text-purple-900 border border-purple-300 dark:bg-purple-900/80 dark:text-purple-100',
+            icon: 'text-purple-700 dark:text-purple-300',
+        },
+        'peringatan-dini': {
+            active: 'bg-red-600 text-white shadow-md ring-2 ring-red-500/25 border border-red-600',
+            inactive:
+                'bg-red-100/90 text-red-800 hover:bg-red-200/80 border border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-red-200/90 text-red-900 border border-red-300 dark:bg-red-900/80 dark:text-red-100',
+            icon: 'text-red-700 dark:text-red-300',
+        },
+        infografis: {
+            active: 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500/25 border border-indigo-600',
+            inactive:
+                'bg-indigo-100/90 text-indigo-800 hover:bg-indigo-200/80 border border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-indigo-200/90 text-indigo-900 border border-indigo-300 dark:bg-indigo-900/80 dark:text-indigo-100',
+            icon: 'text-indigo-700 dark:text-indigo-300',
+        },
+        pelabuhan: {
+            active: 'bg-cyan-600 text-white shadow-sm ring-2 ring-cyan-500/25 border border-cyan-600',
+            inactive:
+                'bg-cyan-100/90 text-cyan-800 hover:bg-cyan-200/80 border border-cyan-300 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-cyan-200/90 text-cyan-900 border border-cyan-300 dark:bg-cyan-900/80 dark:text-cyan-100',
+            icon: 'text-cyan-700 dark:text-cyan-300',
+        },
+        provinsi: {
+            active: 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-500/25 border border-amber-600',
+            inactive:
+                'bg-amber-100/90 text-amber-800 hover:bg-amber-200/80 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900',
+            badgeActive: 'bg-white/20 text-white',
+            badgeInactive:
+                'bg-amber-200/90 text-amber-900 border border-amber-300 dark:bg-amber-900/80 dark:text-amber-100',
+            icon: 'text-amber-700 dark:text-amber-300',
         },
     };
 
@@ -357,9 +446,9 @@ export default function DocumentIndex({
         }
     };
 
-    const processFilesSelection = (filesArr: File[]): boolean => {
+    const processFilesSelection = (newFilesArr: File[], mode: 'append' | 'replace' = 'append'): boolean => {
         const allowedExts = ['png', 'pdf', 'mp4', 'jpg', 'jpeg'];
-        const invalidFile = filesArr.find((f) => {
+        const invalidFile = newFilesArr.find((f) => {
             const ext = f.name.split('.').pop()?.toLowerCase() || '';
             return !allowedExts.includes(ext);
         });
@@ -370,7 +459,7 @@ export default function DocumentIndex({
 
         // Khusus peringatan-dini: izinkan Gambar (.png, .jpg, .jpeg), Video (.mp4), dan Dokumen (.pdf)
         if (data.category === 'peringatan-dini') {
-            const invalidWarning = filesArr.find((f) => {
+            const invalidWarning = newFilesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 return !['.png', '.jpg', '.jpeg', '.mp4', '.pdf'].some((ext) => lower.endsWith(ext));
             });
@@ -379,7 +468,7 @@ export default function DocumentIndex({
                 return false;
             }
         } else if (data.category === 'infografis') {
-            const nonImg = filesArr.find((f) => {
+            const nonImg = newFilesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 return !['.png', '.jpg', '.jpeg'].some((ext) => lower.endsWith(ext));
             });
@@ -388,7 +477,7 @@ export default function DocumentIndex({
                 return false;
             }
         } else if (data.category === 'auto') {
-            const invalidWarning = filesArr.find((f) => {
+            const invalidWarning = newFilesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isWarning = lower.includes('peringatan') || lower.includes('warning') || lower.includes('dini');
                 return isWarning && !['.png', '.jpg', '.jpeg', '.mp4', '.pdf'].some((ext) => lower.endsWith(ext));
@@ -398,7 +487,7 @@ export default function DocumentIndex({
                 return false;
             }
 
-            const invalidInfografis = filesArr.find((f) => {
+            const invalidInfografis = newFilesArr.find((f) => {
                 const lower = f.name.toLowerCase();
                 const isInfografis = ['infografis', 'grafis', 'peta', 'infographic', 'map', 'rilis-harian', 'rilis_harian'].some((kw) => lower.includes(kw));
                 return isInfografis && !['.png', '.jpg', '.jpeg'].some((ext) => lower.endsWith(ext));
@@ -409,20 +498,46 @@ export default function DocumentIndex({
             }
         }
 
-        if (filesArr.length > 112) {
-            alert('Maksimal 112 file yang dapat dipilih sekaligus.');
+        const currentFiles = mode === 'append' ? (data.files || []) : [];
+        const existingKeys = new Set(currentFiles.map((f) => `${f.name}_${f.size}`));
+        const incomingUnique: File[] = [];
+
+        for (const f of newFilesArr) {
+            const key = `${f.name}_${f.size}`;
+            if (!existingKeys.has(key)) {
+                existingKeys.add(key);
+                incomingUnique.push(f);
+            }
+        }
+
+        const combinedFiles = [...currentFiles, ...incomingUnique];
+
+        if (combinedFiles.length > 112) {
+            alert(`Maksimal 112 berkas yang dapat dipilih sekaligus dalam satu antrean. (Saat ini total terkumpul: ${combinedFiles.length})`);
             return false;
         }
 
-        const totalBytes = filesArr.reduce((acc, curr) => acc + curr.size, 0);
+        const totalBytes = combinedFiles.reduce((acc, curr) => acc + curr.size, 0);
         if (totalBytes > 112 * 1024 * 1024) {
-            alert(`Total ukuran berkas (${(totalBytes / (1024 * 1024)).toFixed(2)} MB) melebihi batas 112MB.`);
+            alert(`Total ukuran antrean berkas (${(totalBytes / (1024 * 1024)).toFixed(2)} MB) melebihi batas 112MB.`);
             return false;
         }
 
-        setData('files', filesArr);
+        setData('files', combinedFiles);
         setData('file', null);
         return true;
+    };
+
+    const removeFile = (indexToRemove: number) => {
+        const updated = data.files.filter((_, idx) => idx !== indexToRemove);
+        setData('files', updated);
+    };
+
+    const clearAllFiles = () => {
+        setData('files', []);
+        setData('file', null);
+        const fileInput = document.getElementById('smart-file-upload') as HTMLInputElement | null;
+        if (fileInput) fileInput.value = '';
     };
 
     const submit = (e: React.FormEvent) => {
@@ -525,13 +640,15 @@ export default function DocumentIndex({
                                     setData((prev) => ({
                                         ...prev,
                                         category: 'auto',
-                                        period_type: 'daily',
+                                        period_type: 'weekly',
+                                        forecast_date: tomorrowStr,
                                     }));
                                 } else if (['infografis', 'pelabuhan', 'provinsi'].includes(selectedTab)) {
                                     setData((prev) => ({
                                         ...prev,
                                         category: selectedTab as any,
-                                        period_type: 'daily',
+                                        period_type: 'weekly',
+                                        forecast_date: tomorrowStr,
                                     }));
                                 } else if (selectedTab === 'peringatan-dini') {
                                     setData((prev) => ({
@@ -617,18 +734,18 @@ export default function DocumentIndex({
                                 </div>
 
                                 {showNamingGuide && (
-                                    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5 pt-3 border-t border-border text-slate-600 dark:text-slate-300">
+                                    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-6 pt-3 border-t border-border text-slate-600 dark:text-slate-300">
                                         <div className="rounded-xl border border-indigo-200/50 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
                                             <span className="font-bold text-indigo-800 dark:text-indigo-300 block mb-0.5">
                                                 🖼️ Infografis Cuaca (.PNG)
                                             </span>
                                             Format: <code className="font-bold text-indigo-700 dark:text-indigo-300 font-mono">P_AH / AH / infografis</code>
                                         </div>
-                                        <div className="rounded-xl border border-rose-200/50 bg-rose-50/50 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/30">
-                                            <span className="font-bold text-rose-800 dark:text-rose-300 block mb-0.5">
+                                        <div className="rounded-xl border border-red-200/50 bg-red-50/50 p-2.5 dark:border-red-900/40 dark:bg-red-950/30">
+                                            <span className="font-bold text-red-800 dark:text-red-300 block mb-0.5">
                                                 ⚠️ Peringatan Dini
                                             </span>
-                                            Format: <code className="font-bold text-rose-700 dark:text-rose-300 font-mono">1 Hari (.PNG) • 3 Hari (.MP4)</code>
+                                            Format: <code className="font-bold text-red-700 dark:text-red-300 font-mono">1 Hari (.PNG) • 3 Hari (.MP4)</code>
                                         </div>
                                         <div className="rounded-xl border border-cyan-200/50 bg-cyan-50/50 p-2.5 dark:border-cyan-900/40 dark:bg-cyan-950/30">
                                             <span className="font-bold text-cyan-800 dark:text-cyan-300 block mb-0.5">
@@ -648,6 +765,12 @@ export default function DocumentIndex({
                                             </span>
                                             Nama: <code className="font-bold text-teal-700 dark:text-teal-300 font-mono">slide1..7, pantai</code>
                                         </div>
+                                        <div className="rounded-xl border border-purple-200/50 bg-purple-50/50 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/30">
+                                            <span className="font-bold text-purple-800 dark:text-purple-300 block mb-0.5">
+                                                📖 Buletin Maritim (PDF)
+                                            </span>
+                                            Nama: <code className="font-bold text-purple-700 dark:text-purple-300 font-mono">buletin, bulletin</code>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -663,10 +786,10 @@ export default function DocumentIndex({
                                         e.preventDefault();
                                         e.stopPropagation();
                                         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                                            processFilesSelection(Array.from(e.dataTransfer.files));
+                                            processFilesSelection(Array.from(e.dataTransfer.files), 'append');
                                         }
                                     }}
-                                    className={`relative flex min-h-[160px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
+                                    className={`relative flex min-h-[150px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
                                         data.files.length > 0
                                             ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/20'
                                             : 'border-border bg-muted/10 hover:border-primary hover:bg-muted/30'
@@ -680,30 +803,46 @@ export default function DocumentIndex({
                                         onChange={(e) => {
                                             const fileList = e.target.files;
                                             if (fileList && fileList.length > 0) {
-                                                const ok = processFilesSelection(Array.from(fileList));
-                                                if (!ok) {
-                                                    e.target.value = '';
-                                                    setData('files', []);
-                                                    setData('file', null);
-                                                }
+                                                processFilesSelection(Array.from(fileList), 'append');
+                                                e.target.value = '';
                                             }
                                         }}
                                         className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
                                     />
 
                                     <div className="pointer-events-none flex flex-col items-center gap-2">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+                                        <div
+                                            className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm transition-colors ${
+                                                data.files.length > 0
+                                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                    : 'bg-primary/10 text-primary'
+                                            }`}
+                                        >
                                             <UploadCloud className="h-6 w-6" />
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-sm font-bold text-foreground">
-                                                {data.files.length > 0
-                                                    ? `${data.files.length} Berkas Siap Diproses!`
-                                                    : 'Tarik & Letakkan (Drag & Drop) File ke Sini'}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-0.5">
-                                                Atau klik di area ini untuk memilih berkas dari komputer (Bisa blok puluhan file sekaligus)
-                                            </p>
+                                            {data.files.length > 0 ? (
+                                                <>
+                                                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                                                        {data.files.length} Berkas dalam Antrean Siap Upload
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                        Tarik berkas dari folder lain atau klik di sini untuk{' '}
+                                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 underline underline-offset-2">
+                                                            + menambah berkas lagi
+                                                        </span>
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <p className="text-sm font-bold text-foreground">
+                                                        Tarik & Letakkan (Drag & Drop) File ke Sini
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                        Atau klik untuk memilih berkas dari komputer (Bisa pilih berkas berkali-kali dari folder berbeda)
+                                                    </p>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -758,20 +897,24 @@ export default function DocumentIndex({
 
                                     return (
                                         <div className="rounded-2xl border border-emerald-300/60 bg-emerald-500/10 p-4 text-xs dark:border-emerald-600/40">
-                                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                                <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                                                    <Check className="h-4 w-4 text-emerald-500" />
-                                                    {data.files.length} Berkas Terdeteksi (Total: {(data.files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB):
-                                                </span>
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-300/40 pb-2.5 dark:border-emerald-700/30">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                                        <Check className="h-4 w-4 text-emerald-500" />
+                                                        {data.files.length} Berkas Terkumpul (Total: {(data.files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB):
+                                                    </span>
+                                                    <span className="text-[11px] text-muted-foreground font-mono">
+                                                        (Maks. 112)
+                                                    </span>
+                                                </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        setData('files', []);
-                                                        setData('file', null);
-                                                    }}
-                                                    className="text-xs text-red-500 hover:underline font-semibold"
+                                                    onClick={clearAllFiles}
+                                                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-500/10 dark:text-red-400 transition-colors"
+                                                    title="Kosongkan seluruh antrean berkas"
                                                 >
-                                                    Batalkan Pilihan
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    Bersihkan Semua
                                                 </button>
                                             </div>
 
@@ -813,22 +956,42 @@ export default function DocumentIndex({
                                                 )}
                                             </div>
 
-                                            {/* Scrollable File Tags */}
-                                            <div className="mt-3 flex max-h-24 flex-wrap gap-1 overflow-y-auto rounded-lg border border-border bg-background/80 p-2">
-                                                {data.files.slice(0, 40).map((f, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"
-                                                    >
-                                                        {f.name}
-                                                    </span>
-                                                ))}
-                                                {data.files.length > 40 && (
-                                                    <span className="self-center pl-1 text-[10px] font-semibold text-muted-foreground">
-                                                        +{data.files.length - 40} file lainnya...
-                                                    </span>
-                                                )}
+                                            {/* Scrollable File Chips dengan Tombol Hapus Satuan (Tinggi Terkunci, Nol Lag) */}
+                                            <div className="mt-3 max-h-36 overflow-y-auto rounded-xl border border-border/80 bg-background/90 p-2.5 shadow-inner">
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {data.files.map((f, i) => (
+                                                        <div
+                                                            key={`${f.name}_${f.size}_${i}`}
+                                                            className="group flex items-center gap-1.5 rounded-lg border border-border/70 bg-card px-2 py-1 text-[11px] font-mono shadow-xs transition-colors hover:border-red-300 hover:bg-red-50/20 dark:hover:border-red-800/40"
+                                                        >
+                                                            <span
+                                                                className="max-w-[170px] sm:max-w-[230px] truncate font-medium text-foreground"
+                                                                title={f.name}
+                                                            >
+                                                                {f.name}
+                                                            </span>
+                                                            <span className="shrink-0 text-[10px] text-muted-foreground font-sans">
+                                                                {(f.size / 1024).toFixed(0)} KB
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    removeFile(i);
+                                                                }}
+                                                                title={`Hapus ${f.name} dari antrean`}
+                                                                className="ml-0.5 rounded p-0.5 text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400 transition-colors"
+                                                            >
+                                                                <X className="h-3 w-3" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
+                                            <p className="mt-2 text-[10px] text-muted-foreground">
+                                                💡 <em>Tip: Klik ikon silang (✕) pada berkas untuk membuangnya, atau pilih berkas lagi dari folder lain untuk menambahkannya ke antrean.</em>
+                                            </p>
                                         </div>
                                     );
                                 })()}
@@ -848,7 +1011,7 @@ export default function DocumentIndex({
                                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3 mb-3">
                                                 <div>
                                                     <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
-                                                        <span>📅 Target Tab MFY (Pelabuhan, Provinsi, Infografis):</span>
+                                                        <span>📅 Pilihan Tab MFY:</span>
                                                     </h4>
                                                     <p className="text-[11px] text-muted-foreground mt-0.5">
                                                         Pilih tab tujuan berkas MFY akan ditampilkan di halaman publik
@@ -870,7 +1033,7 @@ export default function DocumentIndex({
                                                                 : 'bg-background hover:bg-muted text-foreground border-border'
                                                         }`}
                                                     >
-                                                        📅 Tab 1: Harian (24 Jam)
+                                                        📅 Tab 1
                                                     </button>
                                                     <button
                                                         type="button"
@@ -887,40 +1050,13 @@ export default function DocumentIndex({
                                                                 : 'bg-background hover:bg-muted text-foreground border-border'
                                                         }`}
                                                     >
-                                                        🌊 Tab 2: Mingguan (3 Hari)
+                                                        🌊 Tab 2
                                                     </button>
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div className={`grid grid-cols-1 gap-4 ${isBuletin || isBahari ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="category" className="text-xs font-semibold text-muted-foreground uppercase">
-                                                    Kategori Target
-                                                </Label>
-                                                <select
-                                                    id="category"
-                                                    value={data.category}
-                                                    onChange={(e) => {
-                                                        const cat = e.target.value as any;
-                                                        setData((prev) => ({
-                                                            ...prev,
-                                                            category: cat,
-                                                            period_type: cat === 'peringatan-dini' ? 'auto' : prev.period_type,
-                                                        }));
-                                                    }}
-                                                    className="h-10 w-full rounded-xl border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none"
-                                                >
-                                                    <option value="auto">⚡ Otomatis Cerdas MFY (Rekomendasi)</option>
-                                                    <option value="infografis">🖼️ Infografis (PNG/JPG)</option>
-                                                    <option value="pelabuhan">⚓ Cuaca Pelabuhan (PDF)</option>
-                                                    <option value="provinsi">📍 Cuaca Provinsi (PDF)</option>
-                                                    <option value="peringatan-dini">⚠️ Peringatan Dini Gelombang</option>
-                                                    <option value="bahari">🌊 Wisata Bahari</option>
-                                                    <option value="buletin">📖 Buletin Maritim (PDF)</option>
-                                                </select>
-                                            </div>
-
+                                        <div className={`grid grid-cols-1 gap-4 ${isBuletin || isBahari ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}`}>
                                             <div className="space-y-1.5">
                                                 <Label htmlFor="forecast_date" className="text-xs font-semibold text-muted-foreground uppercase">
                                                     {isBuletin ? 'Bulan / Tanggal Edisi' : 'Tanggal Berlaku'}
@@ -938,7 +1074,7 @@ export default function DocumentIndex({
                                             {!isBuletin && !isBahari && (
                                                 <div className="space-y-1.5">
                                                     <Label htmlFor="period_type" className="text-xs font-semibold text-muted-foreground uppercase">
-                                                        {isPeringatanDini ? 'Format Peringatan' : 'Periode / Tab'}
+                                                        {isPeringatanDini ? 'Format Peringatan' : 'Pilihan Tab'}
                                                     </Label>
                                                     <select
                                                         id="period_type"
@@ -954,8 +1090,8 @@ export default function DocumentIndex({
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <option value="daily">Tab 1: Harian (24 Jam)</option>
-                                                                <option value="weekly">Tab 2: Mingguan (3 Hari)</option>
+                                                                <option value="daily">Tab 1</option>
+                                                                <option value="weekly">Tab 2</option>
                                                             </>
                                                         )}
                                                     </select>
@@ -963,28 +1099,22 @@ export default function DocumentIndex({
                                             )}
                                         </div>
 
-                                {/* Opsi Pembersihan Berkas Produk Hari Sebelumnya (Wisata Bahari, Peringatan Dini, & MFY) */}
+                                {/* Status Pembersihan Berkas Lama Otomatis (Clean-Slate Lifecycle) */}
                                 {(isMfyCategory || isPeringatanDini || isBahari) && (
                                     <div className="mt-4 pt-3 border-t border-border/60">
-                                        <label
-                                            htmlFor="purge_old_checkbox"
-                                            className="flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/40 p-3 text-left transition-colors hover:bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:bg-amber-950/30 cursor-pointer"
-                                        >
-                                            <Checkbox
-                                                id="purge_old_checkbox"
-                                                checked={data.purge_old}
-                                                onCheckedChange={(checked) => setData('purge_old', !!checked)}
-                                                className="mt-0.5 border-amber-400 text-amber-600 focus:ring-amber-500"
-                                            />
+                                        <div className="flex items-start gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-3 text-left dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                                            <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                                                <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                            </div>
                                             <div className="space-y-0.5">
-                                                <span className="text-xs font-bold text-amber-900 dark:text-amber-200 block">
-                                                    Hapus berkas produk hari sebelumnya secara otomatis?
+                                                <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block">
+                                                    Pembersihan Berkas Lama Otomatis Aktif
                                                 </span>
-                                                <p className="text-[11px] leading-relaxed text-amber-800/80 dark:text-amber-300/80">
-                                                    Jika dicentang, seluruh berkas produk dari hari sebelumnya (tanggal sebelum produk baru ini) pada kategori terkait (seperti Wisata Bahari & Peringatan Dini) akan otomatis dibersihkan dari penyimpanan server agar hanya produk terbaru yang aktif.
+                                                <p className="text-[11px] leading-relaxed text-emerald-800/90 dark:text-emerald-300/85">
+                                                    Sistem otomatis membersihkan berkas lama untuk {isBahari ? 'Wisata Bahari' : isPeringatanDini ? 'Peringatan Dini' : 'produk MFY pada tab ini'} agar penyimpanan server tetap bersih dan hanya menyajikan rilis terbaru.
                                                 </p>
                                             </div>
-                                        </label>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1009,9 +1139,13 @@ export default function DocumentIndex({
                                     disabled={processing || data.files.length === 0}
                                     className="h-11 gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 font-bold text-white shadow-lg hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50"
                                 >
-                                    <Sparkles className="h-4 w-4" />
+                                    {processing ? (
+                                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                    ) : (
+                                        <Sparkles className="h-4 w-4" />
+                                    )}
                                     {processing
-                                        ? `Sedang Memproses ${data.files.length} Berkas...`
+                                        ? `Mengunggah (${progress?.percentage ?? 100}%)...`
                                         : data.files.length > 0
                                           ? `Proses & Terbitkan ${data.files.length} Berkas Sekaligus`
                                           : 'Pilih / Seret Berkas Dulu'}
@@ -1031,17 +1165,23 @@ export default function DocumentIndex({
                                 onClick={() => setSelectedTab('all')}
                                 className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                                     selectedTab === 'all'
-                                        ? 'bg-primary text-primary-foreground shadow-sm'
-                                        : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                        ? filterTabStyles.all.active
+                                        : filterTabStyles.all.inactive
                                 }`}
                             >
-                                <Layers className="h-3.5 w-3.5" />
+                                <Layers
+                                    className={`h-3.5 w-3.5 ${
+                                        selectedTab === 'all'
+                                            ? 'text-white dark:text-slate-950'
+                                            : filterTabStyles.all.icon
+                                    }`}
+                                />
                                 <span>Semua</span>
                                 <span
-                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors ${
                                         selectedTab === 'all'
-                                            ? 'bg-primary-foreground/20 text-primary-foreground'
-                                            : 'bg-background text-muted-foreground border border-border'
+                                            ? filterTabStyles.all.badgeActive
+                                            : filterTabStyles.all.badgeInactive
                                     }`}
                                 >
                                     {categoryCounts?.all || documents.length}
@@ -1077,17 +1217,23 @@ export default function DocumentIndex({
                                             }}
                                             className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-300 ${
                                                 isMfyActive
-                                                    ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-500/20'
-                                                    : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                    ? filterTabStyles.mfy.active
+                                                    : filterTabStyles.mfy.inactive
                                             }`}
                                         >
-                                            <Ship className="h-3.5 w-3.5" />
+                                            <Ship
+                                                className={`h-3.5 w-3.5 ${
+                                                    isMfyActive
+                                                        ? 'text-white'
+                                                        : filterTabStyles.mfy.icon
+                                                }`}
+                                            />
                                             <span>Produk MFY</span>
                                             <span
-                                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors ${
                                                     isMfyActive
-                                                        ? 'bg-white/20 text-white'
-                                                        : 'bg-background text-muted-foreground border border-border'
+                                                        ? filterTabStyles.mfy.badgeActive
+                                                        : filterTabStyles.mfy.badgeInactive
                                                 }`}
                                             >
                                                 {mfyCount}
@@ -1095,7 +1241,7 @@ export default function DocumentIndex({
                                             <ChevronDown
                                                 className={`h-3.5 w-3.5 transition-transform duration-300 ${
                                                     isMfyExpanded ? 'rotate-180' : 'rotate-0'
-                                                }`}
+                                                } ${isMfyActive ? 'text-white/80' : 'text-blue-600'}`}
                                             />
                                         </button>
 
@@ -1109,6 +1255,7 @@ export default function DocumentIndex({
                                         >
                                             {(['infografis', 'pelabuhan', 'provinsi'] as const).map((catKey) => {
                                                 const conf = categoryConfig[catKey];
+                                                const style = filterTabStyles[catKey] || filterTabStyles.mfy;
                                                 const Icon = conf.icon;
                                                 const count = categoryCounts
                                                     ? (catKey === 'pelabuhan'
@@ -1122,19 +1269,25 @@ export default function DocumentIndex({
                                                         key={catKey}
                                                         type="button"
                                                         onClick={() => setSelectedTab(catKey)}
-                                                        className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border ${
+                                                        className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs whitespace-nowrap transition-all duration-200 border ${
                                                             isSelected
-                                                                ? 'bg-primary text-primary-foreground shadow-sm font-bold border-primary'
-                                                                : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground border-border/80'
+                                                                ? `${style.active} font-bold`
+                                                                : `${style.inactive} font-semibold`
                                                         }`}
                                                     >
-                                                        <Icon className="h-3.5 w-3.5" />
+                                                        <Icon
+                                                            className={`h-3.5 w-3.5 ${
+                                                                isSelected
+                                                                    ? 'text-white'
+                                                                    : style.icon
+                                                            }`}
+                                                        />
                                                         <span>{conf.label}</span>
                                                         <span
-                                                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                                                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold transition-colors ${
                                                                 isSelected
-                                                                    ? 'bg-primary-foreground/20 text-primary-foreground'
-                                                                    : 'bg-muted text-muted-foreground'
+                                                                    ? style.badgeActive
+                                                                    : style.badgeInactive
                                                             }`}
                                                         >
                                                             {count}
@@ -1156,6 +1309,7 @@ export default function DocumentIndex({
                                 ] as const
                             ).map((catKey) => {
                                 const conf = categoryConfig[catKey];
+                                const style = filterTabStyles[catKey];
                                 const Icon = conf.icon;
                                 const count = categoryCounts
                                     ? categoryCounts[catKey] ?? 0
@@ -1167,19 +1321,25 @@ export default function DocumentIndex({
                                         key={catKey}
                                         type="button"
                                         onClick={() => setSelectedTab(catKey)}
-                                        className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                                        className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs transition-all ${
                                             isSelected
-                                                ? 'bg-primary text-primary-foreground shadow-sm font-bold'
-                                                : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                ? `${style.active} font-bold`
+                                                : `${style.inactive} font-semibold`
                                         }`}
                                     >
-                                        <Icon className="h-3.5 w-3.5" />
+                                        <Icon
+                                            className={`h-3.5 w-3.5 ${
+                                                isSelected
+                                                    ? 'text-white'
+                                                    : style.icon
+                                            }`}
+                                        />
                                         <span>{conf.label}</span>
                                         <span
-                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors ${
                                                 isSelected
-                                                    ? 'bg-primary-foreground/20 text-primary-foreground'
-                                                    : 'bg-background text-muted-foreground border border-border'
+                                                    ? style.badgeActive
+                                                    : style.badgeInactive
                                             }`}
                                         >
                                             {count}
@@ -1385,7 +1545,7 @@ export default function DocumentIndex({
                                                         <div
                                                             className={`h-10 w-10 rounded-xl ${conf.bgColor} ${conf.color} flex flex-shrink-0 items-center justify-center shadow-xs`}
                                                         >
-                                                            <FileText className="h-5 w-5" />
+                                                            <Icon className="h-5 w-5" />
                                                         </div>
                                                         <div className="max-w-xs min-w-0 sm:max-w-sm md:max-w-md">
                                                             <p className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary">
@@ -1643,6 +1803,154 @@ export default function DocumentIndex({
                         </div>
                     )}
                 </div>
+
+                {/* MODAL / OVERLAY PROGRES UNGGAH REAL-TIME */}
+                {processing && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/20 bg-card p-6 sm:p-8 shadow-2xl dark:border-slate-800">
+                            {/* Decorative Glow */}
+                            <div className="absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+
+                            {/* Header Icon & Pulsing Radar */}
+                            <div className="flex flex-col items-center text-center">
+                                <div className="relative mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white shadow-xl shadow-blue-500/25">
+                                    {progress && progress.percentage >= 100 ? (
+                                        <Sparkles className="h-10 w-10 animate-bounce text-emerald-200" />
+                                    ) : (
+                                        <UploadCloud className="h-10 w-10 animate-pulse text-white" />
+                                    )}
+                                    <div className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-background">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    </div>
+                                </div>
+
+                                <h3 className="text-xl font-extrabold text-foreground tracking-tight">
+                                    {progress && progress.percentage >= 100
+                                        ? 'Memproses & Menerbitkan Dokumen...'
+                                        : `Mengunggah ${data.files.length} Berkas...`}
+                                </h3>
+
+                                <p className="mt-1.5 text-xs text-muted-foreground max-w-sm leading-relaxed">
+                                    {progress && progress.percentage < 100
+                                        ? `Mentransfer data ke server Stamar Ambon (${((progress.loaded || 0) / (1024 * 1024)).toFixed(1)} MB / ${((progress.total || 0) / (1024 * 1024)).toFixed(1)} MB)`
+                                        : 'Server sedang mengklasifikasikan folder, membersihkan berkas lama (Clean-Slate), dan menyinkronkan data.'}
+                                </p>
+                            </div>
+
+                            {/* Progress Bar & Percentage */}
+                            <div className="mt-6 space-y-2">
+                                <div className="flex items-center justify-between text-xs font-bold">
+                                    <span className="text-muted-foreground flex items-center gap-1.5">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                        </span>
+                                        <span>Progres Unggah Dokumen</span>
+                                    </span>
+                                    <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                                        {progress?.percentage ?? 100}%
+                                    </span>
+                                </div>
+
+                                {/* Progress bar track */}
+                                <div className="relative h-3.5 w-full overflow-hidden rounded-full bg-muted shadow-inner border border-border/80">
+                                    <div
+                                        className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 transition-all duration-300 ease-out shadow-md"
+                                        style={{ width: `${progress?.percentage ?? (processing ? 100 : 0)}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Visual Step Tracker (3 Langkah Operasional) */}
+                            <div className="mt-6 space-y-3 rounded-2xl border border-border/80 bg-muted/40 p-4 text-xs">
+                                {/* Langkah 1 */}
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div
+                                            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                                                (progress?.percentage || 0) >= 100
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : 'bg-blue-600 text-white animate-pulse'
+                                            }`}
+                                        >
+                                            {(progress?.percentage || 0) >= 100 ? (
+                                                <Check className="h-3.5 w-3.5" />
+                                            ) : (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            )}
+                                        </div>
+                                        <span className="font-semibold text-foreground">
+                                            1. Transfer Berkas ke Server ({data.files.length} file)
+                                        </span>
+                                    </div>
+                                    <span
+                                        className={`font-mono text-[11px] font-bold ${
+                                            (progress?.percentage || 0) >= 100
+                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                : 'text-blue-600 dark:text-blue-400'
+                                        }`}
+                                    >
+                                        {(progress?.percentage || 0) >= 100 ? 'Selesai' : `${progress?.percentage || 0}%`}
+                                    </span>
+                                </div>
+
+                                {/* Langkah 2 */}
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div
+                                            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                                                (progress?.percentage || 0) >= 100
+                                                    ? 'bg-indigo-600 text-white animate-pulse'
+                                                    : 'bg-muted text-muted-foreground'
+                                            }`}
+                                        >
+                                            {(progress?.percentage || 0) >= 100 ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                '2'
+                                            )}
+                                        </div>
+                                        <span
+                                            className={`font-semibold ${
+                                                (progress?.percentage || 0) >= 100
+                                                    ? 'text-foreground'
+                                                    : 'text-muted-foreground'
+                                            }`}
+                                        >
+                                            2. Klasifikasi & Pembersihan Berkas Lama
+                                        </span>
+                                    </div>
+                                    <span className="font-mono text-[11px] text-muted-foreground">
+                                        {(progress?.percentage || 0) >= 100 ? 'Memproses...' : 'Menunggu'}
+                                    </span>
+                                </div>
+
+                                {/* Langkah 3 */}
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                                            3
+                                        </div>
+                                        <span className="font-semibold text-muted-foreground">
+                                            3. Sinkronisasi Database & Publikasi Website
+                                        </span>
+                                    </div>
+                                    <span className="font-mono text-[11px] text-muted-foreground">
+                                        Menunggu
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Warning / Safety Message */}
+                            <div className="mt-5 text-center">
+                                <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5 font-medium">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                    <span>Mohon jangan menutup atau merefresh halaman selama proses berlangsung.</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
     );
 }

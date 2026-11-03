@@ -23,7 +23,7 @@ class GoogleAuthController extends Controller
         $clientSecret = config('services.google.client_secret');
 
         if (empty($clientId) || empty($clientSecret)) {
-            return redirect('/panel-stamar/login')->with(
+            return redirect('/produkmarambon/login')->with(
                 'error',
                 'Kredensial Google OAuth (GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET) belum dikonfigurasi di file .env.'
             );
@@ -32,19 +32,27 @@ class GoogleAuthController extends Controller
         try {
             $driver = Socialite::driver('google');
 
+            $withParams = [
+                'prompt' => 'select_account',
+            ];
+
             $restrictDomain = (bool) config('services.google.restrict_domain', false);
             $hostedDomain = config('services.google.hosted_domain');
 
-            // Hanya sertakan parameter hd jika pembatasan domain diaktifkan
+            // Sertakan parameter hd jika pembatasan domain diaktifkan
             if ($restrictDomain && ! empty($hostedDomain)) {
-                $driver->with(['hd' => $hostedDomain]);
+                $withParams['hd'] = $hostedDomain;
+            }
+
+            if (! empty($withParams)) {
+                $driver->with($withParams);
             }
 
             return $driver->redirect();
         } catch (\Throwable $e) {
             Log::error('Google OAuth Redirect Error: '.$e->getMessage());
 
-            return redirect('/panel-stamar/login')->with(
+            return redirect('/produkmarambon/login')->with(
                 'error',
                 'Gagal memulai sesi login Google SSO: '.$e->getMessage()
             );
@@ -57,7 +65,7 @@ class GoogleAuthController extends Controller
     public function callback(Request $request): RedirectResponse
     {
         if ($request->has('error')) {
-            return redirect('/panel-stamar/login')->with(
+            return redirect('/produkmarambon/login')->with(
                 'error',
                 'Login dibatalkan oleh pengguna atau Google menolak permintaan otentikasi.'
             );
@@ -68,13 +76,26 @@ class GoogleAuthController extends Controller
         } catch (\Throwable $e) {
             Log::error('Google OAuth Callback Error: '.$e->getMessage());
 
-            return redirect('/panel-stamar/login')->with(
+            return redirect('/produkmarambon/login')->with(
                 'error',
                 'Terjadi kesalahan saat memverifikasi akun Google: '.$e->getMessage()
             );
         }
 
         $email = strtolower(trim((string) $googleUser->getEmail()));
+        $allowedEmailsRaw = (string) config('services.google.allowed_email', 'stamar.ambon@bmkg.go.id');
+        $allowedEmails = array_filter(array_map('trim', explode(',', strtolower($allowedEmailsRaw))));
+
+        // Validasi Eksklusif: Hanya izinkan akun yang terdaftar (stamar.ambon@bmkg.go.id)
+        if (! empty($allowedEmails) && ! in_array($email, $allowedEmails, true)) {
+            Log::warning("Percobaan akses Google SSO tidak terotorisasi ke panel admin dari email: {$email} (IP: {$request->ip()})");
+
+            return redirect('/produkmarambon/login')->with(
+                'error',
+                'Akses ditolak. Akun yang Anda gunakan tidak memiliki otorisasi untuk mengakses panel administrasi ini.'
+            );
+        }
+
         $restrictDomain = config('services.google.restrict_domain', false);
         $allowedDomain = strtolower((string) config('services.google.hosted_domain', 'bmkg.go.id'));
 
@@ -82,9 +103,11 @@ class GoogleAuthController extends Controller
         if ($restrictDomain && ! empty($allowedDomain)) {
             $domainSuffix = '@'.$allowedDomain;
             if (! str_ends_with($email, $domainSuffix)) {
-                return redirect('/panel-stamar/login')->with(
+                Log::warning("Percobaan akses Google SSO non-BMKG ke panel admin dari email: {$email} (IP: {$request->ip()})");
+
+                return redirect('/produkmarambon/login')->with(
                     'error',
-                    "Akses ditolak. Hanya akun email resmi BMKG ({$domainSuffix}) yang diizinkan mengakses panel ini."
+                    'Akses ditolak. Akun Google yang Anda gunakan tidak memiliki otorisasi untuk mengakses panel administrasi ini.'
                 );
             }
         }

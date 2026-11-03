@@ -85,6 +85,55 @@ export default function Welcome({
     // State slider "Galeri Kami" di sidebar (mengikuti style website lama .slideshow-container23)
     const [activeGallerySlide, setActiveGallerySlide] = useState(0);
 
+    // Data gambar latar belakang Hero (Pemandangan Maritim & Ikonik Maluku)
+    const heroSlides = useMemo(
+        () => [
+            {
+                src: '/images/hero/hero-1.jpg',
+                alt: 'Pelabuhan Penyeberangan Ferry Hunimua - Maluku Tengah',
+            },
+            {
+                src: '/images/hero/hero-2.jpg',
+                alt: 'Pelabuhan Yos Soedarso Ambon',
+            },
+            {
+                src: '/images/hero/hero-3.jpg',
+                alt: 'Benteng Belgica & Gunung Api Banda Neira',
+            },
+            {
+                src: '/images/hero/hero-4.jpg',
+                alt: 'Jembatan Merah Putih Teluk Ambon',
+            },
+        ],
+        [],
+    );
+
+    const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+    const [isHeroTransitioning, setIsHeroTransitioning] = useState(true);
+
+    // Slides array dengan klon gambar pertama di akhir untuk infinite smooth sliding ke kiri tanpa jeda
+    const displayHeroSlides = useMemo(
+        () => [...heroSlides, heroSlides[0]],
+        [heroSlides],
+    );
+
+    // Interval ganti slide setiap 3 detik (slide ke kiri)
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setIsHeroTransitioning(true);
+            setCurrentHeroSlide((prev) => prev + 1);
+        }, 3000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    const handleHeroTransitionEnd = () => {
+        if (currentHeroSlide >= heroSlides.length) {
+            setIsHeroTransitioning(false);
+            setCurrentHeroSlide(0);
+        }
+    };
+
     // Real-time WIT (Waktu Indonesia Timur - UTC+9) clock state
     const [currentTime, setCurrentTime] = useState<{
         timeStr: string;
@@ -277,44 +326,106 @@ export default function Welcome({
 
     return (
         <PublicLayout>
-            <Head title="Stasiun Meteorologi Maritim Ambon - Informasi Cuaca Maritim BMKG Maluku" />
+            <Head title="Layanan Informasi Meteorologi Maritim Maluku - BMKG Stamar Ambon" />
 
-            {/* HERO SECTION */}
-            <section className="relative overflow-hidden bg-slate-900 py-12 text-white">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {/* HERO SECTION DENGAN SLIDER BACKGROUND KE KIRI (3 DETIK) */}
+            <section className="relative overflow-hidden py-16 sm:py-20 text-white min-h-[460px] flex items-center justify-center">
+                {/* Background Carousel Slides (Sliding Continuously to the Left) */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+                    <div
+                        className={`flex h-full w-full ${
+                            isHeroTransitioning
+                                ? 'transition-transform duration-1000 ease-in-out'
+                                : 'transition-none'
+                        }`}
+                        style={{
+                            transform: `translateX(-${currentHeroSlide * 100}%)`,
+                        }}
+                        onTransitionEnd={handleHeroTransitionEnd}
+                    >
+                        {displayHeroSlides.map((slide, index) => (
+                            <div
+                                key={index}
+                                className="relative h-full w-full flex-shrink-0"
+                            >
+                                <img
+                                    src={slide.src}
+                                    alt={slide.alt}
+                                    className="h-full w-full object-cover object-center"
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Lapisan transparan sangat tipis (tanpa gelap pekat) agar foto asli tetap terang & jelas */}
+                    <div className="absolute inset-0 bg-black/20" />
+                </div>
+
+                {/* Content Overlay */}
+                <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-3xl text-center">
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                            Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-slate-900/85 px-4 py-1.5 text-xs font-bold text-white shadow-xl backdrop-blur-md">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span>Stasiun Meteorologi Maritim Kelas II Yos Soedarso Ambon</span>
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl leading-tight">
-                            Informasi Cuaca Maritim & Peringatan Dini Maluku
+
+                        <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight [text-shadow:_0_3px_12px_rgba(0,0,0,0.95),_0_1px_4px_rgba(0,0,0,0.9)]">
+                            Layanan Informasi Meteorologi Maritim Maluku
                         </h1>
-                        <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-300">
-                            Menyajikan prakiraan cuaca perairan provinsi Maluku, pelabuhan rakyat dan penyeberangan feri, buletin maritim resmi, serta infografis rilis harian.
+
+                        <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base leading-relaxed text-white font-semibold [text-shadow:_0_2px_8px_rgba(0,0,0,0.95)]">
+                            Menyajikan prakiraan cuaca perairan maritim Maluku, pelabuhan rakyat dan penyeberangan feri, buletin maritim resmi, serta infografis rilis harian.
                         </p>
 
                         {/* Jam Real-Time WIT (Waktu Indonesia Timur - UTC+9) */}
-                        <div className="mt-8 inline-flex flex-col items-center gap-3 rounded-lg border border-slate-700 bg-slate-800 px-5 py-3 sm:flex-row sm:gap-6">
+                        <div className="mt-8 inline-flex flex-col items-center gap-3 rounded-2xl border border-white/30 bg-slate-900/90 px-6 py-3.5 sm:flex-row sm:gap-6 shadow-2xl backdrop-blur-md">
                             <div className="text-center sm:text-left">
-                                <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-400 sm:justify-start">
-                                    <Clock className="h-3 w-3" />
+                                <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-300 sm:justify-start">
+                                    <Clock className="h-3.5 w-3.5 text-cyan-400" />
                                     <span>Waktu Operasional Stasiun</span>
                                 </div>
-                                <div className="mt-0.5 text-xs font-medium capitalize text-slate-200">
+                                <div className="mt-0.5 text-xs font-semibold capitalize text-white">
                                     {currentTime.dateStr || 'Memuat tanggal...'}
                                 </div>
                             </div>
 
-                            <div className="hidden h-8 w-px bg-slate-700 sm:block" />
+                            <div className="hidden h-8 w-px bg-white/20 sm:block" />
 
                             <div className="flex items-baseline gap-2">
-                                <span className="font-mono text-2xl font-bold tabular-nums text-white sm:text-3xl">
+                                <span className="font-mono text-2xl font-extrabold tabular-nums text-white sm:text-3xl drop-shadow-sm">
                                     {currentTime.timeStr || '--:--:--'}
                                 </span>
-                                <span className="rounded border border-slate-600 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-200">
+                                <span className="rounded-md border border-cyan-400/40 bg-cyan-500/20 px-1.5 py-0.5 font-mono text-[11px] font-bold text-cyan-200">
                                     WIT
                                 </span>
                             </div>
+                        </div>
+
+                        {/* Indicator Dots */}
+                        <div className="mt-6 flex items-center justify-center gap-2">
+                            {heroSlides.map((slide, idx) => {
+                                const isActive = (currentHeroSlide % heroSlides.length) === idx;
+                                return (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => {
+                                            setIsHeroTransitioning(true);
+                                            setCurrentHeroSlide(idx);
+                                        }}
+                                        title={slide.alt}
+                                        aria-label={`Slide ${idx + 1}: ${slide.alt}`}
+                                        className={`h-2 transition-all duration-300 rounded-full ${
+                                            isActive
+                                                ? 'w-8 bg-cyan-400 shadow-md shadow-cyan-400/80'
+                                                : 'w-2 bg-white/70 hover:bg-white shadow-xs'
+                                        }`}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -710,9 +821,9 @@ export default function Welcome({
                             {latestInfografisDocs.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {latestInfografisDocs.slice(0, 2).map((doc, idx) => {
-                                        const isPerairan = doc.region_code?.startsWith('P_AH') || idx === 0;
+                                        const isPerairan = doc.region_code === 'COVER_PROV' || doc.region_code?.startsWith('P_AH') || (!doc.region_code?.includes('PEL') && idx === 0);
                                         const targetHref = isPerairan ? '/infografis-provinsi' : '/infografis-pelabuhan';
-                                        const badgeText = isPerairan ? 'Perairan Provinsi' : 'Pelabuhan Maluku';
+                                        const badgeText = isPerairan ? 'Perairan Maritim' : 'Pelabuhan Maluku';
 
                                         return (
                                             <div
@@ -783,7 +894,7 @@ export default function Welcome({
                                             />
                                             <div className="absolute top-2 left-2">
                                                 <span className="rounded-full bg-amber-600/90 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ">
-                                                    Perairan Provinsi
+                                                    Perairan Maritim
                                                 </span>
                                             </div>
                                             <button
@@ -794,7 +905,7 @@ export default function Welcome({
                                                         title: 'Infografis Prakiraan Cuaca Perairan Maluku',
                                                         date: latestReleaseDate,
                                                         desc: 'Peta sebaran tinggi gelombang dan pola angin di perairan Maluku.',
-                                                        badge: 'Infografis Perairan Provinsi',
+                                                        badge: 'Infografis Perairan Maritim',
                                                     })
                                                 }
                                                 className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/70 text-white shadow-sm hover:bg-black"
@@ -804,7 +915,7 @@ export default function Welcome({
                                         </div>
                                         <div className="p-3">
                                             <h4 className="text-xs font-bold text-foreground line-clamp-1 group-hover:text-amber-600">
-                                                Infografis Cuaca Perairan Provinsi
+                                                Infografis Cuaca Perairan Maritim
                                             </h4>
                                             <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                                                 <span>{latestReleaseDate}</span>

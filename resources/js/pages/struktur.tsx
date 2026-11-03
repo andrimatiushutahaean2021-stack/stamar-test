@@ -21,81 +21,81 @@ import {
 export default function Struktur() {
     const unitList = [
         {
-            role: 'Kepala Stasiun',
-            title: 'Pimpinan Eksekutif Stasiun',
+            role: 'Kepala UPT',
+            title: 'Pimpinan Tertinggi Stasiun',
             icon: ShieldCheck,
             badge: 'Pimpinan UPT',
-            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-            desc: 'Memimpin, mengarahkan, dan mengkoordinasikan pelaksanaan seluruh tugas dan fungsi Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon dalam pengamatan, pengelolaan data, diseminasi informasi, serta kemitraan lintas sektoral.',
+            badgeColor: 'bg-blue-600/10 text-blue-700 dark:text-blue-300 border-blue-500/30',
+            desc: 'Memimpin, mengarahkan, dan mengendalikan pelaksanaan seluruh tugas serta fungsi Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon dalam pengamatan cuaca laut, analisis prakiraan, tata kelola kelembagaan, dan kemitraan kemaritiman di Maluku.',
             tasks: [
-                'Perumusan kebijakan operasional dan teknis meteorologi maritim',
-                'Koordinasi dengan BMKG Pusat, Balai Besar MKG Wilayah IV, dan Pemda',
-                'Pengawasan operasional 24 jam dan mitigasi darurat maritim',
+                'Penetapan kebijakan operasional dan teknis meteorologi maritim stasiun',
+                'Pengawasan operasional 24 jam dan mitigasi darurat cuaca ekstrem maritim',
+                'Koordinasi strategis dengan BMKG Pusat, BBMKG Wilayah IV, KSOP, Basarnas, Pelindo, dan Pemda',
             ],
         },
         {
-            role: 'Subbagian Tata Usaha (TU)',
-            title: 'Administrasi & Kepegawaian',
+            role: 'Tata Usaha',
+            title: 'Urusan Administrasi, Kepegawaian & BMN',
             icon: Briefcase,
-            badge: 'Tata Kelola & SDM',
-            badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-            desc: 'Melaksanakan urusan tata usaha, persuratan, kepegawaian, keuangan, penyusunan rencana kerja anggaran, serta pengelolaan Barang Milik Negara (BMN) dan rumah tangga stasiun.',
+            badge: 'Administrasi & Umum',
+            badgeColor: 'bg-teal-600/10 text-teal-700 dark:text-teal-300 border-teal-500/30',
+            desc: 'Menyelenggarakan tata kelola administrasi persuratan dinas, kearsipan, pembinaan kepegawaian ASN, pengelolaan Barang Milik Negara (BMN), kerumahtanggaan kantor, serta mengoordinasikan penugasan tenaga pendukung (PPNPN).',
             tasks: [
-                'Pengelolaan administrasi kepegawaian dan kepatuhan disiplin ASN',
-                'Pengelolaan perbendaharaan dan pertanggungjawaban keuangan negara',
-                'Inventarisasi, pemeliharaan sarana prasarana, dan rumah tangga kantor',
+                'Pengelolaan administrasi persuratan resmi, kearsipan dinas, dan ketatausahaan',
+                'Administrasi kepegawaian, formasi, kenaikan pangkat, disiplin, dan diklat pegawai',
+                'Pengelolaan, inventarisasi, dan perawatan sarana prasarana BMN serta rumah tangga dinas',
             ],
         },
         {
-            role: 'Kelompok Observasi & Pengamatan',
-            title: 'Pengamatan Meteorologi Maritim',
-            icon: Compass,
-            badge: 'Observasi 24/7',
-            badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-            desc: 'Melaksanakan pengamatan sinoptik dan cuaca maritim permukaan secara berkala non-stop 24 jam, pencatatan parameter atmosfer, serta pemantauan tinggi gelombang dan dinamika laut.',
+            role: 'PPNPN',
+            title: 'Pegawai Pemerintah Non Pegawai Negeri',
+            icon: Users,
+            badge: 'Bawahan Tata Usaha',
+            badgeColor: 'bg-blue-700/10 text-blue-800 dark:text-blue-200 border-blue-600/30',
+            desc: 'Melaksanakan penugasan teknis dan dukungan operasional harian kantor di bawah supervisi Subbagian Tata Usaha, mencakup pengamanan fisik lingkungan kantor stasiun, ketertiban fasilitas, kebersihan, serta dukungan mobilitas kedinasan.',
             tasks: [
-                'Pengamatan rutin permukaan laut, angin, arus, dan pasang surut',
-                'Perekaman data cuaca menggunakan instrumen konvensional dan otomatis',
-                'Pengiriman laporan sinoptik dan cuaca maritim secara berkala ke GTS',
+                'Pengamanan fisik gedung kantor, instalasi taman alat meteorologi, dan aset dinas selama 24 jam',
+                'Pemeliharaan kebersihan ruang kerja, sarana operasional, dan lingkungan stasiun',
+                'Dukungan operasional logistik kantor, ekspedisi kedinasan, dan tata graha fasilitas kerja',
             ],
         },
         {
-            role: 'Kelompok Data & Informasi (Forecaster)',
-            title: 'Analisis & Prakiraan Cuaca',
+            role: 'Bendahara',
+            title: 'Pengelolaan Keuangan & Perbendaharaan',
+            icon: FileSpreadsheet,
+            badge: 'Keuangan & Anggaran',
+            badgeColor: 'bg-teal-600/10 text-teal-700 dark:text-teal-300 border-teal-500/30',
+            desc: 'Melaksanakan urusan penatausahaan perbendaharaan negara, pencatatan transaksi keuangan, verifikasi dokumen bukti pertanggungjawaban belanja dinas, serta penyusunan pelaporan keuangan stasiun yang transparan dan akuntabel.',
+            tasks: [
+                'Pencatatan kas dan penatausahaan transaksi perbendaharaan negara melalui sistem SAKTI',
+                'Verifikasi keabsahan dokumen bukti pertanggungjawaban anggaran belanja (SPJ)',
+                'Penyusunan laporan realisasi anggaran berkala dan koordinasi dengan KPPN Ambon',
+            ],
+        },
+        {
+            role: 'Operasional',
+            title: 'Observasi, Analisis & Layanan Maritim 24/7',
             icon: Waves,
-            badge: 'Analisis & Diseminasi',
-            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-            desc: 'Melakukan analisis dinamika atmosfer dan oseanografi, penyusunan produk prakiraan cuaca untuk 18 zona perairan Maluku, cuaca pelabuhan, rute feri, dan pembuatan peringatan dini gelombang tinggi.',
+            badge: 'Teknis & Layanan Maritim',
+            badgeColor: 'bg-teal-600/10 text-teal-700 dark:text-teal-300 border-teal-500/30',
+            desc: 'Mengoordinasikan pelaksanaan seluruh kegiatan teknis operasional maritim non-stop 24 jam, mencakup pengamatan permukaan laut, analisis atmosfer, prakiraan wilayah perairan, peringatan dini gelombang tinggi, dan kesiapan instrumen.',
             tasks: [
-                'Penyusunan prakiraan cuaca harian dan mingguan perairan Maluku',
-                'Diseminasi peringatan dini cuaca maritim ekstrem ke stakeholder pelayaran',
-                'Penerbitan buletin berkala dan publikasi digital info cuaca laut',
+                'Pengawasan operasional shift pengamatan cuaca laut dan sinoptik 24 jam secara berkelanjutan',
+                'Pengendalian mutu (Quality Control) data pengamatan maritim dan diseminasi informasi publik',
+                'Koordinasi penyusunan prakiraan cuaca 18 perairan Maluku, rute penyeberangan feri, dan buletin resmi',
             ],
         },
         {
-            role: 'Kelompok Teknisi & Instrumentasi',
-            title: 'Pemeliharaan Alat & Jaringan',
-            icon: Wrench,
-            badge: 'Pemeliharaan Fasilitas',
-            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-            desc: 'Melaksanakan pemeliharaan preventif dan kuratif peralatan operasional stasiun, Automated Weather Station (AWS), radar cuaca maritim, sensor gelombang, dan jaringan transmisi data.',
+            role: 'Pegawai',
+            title: 'Fungsional Teknis (Forecaster, Observer, Teknisi)',
+            icon: Network,
+            badge: 'Bawahan Operasional',
+            badgeColor: 'bg-blue-700/10 text-blue-800 dark:text-blue-200 border-blue-600/30',
+            desc: 'Para pejabat fungsional dan staf pelaksana teknis yang bertugas langsung di garda terdepan (sistem shift 24 jam), mencakup Prakirawan Cuaca (Forecaster), Pengamat Cuaca (Observer), dan Teknisi Instrumentasi.',
             tasks: [
-                'Kalibrasi dan perawatan rutin instrumen sensor meteorologi kelautan',
-                'Troubleshooting perangkat keras, catu daya listrik, dan sistem komunikasi',
-                'Pengamanan infrastruktur server dan integrasi transmisi data online',
-            ],
-        },
-        {
-            role: 'Unit Layanan Jasa & Kemitraan',
-            title: 'Layanan Publik & Edukasi',
-            icon: Radio,
-            badge: 'Pelayanan Publik',
-            badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-            desc: 'Penyelenggaraan layanan data dan informasi untuk masyarakat, instansi maritim, pelabuhan, serta pelaksanaan Sekolah Lapang Cuaca Nelayan (SLCN) sebagai bentuk edukasi keselamatan berlayar.',
-            tasks: [
-                'Pelayanan permohonan data cuaca maritim untuk riset dan komersial',
-                'Koordinasi dengan KSOP, Basarnas, Pelindo, dan operator pelayaran',
-                'Pelaksanaan edukasi cuaca dan Sekolah Lapang Cuaca Nelayan (SLCN)',
+                'Melaksanakan pengamatan rutin cuaca permukaan laut, angin, arus, dan pasang surut di stasiun/pelabuhan',
+                'Menganalisis dinamika atmosfer-laut dan memproduksi prakiraan maritim harian/mingguan serta peringatan dini',
+                'Melaksanakan kalibrasi, pemeliharaan preventif sensor AWS maritim, radar cuaca, dan jaringan komunikasi data',
             ],
         },
     ];
@@ -150,8 +150,11 @@ export default function Struktur() {
                                 Pimpinan Tertinggi UPT
                             </span>
                             <h2 className="mt-2 text-2xl font-bold text-white">
-                                Kepala Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
+                                Kepala UPT
                             </h2>
+                            <p className="mt-1 text-sm font-semibold text-blue-300">
+                                Stasiun Meteorologi Kelas II Maritim Yos Soedarso Ambon
+                            </p>
                             <p className="mt-2 max-w-lg text-sm text-slate-300">
                                 Bertanggung jawab secara operasional dan manajerial kepada Kepala Badan Meteorologi,
                                 Klimatologi, dan Geofisika melalui koordinasi Balai Besar Meteorologi, Klimatologi,
@@ -174,26 +177,26 @@ export default function Struktur() {
                             Bagan Struktur Organisasi
                         </h2>
                         <p className="mt-3 text-muted-foreground">
-                            Representasi visual struktur organisasi sesuai Surat Penataan Organisasi UPT BMKG.
+                            Representasi visual susunan hierarki unit kerja dan tata hubungan operasional pada UPT Stasiun Meteorologi Maritim Ambon.
                         </p>
                     </div>
 
-                    <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border bg-card p-4 shadow-sm sm:p-8">
-                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-slate-100 dark:bg-slate-900">
+                    <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border bg-card p-4 shadow-md sm:p-8">
+                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border bg-white dark:bg-slate-900 shadow-inner">
                             <img
-                                src="https://stamar-ambon.bmkg.go.id/content/Struktur-Organisasi.png"
-                                alt="Bagan Struktur Organisasi Stasiun Meteorologi Maritim Ambon"
-                                className="h-full w-full object-contain p-2"
+                                src="/images/struktur-organisasi.jpg"
+                                alt="Bagan Struktur Organisasi Stasiun Meteorologi Maritim Ambon - Kepala UPT, Tata Usaha, PPNPN, Bendahara, Operasional, Pegawai"
+                                className="h-full w-full object-contain p-3 sm:p-4"
                                 loading="lazy"
                             />
                         </div>
 
                         <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t pt-6 sm:flex-row">
                             <div className="text-xs text-muted-foreground">
-                                Sumber: Dokumen Resmi Penataan Organisasi BMKG Stasiun Maritim Ambon
+                                Sumber: Dokumen Resmi Bagan Struktur Organisasi BMKG Stasiun Maritim Ambon
                             </div>
                             <a
-                                href="https://stamar-ambon.bmkg.go.id/content/Struktur-Organisasi.png"
+                                href="/images/struktur-organisasi.jpg"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 rounded-full border bg-background px-4 py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-muted"

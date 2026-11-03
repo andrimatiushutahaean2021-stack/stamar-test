@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo('/panel-stamar/login');
+        $middleware->redirectGuestsTo('/produkmarambon/login');
         $middleware->redirectUsersTo('/admin/documents');
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

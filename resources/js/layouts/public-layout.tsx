@@ -34,14 +34,14 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             name: 'Prakiraan',
             href: '#',
             dropdown: [
-                { name: 'Cuaca Provinsi Maluku', href: '/provinsi' },
+                { name: 'Area Maritim', href: '/provinsi' },
                 { name: 'Area Pelabuhan', href: '/pelabuhan' },
                 {
                     name: 'Area Penyeberangan',
                     href: 'https://maritim.bmkg.go.id/cuaca/rute',
                 },
                 { name: 'Prakiraan Wisata Bahari', href: '/wisata-bahari' },
-                { name: 'Infografis Perairan Provinsi', href: '/infografis-provinsi' },
+                { name: 'Infografis Perairan Maritim', href: '/infografis-provinsi' },
                 { name: 'Infografis Pelabuhan', href: '/infografis-pelabuhan' },
             ],
         },
@@ -49,7 +49,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             name: 'Infografis',
             href: '/infografis-provinsi',
             dropdown: [
-                { name: 'Infografis Perairan Provinsi', href: '/infografis-provinsi' },
+                { name: 'Infografis Perairan Maritim', href: '/infografis-provinsi' },
                 { name: 'Infografis Pelabuhan', href: '/infografis-pelabuhan' },
             ],
         },
@@ -197,12 +197,13 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div className="animate-in border-b bg-background shadow-sm slide-in-from-top-2 md:hidden">
+                    <div className="animate-in border-b bg-background shadow-lg slide-in-from-top-2 md:hidden max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain">
                         <div className="space-y-1 px-2 pt-2 pb-4 sm:px-3">
                             {navLinks.map((link, i) => (
                                 <div key={i}>
                                     <Link
                                         href={link.href}
+                                        onClick={() => setMobileMenuOpen(false)}
                                         className="block rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-muted hover:text-primary"
                                     >
                                         {link.name}
@@ -224,6 +225,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                                     <Link
                                                         key={j}
                                                         href={item.href}
+                                                        onClick={() => setMobileMenuOpen(false)}
                                                         className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-primary"
                                                     >
                                                         {item.name}

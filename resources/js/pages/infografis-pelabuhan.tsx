@@ -85,57 +85,86 @@ export default function InfografisPelabuhan({
 
     // Deteksi tanggal-tanggal unik yang diunggah
     const { tab1Info, tab2Info } = useMemo(() => {
-        const dateMap = new Map<string, DocumentItem[]>();
+        // 1. Cek tanggal langsung dari berkas masing-masing tab jika tersedia
+        const dailyDoc = documents.find((d) => d.period_type === 'daily' && d.forecast_date);
+        const weeklyDoc = documents.find((d) => d.period_type === 'weekly' && d.forecast_date);
 
-        documents.forEach((doc) => {
-            const rawDate = doc.forecast_date ? doc.forecast_date.split('T')[0] : doc.created_at.split('T')[0];
-            if (!dateMap.has(rawDate)) {
-                dateMap.set(rawDate, []);
-            }
-            dateMap.get(rawDate)!.push(doc);
-        });
-
-        const sortedDates = Array.from(dateMap.keys()).sort();
+        const dailyDate = dailyDoc?.forecast_date ? dailyDoc.forecast_date.split('T')[0] : null;
+        const weeklyDate = weeklyDoc?.forecast_date ? weeklyDoc.forecast_date.split('T')[0] : null;
 
         let date1: string;
         let date2: string;
 
-        if (sortedDates.length >= 2) {
-            date1 = sortedDates[sortedDates.length - 2];
-            date2 = sortedDates[sortedDates.length - 1];
-        } else if (sortedDates.length === 1) {
-            date1 = sortedDates[0];
-            const d2 = new Date(date1);
+        if (dailyDate && weeklyDate) {
+            date1 = dailyDate;
+            date2 = weeklyDate;
+        } else if (dailyDate && !weeklyDate) {
+            date1 = dailyDate;
+            const d2 = new Date(date1 + 'T00:00:00');
             d2.setDate(d2.getDate() + 1);
             date2 = d2.toISOString().split('T')[0];
+        } else if (!dailyDate && weeklyDate) {
+            date2 = weeklyDate;
+            const d1 = new Date(date2 + 'T00:00:00');
+            d1.setDate(d1.getDate() - 1);
+            date1 = d1.toISOString().split('T')[0];
         } else {
-            const now = new Date();
-            date1 = now.toISOString().split('T')[0];
-            const d2 = new Date(now);
-            d2.setDate(d2.getDate() + 1);
-            date2 = d2.toISOString().split('T')[0];
+            // Ambil tanggal prakiraan atau tanggal pembuatan berkas yang unik
+            const dateMap = new Map<string, DocumentItem[]>();
+
+            documents.forEach((doc) => {
+                const rawDate = doc.forecast_date ? doc.forecast_date.split('T')[0] : doc.created_at.split('T')[0];
+                if (!dateMap.has(rawDate)) {
+                    dateMap.set(rawDate, []);
+                }
+                dateMap.get(rawDate)!.push(doc);
+            });
+
+            // Urutkan tanggal dari yang paling lampau ke paling baru
+            const sortedDates = Array.from(dateMap.keys()).sort();
+
+            if (sortedDates.length >= 2) {
+                // Jika ada minimal 2 batch (misal 15 Okt dan 16 Okt)
+                date1 = sortedDates[sortedDates.length - 2];
+                date2 = sortedDates[sortedDates.length - 1];
+            } else if (sortedDates.length === 1) {
+                // Hanya 1 batch tanggal diunggah
+                date1 = sortedDates[0];
+                const d2 = new Date(date1 + 'T00:00:00');
+                d2.setDate(d2.getDate() + 1);
+                date2 = d2.toISOString().split('T')[0];
+            } else {
+                // Default jika belum ada dokumen
+                const now = new Date();
+                date1 = now.toISOString().split('T')[0];
+                const d2 = new Date(now);
+                d2.setDate(d2.getDate() + 1);
+                date2 = d2.toISOString().split('T')[0];
+            }
         }
 
-        const d1Obj = new Date(date1);
-        const tab1Label = d1Obj.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        });
+        // Format label murni tanggal asli tanpa rekayasa penambahan + 3 hari
+        const formatIndoDate = (dateStr: string) => {
+            const parts = dateStr.split('T')[0].split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                return new Date(year, month, day).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                });
+            }
+            return new Date(dateStr).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            });
+        };
 
-        const d2ObjStart = new Date(date2);
-        const d2ObjEnd = new Date(date2);
-        d2ObjEnd.setDate(d2ObjEnd.getDate() + 3);
-
-        const tab2Label = `${d2ObjStart.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        })} - ${d2ObjEnd.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        })}`;
+        const tab1Label = formatIndoDate(date1);
+        const tab2Label = formatIndoDate(date2);
 
         return {
             tab1Info: { dateKey: date1, label: tab1Label },
@@ -143,7 +172,7 @@ export default function InfografisPelabuhan({
         };
     }, [documents]);
 
-    const [activeTab, setActiveTab] = useState<'tab1' | 'tab2'>('tab1');
+    const [activeTab, setActiveTab] = useState<'tab1' | 'tab2'>('tab2');
 
     const pad = (num: number) => num.toString().padStart(3, '0');
 
@@ -212,7 +241,7 @@ export default function InfografisPelabuhan({
                             <Link href="/infografis-provinsi">
                                 <Button variant="outline" className="h-10 gap-2 rounded-lg border-white/30 bg-white/10 text-xs font-bold text-white hover:bg-white/20 ">
                                     <MapPin className="h-4 w-4 text-amber-300" />
-                                    <span>Beralih ke Infografis Perairan Provinsi</span>
+                                    <span>Beralih ke Infografis Perairan Maritim</span>
                                     <ArrowUpRight className="h-3.5 w-3.5" />
                                 </Button>
                             </Link>
@@ -311,23 +340,25 @@ export default function InfografisPelabuhan({
 
                                             if (!isMatchRegion) return false;
 
-                                            const docDate = d.forecast_date ? d.forecast_date.split('T')[0] : d.created_at.split('T')[0];
-                                            if (tab1Info.dateKey !== tab2Info.dateKey) {
-                                                return docDate === activeDateKey;
-                                            }
+                                            // Prioritaskan kecocokan period_type tab aktif
                                             if (activeTab === 'tab1') {
-                                                return docDate === tab1Info.dateKey || d.period_type === 'daily';
+                                                if (d.period_type === 'daily') return true;
+                                                if (d.period_type === 'weekly') return false;
                                             } else {
-                                                return docDate === tab2Info.dateKey || d.period_type === 'weekly';
+                                                if (d.period_type === 'weekly') return true;
+                                                if (d.period_type === 'daily') return false;
                                             }
-                                        }) || (tab1Info.dateKey === tab2Info.dateKey ? documents.find((d) => {
+
+                                            const docDate = d.forecast_date ? d.forecast_date.split('T')[0] : d.created_at.split('T')[0];
+                                            return docDate === activeDateKey;
+                                        }) || documents.find((d) => {
                                             return (
                                                 d.region_number === regionNumber ||
                                                 (d.region_code && d.region_code.toUpperCase() === defaultCode) ||
                                                 new RegExp(`\\bAH[._\\-\\s]?0*${regionNumber}\\b`, 'i').test(d.title || '') ||
                                                 new RegExp(`\\bAH[._\\-\\s]?0*${regionNumber}\\b`, 'i').test(d.file_path || '')
                                             );
-                                        }) : undefined);
+                                        });
 
                                         const docUrl = doc ? `/storage/${doc.file_path}` : '';
 

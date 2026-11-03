@@ -30,7 +30,7 @@ if exist "%OUTPUT_ZIP%" del /f /q "%OUTPUT_ZIP%"
 
 :: Gunakan PowerShell untuk zip dengan filter pengecualian otomatis
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$exclude = @('node_modules', 'vendor', '.git', '.github', '.env', '.env.backup', 'storage\\app\\public', '*.zip', 'tests', '.agents');" ^
+    "$exclude = @('node_modules', 'vendor', '.git', '.github', '.env.backup', 'storage\app\public', '*.zip', 'tests', '.agents', 'public\hot');" ^
     "$source = (Get-Item .).FullName;" ^
     "$zipPath = Join-Path $source '%OUTPUT_ZIP%';" ^
     "Add-Type -AssemblyName System.IO.Compression.FileSystem;" ^
@@ -38,8 +38,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "Get-ChildItem -Path $source -Recurse | Where-Object {" ^
     "    $rel = $_.FullName.Substring($source.Length + 1);" ^
     "    $skip = $false;" ^
+    "    if ($_.Name -eq '.env') { $skip = $true }" ^
     "    foreach ($pat in $exclude) {" ^
-    "        if ($rel -like \"$pat*\" -or $rel -like \"*\\$pat*\") { $skip = $true; break }" ^
+    "        if ($rel -like \"$pat*\" -or $rel -like \"*\$pat*\") { $skip = $true; break }" ^
     "    }" ^
     "    -not $skip -and -not $_.PSIsContainer" ^
     "} | ForEach-Object {" ^

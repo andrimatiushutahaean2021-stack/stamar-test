@@ -93,16 +93,16 @@ class MfyUploadController extends Controller
                 (str_contains($lower, 'cover') || str_contains($lower, 'sampul') || str_contains($lower, 'header') || str_contains($lower, 'slide'))
                 && (str_contains($lower, 'prov') || str_contains($lower, 'pelabuhan') || str_contains($lower, 'port') || str_contains($lower, 'maritim'))
             ) {
-                if (str_contains($lower, 'prov') || str_contains($lower, 'maritim')) {
-                    $docCategory = 'provinsi';
-                    $regionCode = 'COVER_PROV';
-                    $regionNumber = 0;
-                    $docTitle = 'Sampul Prakiraan Cuaca Maritim Wilayah Provinsi Maluku';
-                } else {
+                if (str_contains($lower, 'pelabuhan') || str_contains($lower, 'port')) {
                     $docCategory = 'pelabuhan';
                     $regionCode = 'COVER_PEL';
                     $regionNumber = 0;
-                    $docTitle = 'Sampul Prakiraan Cuaca Pelabuhan Provinsi Maluku';
+                    $docTitle = 'Sampul Prakiraan Cuaca Pelabuhan Maluku';
+                } else {
+                    $docCategory = 'provinsi';
+                    $regionCode = 'COVER_PROV';
+                    $regionNumber = 0;
+                    $docTitle = 'Sampul Prakiraan Cuaca Perairan Maritim Maluku';
                 }
             } elseif ($docCategory === 'peringatan-dini' || str_contains($lower, 'peringatan') || str_contains($lower, 'warning') || str_contains($lower, 'gelombang') || in_array($safeExtension, ['mp4']) || preg_match('/(?:^|[^a-zA-Z0-9])(?:no[._\-\s]?pd|nopd|nihil)/i', $baseName)) {
                 $docCategory = 'peringatan-dini';

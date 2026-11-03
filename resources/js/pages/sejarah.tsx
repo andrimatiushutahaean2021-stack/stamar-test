@@ -109,7 +109,7 @@ export default function Sejarah() {
         { label: 'Tanggal Disetujui', val: '8 Februari 2019' },
         { label: 'Instansi Pembina', val: 'Badan Meteorologi, Klimatologi, dan Geofisika (BMKG)' },
         { label: 'Status Kelembagaan', val: 'Unit Pelaksana Teknis (UPT) Mandiri Kelas II' },
-        { label: 'Wilayah Layanan', val: 'Perairan Provinsi Maluku & Sekitarnya' },
+        { label: 'Wilayah Layanan', val: 'Perairan Maritim Maluku & Sekitarnya' },
         { label: 'Lokasi Kantor', val: 'Jl. Amanlanite, Waimahu, Latuhalat, Nusaniwe, Ambon' },
         { label: 'Waktu Operasional', val: '24 Jam Non-Stop (Setiap Hari)' },
     ];
