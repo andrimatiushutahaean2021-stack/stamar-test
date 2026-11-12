@@ -83,10 +83,10 @@ class GoogleAuthController extends Controller
         }
 
         $email = strtolower(trim((string) $googleUser->getEmail()));
-        $allowedEmailsRaw = (string) config('services.google.allowed_email', 'stamar.ambon@bmkg.go.id');
+        $allowedEmailsRaw = (string) config('services.google.allowed_email', 'stamar.ambon@bmkg.go.id,andri.matius@bmkg.go.id');
         $allowedEmails = array_filter(array_map('trim', explode(',', strtolower($allowedEmailsRaw))));
 
-        // Validasi Eksklusif: Hanya izinkan akun yang terdaftar (stamar.ambon@bmkg.go.id)
+        // Validasi Eksklusif: Hanya izinkan akun yang terdaftar (stamar.ambon@bmkg.go.id & andri.matius@bmkg.go.id)
         if (! empty($allowedEmails) && ! in_array($email, $allowedEmails, true)) {
             Log::warning("Percobaan akses Google SSO tidak terotorisasi ke panel admin dari email: {$email} (IP: {$request->ip()})");
 
